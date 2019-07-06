@@ -1,7 +1,7 @@
 # global-markets-i
  Análisis y Cálculo de metricas financieras de acuerdo a convenciones de mercado
 
-<img src="https://github.com/claudio-oj/global-markets-i/blob/master/assets/gmi_img_snapshot2.png" width=400 style="float: center; margin-right: 10px;" />
+<img src="https://github.com/claudio-oj/global-markets-i/blob/master/assets/gmi_img_snapshot2.png" width=800 style="float: center; margin-right: 10px;" />
 
 
 (1) pasar dominio host de heroku a www.binaryanalytics.cl/gmi

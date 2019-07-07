@@ -2,13 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2080035e-cecf-43ab-8719-9875cce1dce9" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batch/__init__.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/batch/bbg_hist_dnlder_excel.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/batch/bbg_hist_dnlder_excel.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batch/crea_calendar_tenors.py" beforeDir="false" afterPath="$PROJECT_DIR$/batch/crea_calendar_tenors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bbg_hist_dnlder_excel.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/batch/bbg_prices_to_pickle.py" beforeDir="false" afterPath="$PROJECT_DIR$/batch/bbg_prices_to_pickle.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -17,17 +13,14 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.517872">
+    <splitter split-orientation="horizontal" split-proportion="0.6290429">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/batch/bbg_prices_to_pickle.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="240">
-                  <caret line="15" column="36" selection-start-line="15" selection-start-column="36" selection-end-line="15" selection-end-column="36" />
-                  <folding>
-                    <element signature="e#1318#1883#0" />
-                  </folding>
+                <state relative-caret-position="385">
+                  <caret line="91" lean-forward="true" selection-start-line="91" selection-end-line="91" />
                 </state>
               </provider>
             </entry>
@@ -151,6 +144,9 @@
       <module name="global-markets-i" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/batch" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -189,7 +185,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-6" y="-6" width="1549" height="837" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.20594059" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -300,11 +295,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/batch/bbg_prices_to_pickle.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="15" column="36" selection-start-line="15" selection-start-column="36" selection-end-line="15" selection-end-column="36" />
-          <folding>
-            <element signature="e#1318#1883#0" />
-          </folding>
+        <state relative-caret-position="385">
+          <caret line="91" lean-forward="true" selection-start-line="91" selection-end-line="91" />
         </state>
       </provider>
     </entry>

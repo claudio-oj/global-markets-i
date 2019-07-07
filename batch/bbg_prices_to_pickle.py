@@ -1,5 +1,5 @@
 """ codigo que importa data de bloomberg, procesa, y descarga un pickle por
- cada producto, que contiene +-255 dataframes con [carry_days, Precio]"""
+ -cada producto-, que contiene +-255 dataframes con [carry_days, Precio]"""
 
 import os # borrar os al momento de subir a heroku (y solucionar ruta llamado funciones co)
 os.chdir('D:\Dropbox\Documentos\Git\global-markets-i')
@@ -26,8 +26,6 @@ dfb.sort_index(inplace=True)
 
 
 
-# tod = pd.Timestamp(2019,7,4)
-
 """ 2. PRODUCTO SWAP LIBOR + TCS """
 
 tenors_us = ['o/n','3m','6m']+[str(x)+'y' for x in range(1,11)]+['12y','15y','20y','30y']
@@ -42,7 +40,7 @@ for d in dfb.index:
 	df_us.meses = meses_us
 
 	# fecha settle del tenor o/n
-	df_us.val['o/n'] = fcc.next_lab_settle(d,1,cal_ny=True)
+	df_us.val['o/n'] = fcc.next_lab_settle(d,2,cal_ny=True)
 
 	# fecha settle para los tenors largos en base al 1er settle
 	df_us.val = df_us.apply(lambda x: fcc.settle_rule(df_us.val['o/n'],x.meses), axis=1)
@@ -62,7 +60,36 @@ pd.to_pickle(ilib_dict,"./batch/p_ilib.pkl")
 
 
 
+
 """ 2.2. PRODUCTO SWAP ICAM """
+
+tenors_cl = ['o/n','3m','6m','9m','1y','18m']+[str(x)+'y' for x in range(2,11)]+['12y','15y','20y','30y']
+meses_cl  = [0,3,6,9,12,18]+[12*int(x) for x in range(2,11)]+[12*12,15*12,20*12,30*12]
+
+icam_dict={}
+for d in dfb.index:
+
+	df_cl = pd.DataFrame(index=tenors_cl, columns=['meses','val','carry_dias','icam'])
+
+	# numero de meses para cada tenor
+	df_cl.meses = meses_cl
+
+	# fecha settle del tenor o/n
+	df_cl.val['o/n'] = fcc.next_lab_settle(d,2,cal_ny=True)
+
+	# fecha settle para los tenors largos en base al 1er settle
+	df_cl.val = df_cl.apply(lambda x: fcc.settle_rule(df_cl.val['o/n'],x.meses), axis=1)
+
+	# calcula carry days en base al primer settle date
+	df_cl.carry_dias = (df_cl.val - df_cl.val[0]).apply(lambda x: x.days)
+
+	df_cl.icam = dfb.loc[d][33:52].values
+
+	icam_dict[d] = df_cl
+
+# p_ilib es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
+pd.to_pickle(icam_dict,"./batch/p_icam.pkl")
+
 
 
 

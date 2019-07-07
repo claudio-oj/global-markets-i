@@ -23,24 +23,28 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 7. aumentar los dynos
 8. storage memoria cache "puntos del dia"
 9. Desarrollar **widgets precios**
-10. <span style="color:Salmon">**bug**</span>: fix funciones inestables calendario
+10. **bug**: fix funciones inestables calendario
+11. **bug**: en `bbg_hist_dnlder_excel.xlsx` arreglar consulta bbg que rellene nan's con dato del dia anterior: icam 30yrs vino con nan's
+12. **bug**: pestaña FX ptos, en la tabla html, al seleccionar celdas no editables se pega el cursor. Posible causa: _pifia_ en los **callbacks**, inconsistencia INPUT --> STATE --> OUTPUT
 
 
 * ~~analizar si vale la pena modificar callbacks para q sea todo pandas~~
 * desarrollar mini calculadoras en base a fra s. desde * curva cero fra s
-* crear proceso o/n desde archivo bloomberg <span style="color:MediumSeaGreen">**TRABAJANDO EN ESTO**</span>
+* **TRABAJANDO EN ESTO**: crear proceso o/n desde archivo bloomberg
 * ~~agregar div Markdown abajo al medio: copyright, contacto, disclosures.~~
   
      
 ### Metodología de Desarrollo:
-- master branch (producción), develop branch, features branches
-
+- master branch (producción), develop branch, features branches  
+<img src="http://featureflags.io/wp-content/uploads/2018/03/featurebranchingwithflags.jpg" width=800 style="float: center; margin-right: 10px;" />
 
 ### Ideas de Mejoras para Versiones Futuras
 1. en Pestaña FX ptos: permitir input manual en tabla html de `ilib`, `tcs`
 2. eliminar post batch las variables que ocupa el batch. Para ocupar menos memoria durante el día, cuando el usuario final ocupa la calculadora.
 
 ### Explicaciones Batch
-1. los archivos **`p_*.pkl`** son los pickle con los df de cada dia, de los precios descargados de bloomberg, con sus fechas respectivas y calculo de carry days en base a la comvención de calendario de mercado. 
+1. los archivos **`p_*.pkl`** son los pickle con los df de cada dia, de los precios descargados de bloomberg, con sus fechas respectivas y calculo de carry days en base a la comvención de calendario de mercado.  
+
+<img src="https://github.com/claudio-oj/global-markets-i/blob/develop/batch/gmi_batch.png" width=800 style="float: center; margin-right: 10px;" />
 
 <!-- https://en.wikipedia.org/wiki/Web_colors#X11_color_names -->

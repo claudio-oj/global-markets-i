@@ -12,17 +12,13 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 import numpy as np
 
-"""
-ESTE CODIGO TIENE BUGS CALCULANDO FECHAS, SE APRECIA CUANDO SE CALCULA PARA TODO UN AÑO COMPLETO
-ARREGLAR ANTES DE ENTREGAR
-"""
 
 def crea_cal_tenors(tod):
 
 	# tod = pd.Timestamp(2019,7,4)
 
 	# df feriados
-	df_h = pd.read_excel('feriados_base_datos.xlsx', parse_dates=[0])
+	df_h = pd.read_excel('batch/feriados_base_datos.xlsx', parse_dates=[0])
 
 	h_stgo_or_ny = df_h[(df_h.holiday_STGO == True) | (df_h.holiday_NY == True)]['date']
 	h_stgo       = df_h[df_h.holiday_STGO == True]['date']
@@ -94,8 +90,7 @@ def crea_cal_tenors(tod):
 	# today's value date
 	tod_v = next_lab_settle(tod,2,cal_spot=True)
 
-	df1 = pd.DataFrame(index=['TOD', 'TOM'], columns=['days','fix','pub','val','tenor_s'])
-
+	df1 = pd.DataFrame(index=['TOD', 'TOM'], columns=['pubdays','fix','pub','val','tenor_s'])
 
 
 
@@ -112,7 +107,7 @@ def crea_cal_tenors(tod):
 
 
 	""" para 1w, y 2w no aplica la regla "cambia mes". Aca se comienza a escribir a partir de HOY + tenor sugerido --> pub date """
-	df2 = pd.DataFrame(index=['1w','2w'], columns=['days','fix','pub','val','tenor_s']) # tenor_s: tenor sugerido
+	df2 = pd.DataFrame(index=['1w','2w'], columns=['pubdays','fix','pub','val','tenor_s']) # tenor_s: tenor sugerido
 
 	df2['tenor_s'] = (7,14)
 	df2['pub']     = df2.apply(lambda x: next_cal_day(tod, x.tenor_s), axis=1)
@@ -129,7 +124,7 @@ def crea_cal_tenors(tod):
 	 '9yrs', '9.5yrs', '10yrs', '10.5yrs', '11yrs', '11.5yrs', '12yrs', '12.5yrs', '13yrs',
 	 '13.5yrs', '14yrs', '14.5yrs', '15yrs', '15.5yrs', '16yrs', '16.5yrs', '17yrs', '17.5yrs',
 	 '18yrs', '18.5yrs', '19yrs', '19.5yrs', '20yrs'],
-					   columns=['days','fix','pub','val','tenor_s'])
+					   columns=['pubdays','fix','pub','val','tenor_s'])
 
 	df3['tenor_s'] = np.arange(1,18+1).tolist() + np.arange(24,240+1,6).tolist()
 
@@ -141,13 +136,13 @@ def crea_cal_tenors(tod):
 
 	df = pd.concat([df1,df2,df3])
 
-	df['carry_days'] = df['pub'] - df.pub[0]
-	df.carry_days = df.carry_days.apply(lambda x: x.days)
+	df.pubdays = (df.pub - tod).apply(lambda x: x.days)
+
+	df['carry_days'] = ( df.pub - df.pub[0] ).apply(lambda x: x.days)
 
 	return df
 
 
-##
 
 """ SECCION NUEVA: MERGE DIAS CARRY CON BASE DE DATOS BLOOMBERG """
 

@@ -22,13 +22,25 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 6. integrar heroku CLI con Github
 7. aumentar los dynos
 8. storage memoria cache "puntos del dia"
+9. Desarrollar **widgets precios**
+10. <span style="color:Salmon">**bug**</span>: fix funciones inestables calendario
 
 
 * ~~analizar si vale la pena modificar callbacks para q sea todo pandas~~
 * desarrollar mini calculadoras en base a fra s. desde * curva cero fra s
-* crear proceso o/n desde archivo bloomberg **TRABAJANDO EN ESTO**
+* crear proceso o/n desde archivo bloomberg <span style="color:MediumSeaGreen">**TRABAJANDO EN ESTO**</span>
 * ~~agregar div Markdown abajo al medio: copyright, contacto, disclosures.~~
   
      
 ### Metodología de Desarrollo:
 - master branch (producción), develop branch, features branches
+
+
+### Ideas de Mejoras para Versiones Futuras
+1. en Pestaña FX ptos: permitir input manual en tabla html de `ilib`, `tcs`
+2. eliminar post batch las variables que ocupa el batch. Para ocupar menos memoria durante el día, cuando el usuario final ocupa la calculadora.
+
+### Explicaciones Batch
+1. los archivos **`p_*.pkl`** son los pickle con los df de cada dia, de los precios descargados de bloomberg, con sus fechas respectivas y calculo de carry days en base a la comvención de calendario de mercado. 
+
+<!-- https://en.wikipedia.org/wiki/Web_colors#X11_color_names -->

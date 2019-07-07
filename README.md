@@ -36,7 +36,7 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
      
 ### Metodología de Desarrollo:
 - master branch (producción), develop branch, features branches  
-<img src="http://featureflags.io/wp-content/uploads/2018/03/featurebranchingwithflags.jpg" width=800 style="float: center; margin-right: 10px;" />
+<img src="http://featureflags.io/wp-content/uploads/2018/03/featurebranchingwithflags.jpg" width=700 style="float: center; margin-right: 10px;" />
 
 ### Ideas de Mejoras para Versiones Futuras
 1. en Pestaña FX ptos: permitir input manual en tabla html de `ilib`, `tcs`
@@ -45,6 +45,7 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 ### Explicaciones Batch
 1. los archivos **`p_*.pkl`** son los pickle con los df de cada dia, de los precios descargados de bloomberg, con sus fechas respectivas y calculo de carry days en base a la comvención de calendario de mercado.  
 
-<img src="https://github.com/claudio-oj/global-markets-i/blob/develop/batch/gmi_batch.png" width=800 style="float: center; margin-right: 10px;" />
+#### Flujo Batch
+<img src="https://github.com/claudio-oj/global-markets-i/blob/develop/batch/gmi_batch.png" width=900 style="float: center; margin-right: 10px;" />
 
 <!-- https://en.wikipedia.org/wiki/Web_colors#X11_color_names -->

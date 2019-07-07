@@ -1,6 +1,6 @@
 """ codigo que importa data de bloomberg, procesa, y descarga un pickle por
  -cada producto-, que contiene +-255 dataframes con [carry_days, Precio]"""
-
+##
 import os # borrar os al momento de subir a heroku (y solucionar ruta llamado funciones co)
 os.chdir('D:\Dropbox\Documentos\Git\global-markets-i')
 
@@ -91,11 +91,30 @@ for d in dfb.index:
 pd.to_pickle(icam_dict,"./batch/p_icam.pkl")
 
 
-
+##
 
 """ 2.3. PRODUCTO PUNTOS FORWARD """
 
+
+ptos_dict={}
+for d in dfb.index:
+	df_p = fcc.crea_cal_tenors(d)
+	df_p['ptos'] = None
+	df_p.ptos['TOD'] = 0
+	df_p.ptos.loc[['1w','2w','1m','2m','3m','4m','5m','6m','9m','12m','18m','24m']] = dfb.loc[d][52:64].values
+	ptos_dict[d] = df_p
+
+# p_ptos es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
+pd.to_pickle(ptos_dict,"./batch/p_ptos.pkl")
+
+
+
 """ 2.4. USDCLP SPOT """
+pd.to_pickle(dfb.spot, "./batch/p_clp_spot.pkl")
+
+
 
 """ 2.5. PRODUCTO IR USDCLP BASIS  """
+# PENDIENTE... no es necesario para la pestaña FX puntos... si lo vamos a necesitar para la
+# pestaña IR Basis.... sobretodo pensando en transformar el basis6m a un basis de 3m
 

@@ -2,13 +2,19 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2080035e-cecf-43ab-8719-9875cce1dce9" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batch/bbg_hist_dnlder_excel.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/batch/bbg_hist_dnlder_excel.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/batch/bbg_prices_to_pickle.py" beforeDir="false" afterPath="$PROJECT_DIR$/batch/bbg_prices_to_pickle.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/batch/gmi_batch.png" beforeDir="false" afterPath="$PROJECT_DIR$/batch/gmi_batch.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/batch/p_clp_spot.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/batch/p_clp_spot.pkl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/batch/p_icam.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/batch/p_icam.pkl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/batch/p_ilib.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/batch/p_ilib.pkl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/batch/p_ptos.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/batch/p_ptos.pkl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documentacion/documentacion_formulas.docx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/funcs_calendario_co.py" beforeDir="false" afterPath="$PROJECT_DIR$/funcs_calendario_co.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/funcs_co.py" beforeDir="false" afterPath="$PROJECT_DIR$/funcs_co.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/header.py" beforeDir="false" afterPath="$PROJECT_DIR$/header.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/index.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -17,14 +23,26 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.61122113">
+    <splitter split-orientation="horizontal" split-proportion="0.47788778">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/batch/bbg_prices_to_pickle.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="291">
-                  <caret line="114" lean-forward="true" selection-start-line="114" selection-end-line="114" />
+                <state relative-caret-position="512">
+                  <caret line="155" lean-forward="true" selection-start-line="155" selection-end-line="155" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
+            <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_14.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="240">
+                  <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+                  <folding>
+                    <element signature="e#0#18#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -32,12 +50,12 @@
         </leaf>
       </split-first>
       <split-second>
-        <leaf>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/batch/crea_calendar_tenors.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="240">
-                  <caret line="15" selection-start-line="15" selection-end-line="143" />
+                <state>
+                  <caret line="5" column="27" selection-start-line="15" selection-end-line="143" />
                   <folding>
                     <element signature="e#417#4598#0" />
                   </folding>
@@ -46,15 +64,22 @@
             </entry>
           </file>
           <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/funcs_co.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="235">
+                  <caret line="361" lean-forward="true" selection-start-line="361" selection-end-line="361" />
+                  <folding>
+                    <element signature="e#52#61#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/funcs_calendario_co.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="353">
-                  <caret line="78" selection-start-line="78" selection-end-line="78" />
-                  <folding>
-                    <element signature="e#440#697#0" />
-                    <element signature="e#775#1257#0" />
-                    <element signature="e#1284#1887#0" />
-                  </folding>
+                <state>
+                  <caret line="103" column="4" selection-start-line="103" selection-start-column="4" selection-end-line="104" selection-end-column="35" />
                 </state>
               </provider>
             </entry>
@@ -77,6 +102,9 @@
       <find>os</find>
       <find>tod</find>
       <find>crea_cal_tenors</find>
+      <find>interpol</find>
+      <find>icam_os</find>
+      <find>d</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -85,11 +113,14 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/header.py" />
         <option value="$PROJECT_DIR$/app_fx.py" />
         <option value="$PROJECT_DIR$/batch/crea_calendar_tenors.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_11.py" />
         <option value="$PROJECT_DIR$/funcs_calendario_co.py" />
+        <option value="$PROJECT_DIR$/header.py" />
+        <option value="$PROJECT_DIR$/index.py" />
+        <option value="$PROJECT_DIR$/funcs_co.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_14.py" />
         <option value="$PROJECT_DIR$/batch/bbg_prices_to_pickle.py" />
       </list>
     </option>
@@ -105,7 +136,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -113,22 +143,19 @@
               <item name="global-markets-i" type="b2602c69:ProjectViewProjectNode" />
               <item name="global-markets-i" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="global-markets-i" type="b2602c69:ProjectViewProjectNode" />
-              <item name="global-markets-i" type="462c0819:PsiDirectoryNode" />
-              <item name="batch" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="pyconsole" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="settings.editor.selected.configurable" value="debugger.dataViews" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myUseExistingConsole" value="true" />
@@ -145,14 +172,11 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.scratch_14">
     <configuration name="bbg_prices_to_pickle" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="global-markets-i" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/batch" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -167,9 +191,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="scratch_14" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="global-markets-i" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_14.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.bbg_prices_to_pickle" />
+        <item itemvalue="Python.scratch_14" />
+        <item itemvalue="Python.scratch_14" />
         <item itemvalue="Python.bbg_prices_to_pickle" />
         <item itemvalue="Python.bbg_prices_to_pickle" />
         <item itemvalue="Python.bbg_prices_to_pickle" />
@@ -197,20 +240,80 @@
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.31811696" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.31676137" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.25184095" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39911634" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39772728" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32842416" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.32909605" />
       <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.49967468" weight="0.19744319" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.5003253" side_tool="true" weight="0.19400856" />
-      <window_info active="true" anchor="bottom" id="Python Console" order="10" visible="true" weight="0.3338068" />
+      <window_info active="true" anchor="bottom" id="Python Console" order="10" visible="true" weight="0.33238637" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
     </layout>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$APPLICATION_CONFIG_DIR$/scratches/scratch_14.py</url>
+          <line>14</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="evaluateExpression">
+      <expression>
+        <expression-string>df.loc[1:]['fra1w'] = df[1:].apply(lambda x: fc.fra1w(x.w,x.wl,x.i,x.il), axis=1)</expression-string>
+        <language-id>TEXT</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>df.loc[1:]['fra1w']</expression-string>
+        <language-id>TEXT</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>df.loc[1:]</expression-string>
+        <language-id>TEXT</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>df</expression-string>
+        <language-id>TEXT</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>df[1:]['fra1w'] = df[1:].apply(lambda x: fc.fra1w(x.w,x.wl,x.i,x.il), axis=1)</expression-string>
+        <language-id>TEXT</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>df[1:]['fra1w']</expression-string>
+        <language-id>TEXT</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>df[1:]</expression-string>
+        <language-id>TEXT</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>df[1:].apply(lambda x: fc.fra1w(x.w,x.wl,x.i,x.il), axis=1)</expression-string>
+        <language-id>TEXT</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>df.i[0]</expression-string>
+        <language-id>TEXT</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/batch/gmi_batch.png">
@@ -227,26 +330,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/index.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="905">
-          <caret line="69" lean-forward="true" selection-start-line="69" selection-end-line="69" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app_fx_copia.py">
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <folding>
             <element signature="e#0#34#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/header.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="400">
-          <caret line="26" column="77" selection-start-line="26" selection-start-column="71" selection-end-line="26" selection-end-column="77" />
         </state>
       </provider>
     </entry>
@@ -270,20 +359,31 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/funcs_co.py">
+    <entry file="file://$USER_HOME$/Anaconda3/envs/venv_gmi/Lib/site-packages/pandas/core/series.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-782">
-          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
-          <folding>
-            <element signature="e#52#61#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="314">
+          <caret line="3577" selection-start-line="3577" selection-end-line="3577" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Anaconda3/envs/venv_gmi/Lib/site-packages/pandas/core/generic.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-141">
+          <caret line="5066" selection-start-line="5066" selection-end-line="5066" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/batch/crea_calendar_tenors.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="15" selection-start-line="15" selection-end-line="143" />
+        <state>
+          <caret line="5" column="27" selection-start-line="15" selection-end-line="143" />
           <folding>
             <element signature="e#417#4598#0" />
           </folding>
@@ -292,20 +392,49 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/funcs_calendario_co.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="353">
-          <caret line="78" selection-start-line="78" selection-end-line="78" />
+        <state>
+          <caret line="103" column="4" selection-start-line="103" selection-start-column="4" selection-end-line="104" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/header.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="307">
+          <caret line="30" lean-forward="true" selection-start-line="30" selection-end-line="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/index.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="242">
+          <caret line="63" column="29" lean-forward="true" selection-start-line="63" selection-start-column="29" selection-end-line="63" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_14.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
           <folding>
-            <element signature="e#440#697#0" />
-            <element signature="e#775#1257#0" />
-            <element signature="e#1284#1887#0" />
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/funcs_co.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="235">
+          <caret line="361" lean-forward="true" selection-start-line="361" selection-end-line="361" />
+          <folding>
+            <element signature="e#52#61#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/batch/bbg_prices_to_pickle.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="291">
-          <caret line="114" lean-forward="true" selection-start-line="114" selection-end-line="114" />
+        <state relative-caret-position="512">
+          <caret line="155" lean-forward="true" selection-start-line="155" selection-end-line="155" />
         </state>
       </provider>
     </entry>

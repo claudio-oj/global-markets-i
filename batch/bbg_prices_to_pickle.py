@@ -1,11 +1,22 @@
-""" codigo que importa data de bloomberg, procesa, y descarga un pickle por
- -cada producto-, que contiene +-255 dataframes con [carry_days, Precio]"""
-##
+""" codigo PROCESO BATCH
+
+PASO 1. importa y procesa data de bloomberg
+
+PASO 2. a partir del paso1 crea un pickle / producto. con un df [carry_days, Precio] por cada dia de
+ la historia (255 dias). Para ilib y icam calculo además `tasa-zero`
+
+PASO 3. crea tasas camara off shore, para cada uno de los 255d. llamando los pickles necesarios
+
+PASO 4. crea tasas FRA1m, para cada uno de los 255d
+"""
+
 import os # borrar os al momento de subir a heroku (y solucionar ruta llamado funciones co)
 os.chdir('D:\Dropbox\Documentos\Git\global-markets-i')
 
 import pandas as pd
+import numpy as np
 import pickle
+import funcs_co as fc
 import funcs_calendario_co as fcc
 
 
@@ -23,10 +34,9 @@ dfb = pd.read_excel('batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', he
 
 dfb.sort_index(inplace=True)
 
+dfb = dfb[-3:] # para que corra + rapido
 
-
-
-""" 2. PRODUCTO SWAP LIBOR + TCS """
+""" PASO 2.1 PRODUCTO SWAP LIBOR """
 
 tenors_us = ['o/n','3m','6m']+[str(x)+'y' for x in range(1,11)]+['12y','15y','20y','30y']
 meses_us  = [0,3,6]+[12*int(x) for x in range(1,11)]+[12*12,15*12,20*12,30*12]
@@ -34,7 +44,7 @@ meses_us  = [0,3,6]+[12*int(x) for x in range(1,11)]+[12*12,15*12,20*12,30*12]
 ilib_dict={}
 for d in dfb.index:
 
-	df_us = pd.DataFrame(index=tenors_us, columns=['meses','val','carry_dias','ilib'])
+	df_us = pd.DataFrame(index=tenors_us, columns=['meses','val','carry_dias','ilib','ilib_z'])
 
 	# numero de meses para cada tenor
 	df_us.meses = meses_us
@@ -50,14 +60,13 @@ for d in dfb.index:
 
 	df_us.ilib = dfb.loc[d][1:18].values
 
+	# transformo tasas act 90/360 ---> a tasas zero act/360. creo que IRS USD no es act, es meses de 30d
+	df_us.ilib_z = df_us.apply(lambda x: fc.comp_a_z(x.carry_dias,x.ilib, periodicity=90), axis=1)
+
 	ilib_dict[d] = df_us
 
 # p_ilib es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
 pd.to_pickle(ilib_dict,"./batch/p_ilib.pkl")
-
-# pout = pd.read_pickle("./batch/p_ilib.pkl")
-# pout[d]
-
 
 
 
@@ -69,7 +78,7 @@ meses_cl  = [0,3,6,9,12,18]+[12*int(x) for x in range(2,11)]+[12*12,15*12,20*12,
 icam_dict={}
 for d in dfb.index:
 
-	df_cl = pd.DataFrame(index=tenors_cl, columns=['meses','val','carry_dias','icam'])
+	df_cl = pd.DataFrame(index=tenors_cl, columns=['meses','val','carry_dias','icam','icam_z'])
 
 	# numero de meses para cada tenor
 	df_cl.meses = meses_cl
@@ -85,16 +94,19 @@ for d in dfb.index:
 
 	df_cl.icam = dfb.loc[d][33:52].values
 
+	# el segmento money market ya está en convención tasa zero
+	df_cl.icam_z.loc['o/n':'18m'] = df_cl.icam.loc['o/n':'18m']
+
+	# transformo tasas act 180/360 ---> a tasas zero act/360
+	df_cl.icam_z.loc['2y':] = df_cl.loc['2y':].apply(lambda x: fc.comp_a_z(x.carry_dias,x.icam, periodicity=180), axis=1)
+
 	icam_dict[d] = df_cl
 
 # p_ilib es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
 pd.to_pickle(icam_dict,"./batch/p_icam.pkl")
 
 
-##
-
 """ 2.3. PRODUCTO PUNTOS FORWARD """
-
 
 ptos_dict={}
 for d in dfb.index:
@@ -108,13 +120,41 @@ for d in dfb.index:
 pd.to_pickle(ptos_dict,"./batch/p_ptos.pkl")
 
 
-
 """ 2.4. USDCLP SPOT """
 pd.to_pickle(dfb.spot, "./batch/p_clp_spot.pkl")
 
 
-
-""" 2.5. PRODUCTO IR USDCLP BASIS  """
+# """ 2.5. PRODUCTO IR USDCLP BASIS + TCS """
 # PENDIENTE... no es necesario para la pestaña FX puntos... si lo vamos a necesitar para la
 # pestaña IR Basis.... sobretodo pensando en transformar el basis6m a un basis de 3m
 
+
+
+
+""" PROCESO 4 CREA TASAS CAMARA OFF SHORE: convención simple act/360 """
+d_icamos = {}
+for d in dfb.index:
+
+	# d = pd.Timestamp('2019-07-03 00:00:00')
+
+	# llamo dict puntos, ese indice necesito, para crear el df donde guardar la icam-os
+	dfio = ptos_dict[d][['pubdays','carry_days','ptos']].copy()
+
+	# llamo las ilib-z, las mapeo en dfio, mendiante interpolación
+	dfio['ilib_z'] = np.interp(x=dfio.pubdays.values,
+							   xp=ilib_dict[d].carry_dias.values, fp=ilib_dict[d].ilib_z.values)
+
+	# primero interpolar curva de puntos faltantes
+	X = dfio[['pubdays','ptos']].dropna()
+	dfio.ptos = np.interp(x=dfio.pubdays.values, xp=X.pubdays.values, fp=X.ptos.map(float).values)
+
+	# calcula camara off-shore
+	dfio['icam_os'] = dfio.apply(lambda x: fc.cam_lcl_a_os(dias=x.carry_days,spot=dfb.loc[d].spot,
+														   ptos=x.ptos,iusd=x.ilib_z),axis=1)
+	d_icamos[d] = dfio
+
+
+
+
+
+""" PROCESO 5 CREA TASAS FRA 1M - CAMARA OFF SHORE """

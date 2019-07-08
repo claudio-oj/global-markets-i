@@ -15,8 +15,16 @@ h_both = df_h[(df_h.holiday_STGO == True) & (df_h.holiday_NY == True)]['date']
 
 
 def next_cal_day(d0, offset):
-	""" calcula dias calendario, incluyendo calendario de feriados STGO !!!
-	para estimar el 1w y el 2w """
+	""" calcula siguiente dia habil, incluyendo calendario de feriados STGO
+	para estimar el 1w y el 2w
+
+	PARAMETERS:
+		d0: pandas timestamp
+		offset: int
+
+	RETURNS:
+			pandas timestamp: next_cal_day
+	"""
 
 	d1 = d0 + pd.DateOffset(offset)
 
@@ -28,10 +36,20 @@ def next_cal_day(d0, offset):
 		return d1
 
 
+
 def next_lab_settle(d0, offset, cal_spot=False, cal_cl=False, cal_ny=False):
 	""" calcula el dia laboral siguiente, segun calendarios de feriados
-	d: pandas timestamp
-	cal_spot, cal_ndf: boolean"""
+
+	PARAMETERS:
+		d: pandas timestamp
+		offset: int
+		cal_spot: boolean, intersección calendario holidays STGO & NY
+		cal_cl: boolean, calendario holidays STGO
+		cal_ny: boolean, calendario holidays NY
+
+	RETURNS:
+			next_lab_settle
+		"""
 
 	# SPOT
 	if cal_spot:
@@ -53,8 +71,13 @@ def settle_rule(d0, m):
 	le sumo 30 dias a d0. Si es feriado le sumo un día, si ese dia cambió de mes --> le resto días tal que
 	quedemos en el business month end.
 
-	d0: starting date
-	m: # of months offset
+	PARAMETERS:
+		d0: pd.Timestamp, starting date
+		m: int, # of months offset
+
+	RETURNS:
+		pd.Timestamp, settle day a partir de d0, m meses en adelante
+
 	"""
 	if d0 is None:
 		return None
@@ -76,6 +99,11 @@ def settle_rule(d0, m):
 
 
 def crea_cal_tenors(tod):
+	""" función que crea calendario completo
+
+	:param tod:
+	:return: df calendario completo
+	"""
 
 	# tod = pd.Timestamp(2019,7,4)
 

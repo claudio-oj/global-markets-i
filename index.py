@@ -10,7 +10,7 @@ from dash.dependencies import Input, Output
 from header import header_logo,header_link,tabs_gmi
 
 from app import app, server
-import app_home, app_fx
+import app_home, app_fx, app_upload
 
 
 """ DESPLIEGA LA APP """
@@ -88,6 +88,8 @@ def show_content(tab_value):
 		return app_home.layout
 	if tab_value == 'tab-2':
 		return app_fx.layout
+	if tab_value == "tab-7":
+		return app_upload.layout
 	else:
 		return html.P('en desarrollo...', style={"text-align":"center","vertical-align":"middle", 'marginTop': 200})
 

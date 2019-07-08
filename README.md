@@ -8,7 +8,7 @@ Master Branch deployment en producción @ https://global-markets-i.herokuapp.com
 
 **Instrucciones run local**: correr archivo index.py en el _terminal_
 
-<img src="https://github.com/claudio-oj/global-markets-i/blob/master/assets/gmi_img_snapshot2.png" width=800 style="float: center; margin-right: 10px;" />
+<img src="https://github.com/claudio-oj/global-markets-i/blob/develop/assets/gmi_img_snapshot2.png" width=800 style="float: center; margin-right: 10px;" />
 
 ### Desarrollo Modular:
 

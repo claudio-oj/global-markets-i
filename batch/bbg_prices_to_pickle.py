@@ -5,9 +5,12 @@ PASO 1. importa y procesa data de bloomberg
 PASO 2. a partir del paso1 crea un pickle / producto. con un df [carry_days, Precio] por cada dia de
  la historia (255 dias). Para ilib y icam calculo además `tasa-zero`
 
-PASO 3. crea tasas camara off shore, para cada uno de los 255d. llamando los pickles necesarios
+PASO 3. crea tasas camara off shore + tasas FRA1m, para cada uno de los 255d, para cada uno de los 255d.
+Lo almacena en un diccionario, con un df por cada dia de historia. Almacenado en pickle
 
-PASO 4. crea tasas FRA1m, para cada uno de los 255d
+PASO 4. Crea historia de la FRA para los plazos 7d-380d + 18m + 24m.
+Que es la que van a llamar los callback de la app
+
 """
 
 import os # borrar os al momento de subir a heroku (y solucionar ruta llamado funciones co)
@@ -34,10 +37,11 @@ dfb = pd.read_excel('batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', he
 
 dfb.sort_index(inplace=True)
 
-dfb = dfb[-3:] # para que corra + rapido
+# dfb = dfb[-3:] # para que corra + rapido
+
+
 
 """ PASO 2.1 PRODUCTO SWAP LIBOR """
-
 tenors_us = ['o/n','3m','6m']+[str(x)+'y' for x in range(1,11)]+['12y','15y','20y','30y']
 meses_us  = [0,3,6]+[12*int(x) for x in range(1,11)]+[12*12,15*12,20*12,30*12]
 
@@ -66,12 +70,11 @@ for d in dfb.index:
 	ilib_dict[d] = df_us
 
 # p_ilib es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
-pd.to_pickle(ilib_dict,"./batch/p_ilib.pkl")
+# pd.to_pickle(ilib_dict,"./batch/p_ilib.pkl")
 
 
 
 """ 2.2. PRODUCTO SWAP ICAM """
-
 tenors_cl = ['o/n','3m','6m','9m','1y','18m']+[str(x)+'y' for x in range(2,11)]+['12y','15y','20y','30y']
 meses_cl  = [0,3,6,9,12,18]+[12*int(x) for x in range(2,11)]+[12*12,15*12,20*12,30*12]
 
@@ -103,11 +106,10 @@ for d in dfb.index:
 	icam_dict[d] = df_cl
 
 # p_ilib es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
-pd.to_pickle(icam_dict,"./batch/p_icam.pkl")
+# pd.to_pickle(icam_dict,"./batch/p_icam.pkl")
 
 
 """ 2.3. PRODUCTO PUNTOS FORWARD """
-
 ptos_dict={}
 for d in dfb.index:
 	df_p = fcc.crea_cal_tenors(d)
@@ -117,11 +119,11 @@ for d in dfb.index:
 	ptos_dict[d] = df_p
 
 # p_ptos es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
-pd.to_pickle(ptos_dict,"./batch/p_ptos.pkl")
+# pd.to_pickle(ptos_dict,"./batch/p_ptos.pkl")
 
 
 """ 2.4. USDCLP SPOT """
-pd.to_pickle(dfb.spot, "./batch/p_clp_spot.pkl")
+# pd.to_pickle(dfb.spot, "./batch/p_clp_spot.pkl")
 
 
 # """ 2.5. PRODUCTO IR USDCLP BASIS + TCS """
@@ -131,7 +133,7 @@ pd.to_pickle(dfb.spot, "./batch/p_clp_spot.pkl")
 
 
 
-""" PROCESO 4 CREA TASAS CAMARA OFF SHORE: convención simple act/360 """
+""" PROCESO 3 CREA TASAS CAMARA OFF SHORE: convención simple act/360  y  TASAS FRA 1W """
 d_icamos = {}
 for d in dfb.index:
 
@@ -151,10 +153,23 @@ for d in dfb.index:
 	# calcula camara off-shore
 	dfio['icam_os'] = dfio.apply(lambda x: fc.cam_lcl_a_os(dias=x.carry_days,spot=dfb.loc[d].spot,
 														   ptos=x.ptos,iusd=x.ilib_z),axis=1)
-	d_icamos[d] = dfio
+	dfio['icam_os1'] = dfio.icam_os.shift(1) # col utilitaria calculo fra
+
+
+	""" calculo FRA 1 semana """
+	dfio['w'] = [0,0,1,2]+[x for x in range(4,76,4)]+[x for x in range(96,984,24)] # inicializo columna para asignar # semanas / tenor
+	dfio['w1'] = dfio.w.shift(1)
+
+	dfio['fra1w'] = None # inicializo col para calcular fra's
+	dfio.loc['TOD':'1w','fra1w'] = dfio.loc['TOD':'1w','icam_os'].copy()
+
+	dfio.loc['2w':,'fra1w'] = dfio.loc['2w':].apply(lambda x: fc.fra1w(x.w,x.w1,x.icam_os,x.icam_os1), axis=1)
+
+	# guardo solo estas 3 cols para hacer mas ligero el pickle
+	d_icamos[d] = dfio[['pubdays','icam_os','fra1w']]
+
+pd.to_pickle(d_icamos, "./batch/icamos_fra.pkl")
 
 
 
-
-
-""" PROCESO 5 CREA TASAS FRA 1M - CAMARA OFF SHORE """
+d_icamos[pd.Timestamp('2018-07-05')]

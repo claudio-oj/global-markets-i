@@ -3,18 +3,13 @@
   <component name="ChangeListManager">
     <list default="true" id="2080035e-cecf-43ab-8719-9875cce1dce9" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/batch/bbg_prices_to_pickle.py" beforeDir="false" afterPath="$PROJECT_DIR$/batch/bbg_prices_to_pickle.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batch/gmi_batch.png" beforeDir="false" afterPath="$PROJECT_DIR$/batch/gmi_batch.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batch/p_clp_spot.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/batch/p_clp_spot.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batch/p_icam.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/batch/p_icam.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batch/p_ilib.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/batch/p_ilib.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/batch/p_ptos.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/batch/p_ptos.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/documentacion/documentacion_formulas.docx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/funcs_calendario_co.py" beforeDir="false" afterPath="$PROJECT_DIR$/funcs_calendario_co.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/batch/p_clp_spot.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/batch/p_icam.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/batch/p_ilib.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/batch/p_ptos.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/documentacion/~$rmulas.docx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/funcs_co.py" beforeDir="false" afterPath="$PROJECT_DIR$/funcs_co.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/header.py" beforeDir="false" afterPath="$PROJECT_DIR$/header.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/index.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -23,26 +18,23 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.47788778">
+    <splitter split-orientation="horizontal" split-proportion="0.54521453">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/batch/bbg_prices_to_pickle.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="512">
-                  <caret line="155" lean-forward="true" selection-start-line="155" selection-end-line="155" />
-                </state>
-              </provider>
-            </entry>
-          </file>
           <file pinned="false" current-in-tab="false">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_14.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="240">
-                  <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
-                  <folding>
-                    <element signature="e#0#18#0" expanded="true" />
-                  </folding>
+                  <caret line="16" selection-start-line="16" selection-end-line="16" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/batch/bbg_prices_to_pickle.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="658">
+                  <caret line="156" lean-forward="true" selection-start-line="156" selection-end-line="156" />
                 </state>
               </provider>
             </entry>
@@ -66,8 +58,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/funcs_co.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="235">
-                  <caret line="361" lean-forward="true" selection-start-line="361" selection-end-line="361" />
+                <state relative-caret-position="367">
+                  <caret line="360" column="52" selection-start-line="360" selection-start-column="52" selection-end-line="360" selection-end-column="52" />
                   <folding>
                     <element signature="e#52#61#0" expanded="true" />
                   </folding>
@@ -103,8 +95,11 @@
       <find>tod</find>
       <find>crea_cal_tenors</find>
       <find>interpol</find>
-      <find>icam_os</find>
       <find>d</find>
+      <find>df_p</find>
+      <find>icam_os</find>
+      <find>dfb.spot</find>
+      <find>to_pi</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -119,8 +114,8 @@
         <option value="$PROJECT_DIR$/funcs_calendario_co.py" />
         <option value="$PROJECT_DIR$/header.py" />
         <option value="$PROJECT_DIR$/index.py" />
-        <option value="$PROJECT_DIR$/funcs_co.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_14.py" />
+        <option value="$PROJECT_DIR$/funcs_co.py" />
         <option value="$PROJECT_DIR$/batch/bbg_prices_to_pickle.py" />
       </list>
     </option>
@@ -172,7 +167,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.scratch_14">
+  <component name="RunManager" selected="Python.bbg_prices_to_pickle">
     <configuration name="bbg_prices_to_pickle" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="global-markets-i" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -195,6 +190,9 @@
       <module name="global-markets-i" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
       <option name="IS_MODULE_SDK" value="false" />
@@ -211,9 +209,9 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.scratch_14" />
-        <item itemvalue="Python.scratch_14" />
         <item itemvalue="Python.bbg_prices_to_pickle" />
+        <item itemvalue="Python.scratch_14" />
+        <item itemvalue="Python.scratch_14" />
         <item itemvalue="Python.bbg_prices_to_pickle" />
         <item itemvalue="Python.bbg_prices_to_pickle" />
       </list>
@@ -249,7 +247,7 @@
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.32909605" />
       <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.49967468" weight="0.19744319" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.5003253" side_tool="true" weight="0.19400856" />
-      <window_info active="true" anchor="bottom" id="Python Console" order="10" visible="true" weight="0.33238637" />
+      <window_info active="true" anchor="bottom" id="Python Console" order="10" visible="true" weight="0.3309659" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -380,6 +378,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/header.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="307">
+          <caret line="30" lean-forward="true" selection-start-line="30" selection-end-line="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/index.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="242">
+          <caret line="63" column="29" lean-forward="true" selection-start-line="63" selection-start-column="29" selection-end-line="63" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/batch/crea_calendar_tenors.py">
       <provider selected="true" editor-type-id="text-editor">
         <state>
@@ -397,34 +409,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/header.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="307">
-          <caret line="30" lean-forward="true" selection-start-line="30" selection-end-line="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/index.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="63" column="29" lean-forward="true" selection-start-line="63" selection-start-column="29" selection-end-line="63" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_14.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="240">
-          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
+          <caret line="16" selection-start-line="16" selection-end-line="16" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/funcs_co.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="235">
-          <caret line="361" lean-forward="true" selection-start-line="361" selection-end-line="361" />
+        <state relative-caret-position="367">
+          <caret line="360" column="52" selection-start-line="360" selection-start-column="52" selection-end-line="360" selection-end-column="52" />
           <folding>
             <element signature="e#52#61#0" expanded="true" />
           </folding>
@@ -433,8 +428,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/batch/bbg_prices_to_pickle.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="512">
-          <caret line="155" lean-forward="true" selection-start-line="155" selection-end-line="155" />
+        <state relative-caret-position="658">
+          <caret line="156" lean-forward="true" selection-start-line="156" selection-end-line="156" />
         </state>
       </provider>
     </entry>

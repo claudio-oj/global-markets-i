@@ -353,10 +353,12 @@ def fra1w(w2,w1,i2,i1):
 	sea > 1 semana --> promedio de fra's.
 
 	:param
-	w: Series of int, numero de semanas asociada a la tasa
-	i: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89
+	w2: Series of int, numero de SEMANAS asociada a la tasa zero, larga
+	w1: Series of int, numero de SEMANAS asociada a la tasa zero, corta
+	i2: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89, larga
+	i1: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89, corta
 	:return:
-	Series of floats, tasas de interés FRA 1 semana. """
+	Series of floats, tasas de interés FRA 1 semanal. """
 	return 100*(( ((1+i2/100)**w2) / ((1+i1/100)**w1) )**(1/(w2-w1)) - 1 )
 
 

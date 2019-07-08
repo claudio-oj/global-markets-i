@@ -41,7 +41,7 @@ dfb.sort_index(inplace=True)
 fec_uso = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheetname='valores', header=None).iloc[1,1]
 
 
-dfb = dfb[-3:] # para que corra + rapido
+# dfb = dfb[-3:] # para que corra + rapido
 
 
 
@@ -178,13 +178,15 @@ pd.to_pickle(d_icamos, "./batch/icamos_fra.pkl")
 
 
 """ PASO 4. Crea historia de la FRA para los plazos 7d-380d + 18m + 24m """
-
-# pd.read_pickle("")
-
 # lista de dias 0-380 + dias del 18m, 24m
-cols = [str(x) for x in range(0,381)] + fcc.crea_cal_tenors(fec_uso).loc[['18m','24m'],'pubdays'].to_list()
+cols = [str(x) for x in range(1,381)] + fcc.crea_cal_tenors(fec_uso).loc[['18m','24m'],'pubdays'].to_list()
 
 dff = pd.DataFrame(index=dfb.index, columns=cols)
 
 for d in dfb.index:
-	dff.loc[d] = d_icamos[pd.Timestamp('2018-07-05')]
+	dff.loc[d] = np.interp(x=dff.columns.map(int), xp=d_icamos[d].pubdays.values ,fp=d_icamos[d].fra1w.map(float))
+
+# pickle que guarda un df, con la historia diaria, del ultimo año, de cada fra 1d-380d + 18m + 24m
+pd.to_pickle(dff.astype('float').round(2),"./batch/hist_fra.pkl")
+
+

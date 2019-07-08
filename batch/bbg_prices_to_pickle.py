@@ -32,12 +32,17 @@ header = ['spot','ff', 'ilib3m','ilib6m'] + ['ilib'+str(x) for x in range(1,11)]
 	['ptos1w','ptos2w'] + ['ptos'+str(x) for x in range(1,7)] + ['ptos9m','ptos12m','ptos18m','ptos24m'] +\
 	['basis'+str(x) for x in range(1,11)] + ['basis12','basis15','basis20']
 
-dfb = pd.read_excel('batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None,
+dfb = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None,
 					names=header, skiprows=6, index_col=0, parse_dates=[0])
 
 dfb.sort_index(inplace=True)
 
-# dfb = dfb[-3:] # para que corra + rapido
+# fecha uso GMI, input manual del MIddle Office
+fec_uso = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheetname='valores', header=None).iloc[1,1]
+
+
+dfb = dfb[-3:] # para que corra + rapido
+
 
 
 
@@ -172,4 +177,14 @@ pd.to_pickle(d_icamos, "./batch/icamos_fra.pkl")
 
 
 
-d_icamos[pd.Timestamp('2018-07-05')]
+""" PASO 4. Crea historia de la FRA para los plazos 7d-380d + 18m + 24m """
+
+# pd.read_pickle("")
+
+# lista de dias 0-380 + dias del 18m, 24m
+cols = [str(x) for x in range(0,381)] + fcc.crea_cal_tenors(fec_uso).loc[['18m','24m'],'pubdays'].to_list()
+
+dff = pd.DataFrame(index=dfb.index, columns=cols)
+
+for d in dfb.index:
+	dff.loc[d] = d_icamos[pd.Timestamp('2018-07-05')]

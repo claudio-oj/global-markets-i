@@ -101,8 +101,10 @@ def settle_rule(d0, m):
 def crea_cal_tenors(tod):
 	""" función que crea calendario completo
 
-	:param tod:
-	:return: df calendario completo
+	:param
+		tod:
+	:return:
+		df calendario completo
 	"""
 
 	# tod = pd.Timestamp(2019,7,4)

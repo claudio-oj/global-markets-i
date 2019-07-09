@@ -53,7 +53,7 @@ def imp_clos_t():
 	df['ind']= df.index.values
 	df['tenor'] = tenors
 
-	#calendario yesterday
+	# TODO: eliminar la dependencia al archivo Traductor tenors Tradition-Calypso.xlsm
 	df['daysy']= imp_calendar().values
 
 	#calendario hoy
@@ -251,19 +251,22 @@ def comp_a_z(dias,i_c,periodicity=180):
 
 
 def cam_os_simp(dias,spot,ptos,iusd,comp=True):
-	""" funcion que calcula tasa camara off shore, convención simple.
+	""" funcion que calcula tasa camara off-shore, convención simple.
 	detalles: ver formulario.
 
 	:param
-	dias: int, tenor en numero de dias
-	spot: float, usdclp fx spot rate
-	iusd: tasa fija swap libor, convención cupones semestrales
-	ptos: float, puntos forward
-	comp: boolean. i.e. True if return is compounded rate (not simple rate), false if zero rate
-	:return: camara off shore
+		dias: int, tenor en numero de dias
+		spot: float, usdclp fx spot rate
+		iusd: tasa fija swap libor, convención cupones semestrales
+		ptos: float, puntos forward
+		comp: boolean. i.e. True if return is compounded rate (not simple rate), false if zero rate
+	:return:
+		camara off shore
 	"""
-	if dias==0:
+	if dias==0:		# si carry_dias es cero --> return: iusd
 		return iusd
+	if np.isnan(ptos): 	# si ptos=nan... evalualos cero, para que siga la formula...
+		ptos=0
 
 	iusd = iusd/100
 
@@ -278,13 +281,14 @@ def cam_lcl_a_os(dias,spot,ptos,iusd):
 	""" funcion que, a partir de la tasa zero camara local, calcula la
 	tasa zero camara off shore
 
-	:param
-	dias: int, tenor en numero de dias
-	spot: float, usdclp fx spot rate
-	iusd: tasa fija swap libor, convención cupones semestrales
-	ptos: float, puntos forward
-	comp: boolean. i.e. True if return is compounded rate (not simple rate), false if zero rate
-	:return: tasa zero camara off shore
+	:param:
+		dias: int, tenor en numero de dias
+		spot: float, usdclp fx spot rate
+		iusd: tasa fija swap libor, convención cupones semestrales
+		ptos: float, puntos forward
+		comp: boolean. i.e. True if return is compounded rate (not simple rate), false if zero rate
+	:return:
+		tasa zero camara off shore
 	"""
 	if dias==0:
 		return iusd
@@ -315,13 +319,17 @@ def fra1m(d_c,ispot_c,d_l,ispot_l,interp=False):
 
 
 def fra1m_v2(df,interp=False):
-	""" Función calcula tasa FRA vectorizada, dataframe pandas
-	df: dataframe nombres cols: tenor, carry_days, icam_os
+	"""
+	DEPRECATED...usar fra1w_v en su lugar. fra 1 semana vectorizada
 
-	d_c: dias tasa corta
-	ispot_c: valor tasa spot, corto plazo
-	interp: boolean, FRA heuristica interpolacion plazos sin tenor de mercado
-	output: Series tasa fra"""
+	Función calcula tasa FRA vectorizada, dataframe pandas
+	:param:
+		df: dataframe nombres cols: tenor, carry_days, icam_os
+			d_c: dias tasa corta
+			ispot_c: valor tasa spot, corto plazo
+			interp: boolean, FRA heuristica interpolacion plazos sin tenor de mercado
+	:return:
+		Series tasa fra """
 
 	y = pd.Series(index=df.index)
 
@@ -351,15 +359,38 @@ def fra1m_v2(df,interp=False):
 def fra1w(w2,w1,i2,i1):
 	""" Función Calcula tasas FRA de 1 semana. Entre plazos que la distancia
 	sea > 1 semana --> promedio de fra's.
-
 	:param
-	w2: Series of int, numero de SEMANAS asociada a la tasa zero, larga
-	w1: Series of int, numero de SEMANAS asociada a la tasa zero, corta
-	i2: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89, larga
-	i1: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89, corta
+		w2: Series of int, numero de SEMANAS asociada a la tasa zero, larga
+		w1: Series of int, numero de SEMANAS asociada a la tasa zero, corta
+		i2: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89, larga
+		i1: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89, corta
 	:return:
-	Series of floats, tasas de interés FRA 1 semanal. """
-	return 100*(( ((1+i2/100)**w2) / ((1+i1/100)**w1) )**(1/(w2-w1)) - 1 )
+		Series of floats, tasas de interés FRA 1 semanal. """
+	return 5200*(( ((1+i2/5200)**w2) / ((1+i1/5200)**w1) )**(1/(w2-w1)) - 1 )
+
+
+
+def fra1w_v(df):
+	""" Función Calcula, vectorizado, tasas FRA de 1 semana. Entre plazos que la distancia
+	sea > 1 semana --> promedio de fra's.
+	:param:
+		df: dataframe que contiene estas dos cols:
+			tenor: Series of strings, nombre del tenor asociada a la tasa --> se traduce en # weeks
+			icam_os: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89
+	:return:
+		Series of floats, tasas de interés FRA 1 semanal. """
+
+	# w = {'tod':0,'tom':0,'1w':1,'2w':2,'1m':4,'2m':8,'3m':12,'4m':16,'5m':20,'6m':24,
+	# 			  '9m':36,'12m':48,'18m':72,'2y':96}
+	df['w'] = df.days / 7
+	df['w_1'] = df.w.shift(1)
+	df['icam_os_1'] = df.icam_os.shift(1)
+
+	# 1yr tiene 52 semanas
+	y = 5200*(( ((1+df.icam_os/5200)**df.w) / ((1+df.icam_os_1/5200)**df.w_1) )**(1/(df.w-df.w_1)) - 1 )
+	y.loc[0:1] = df.icam_os.loc[0:1].copy()
+	return y
+
 
 
 

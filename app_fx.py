@@ -21,8 +21,8 @@ pd.options.mode.chained_assignment = None #apaga warning set with copy
 import numpy as np
 from numbers import Number
 
-from funcs_co import imp_spot, imp_clos_t, live, cam_os_simp, fra1m, fra1m_v2,iptos, ibasis
-from funcs_co import weird_division, round_conv_basis, round_2d, float_or_zero
+from funcs_co import imp_spot, imp_clos_t, live, cam_os_simp, fra1m, fra1m_v2,fra1w,iptos, ibasis
+from funcs_co import weird_division, round_conv_basis, round_2d, float_or_zero, fra1w_v
 
 from graphs import crea_fra_scatter_graph, crea_fra_hist_line
 
@@ -57,11 +57,14 @@ def table1_update(df):
 
 		df.carry  = df.apply(lambda x: df.days[4] * weird_division(x.ptos, x.carry_days),axis=1)
 
+		df.icam_os = df.apply(lambda x: cam_os_simp(x.carry_days, spot, x.ptos, x.ilib), axis=1)
 
-		df.icam_os= df.apply(lambda x: cam_os_simp(x.carry_days if x.carry_days!=0 else float('Nan'),
-												   spot, x.ptos , x.ilib),axis=1)
+		# df.icam_os= df.apply(lambda x: cam_os_simp(x.carry_days if x.carry_days!=0 else float('Nan'),
+		# 										   spot, x.ptos , x.ilib),axis=1)
 
-		df.fracam_os = fra1m_v2(df[['tenor', 'carry_days', 'icam_os']], interp=False)
+		# df.fracam_os = fra1m_v2(df[['tenor', 'carry_days', 'icam_os']], interp=False)
+
+		df.fracam_os = fra1w_v(df[['days','icam_os']])
 
 		df.i_ptos = df.apply(lambda x: iptos(t=x.carry_days if x.carry_days!=0 else float('nan'),
 								 spot=spot, iusd=x.ilib, icam=x.icam, b= x.basis,
@@ -104,7 +107,7 @@ layout = html.Div(
 						{'id':'daysy',     'name':'daysy',    'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'days',      'name':'days',     'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'ptosy',     'name':'ptosy',    'editable':False, 'type': 'numeric'},
-						{'id':'ptos',      'name':'ptos',     'editable':True, 'type': 'numeric'},
+						{'id':'ptos',      'name':'ptos',     'editable':True,  'type': 'numeric'},
 						{'id':'odelta',    'name':'change',   'editable':False, 'hidden': False, 'type': 'numeric'},
 						{'id':'ddelta',    'name':'ddelta',   'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'carry',     'name':'carry',    'editable':False, 'hidden': True, 'type': 'numeric'},
@@ -184,7 +187,10 @@ layout = html.Div(
 							  # 'height':'40vh',
 							  # 'margin-bottom':'0px',
 							}),
-				# dcc.Store(id='intermediate-value-fra',storage_type='memory',data={}),
+
+				# ! guarda un objeto escondido, utilitario, la curva fra de hoy
+				dcc.Store(id='intermediate-value-fra',storage_type='memory',data={}),
+
 				]
 			),
 		html.Div(
@@ -204,7 +210,7 @@ layout = html.Div(
 @app.callback(
 	Output('table1','data'),
 	[Input('table1','data_timestamp')],
-	[State('table1','data')])
+	[State('table1','data')]) # ! este q "state" creo que pega la tabla html en la app.
 def update_columns(timestamp,rows):
 	dfr = pd.DataFrame.from_dict(rows)
 	dfr = dfr[df.columns.copy()]
@@ -231,6 +237,7 @@ def display_outputtt(rows):
 def update_fra_hist_graph(timestamp, data):
 	if timestamp is None:
 		raise PreventUpdate
+	print(crea_fra_hist_line( data['4'] ))
 	return crea_fra_hist_line( data['4'] )
 
 

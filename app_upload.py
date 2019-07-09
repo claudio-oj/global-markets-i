@@ -58,7 +58,7 @@ def parse_contents(contents, filename, date):
             # ! cambiar correo por otro con clave de desarrollador 
             email_user = 'r2019curso@gmail.com'
             email_password = 'gtcybxienrydeqix'
-            email_send = 'r2019curso@gmail.com'
+            email_send = 'contacto@binaryanalytics.cl'
 
             if filename == "tenor.csv":
 

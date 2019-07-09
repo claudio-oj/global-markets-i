@@ -59,11 +59,6 @@ def table1_update(df):
 
 		df.icam_os = df.apply(lambda x: cam_os_simp(x.carry_days, spot, x.ptos, x.ilib), axis=1)
 
-		# df.icam_os= df.apply(lambda x: cam_os_simp(x.carry_days if x.carry_days!=0 else float('Nan'),
-		# 										   spot, x.ptos , x.ilib),axis=1)
-
-		# df.fracam_os = fra1m_v2(df[['tenor', 'carry_days', 'icam_os']], interp=False)
-
 		df.fracam_os = fra1w_v(df[['days','icam_os']])
 
 		df.i_ptos = df.apply(lambda x: iptos(t=x.carry_days if x.carry_days!=0 else float('nan'),
@@ -115,7 +110,7 @@ layout = html.Div(
 						{'id':'ilib',      'name':'ilib',     'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'tcs',       'name':'tcs',      'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'icam_os',   'name':'icam-os',  'editable':False, 'hidden': True, 'type': 'numeric'},
-						{'id':'fracam_os', 'name':'f1m-os',   'editable':False, 'hidden': False, 'type': 'numeric'},
+						{'id':'fracam_os', 'name':'fra-os',   'editable':False, 'hidden': False, 'type': 'numeric'},
 						{'id':'basisy',    'name':'basisy',   'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'basis',     'name':'basis',    'editable':True, 'type': 'numeric'},
 						{'id':'i_ptos',    'name':'i_ptos',   'editable':False, 'type': 'numeric'},
@@ -161,8 +156,8 @@ layout = html.Div(
 							{'if': {'column_id':'fracam_os'}, 'width': '50px'},
 							{'if': {'column_id':'basis'}, 'width': '48px',
 							 'fontWeight': 600, 'color': '#4176A4'},
-							{'if': {'column_id':'i_ptos'},  'width': '50px', 'fontWeight': 600,'color':'#801A86'},
-							{'if': {'column_id':'i_basis'}, 'width': '50px', 'fontWeight': 600,'color':'#801A86'},
+							{'if': {'column_id':'i_ptos'},  'width': '50px','backgroundColor':'rgb(251,251,251)'},
+							{'if': {'column_id':'i_basis'}, 'width': '50px','backgroundColor':'rgb(251,251,251)'},
 						],
 						editable=True,
 					),
@@ -188,9 +183,9 @@ layout = html.Div(
 							  # 'margin-bottom':'0px',
 							}),
 
+				# https://community.plot.ly/t/sharing-a-dataframe-between-plots/6173/2
 				# ! guarda un objeto escondido, utilitario, la curva fra de hoy
-				dcc.Store(id='intermediate-value-fra',storage_type='memory',data={}),
-
+				html.Div(id='intermediate-value-fra',style={'display': 'none'}),
 				]
 			),
 		html.Div(
@@ -208,15 +203,16 @@ layout = html.Div(
 
 
 @app.callback(
-	Output('table1','data'),
+	[Output('table1','data'), Output('intermediate-value-fra','children')],
 	[Input('table1','data_timestamp')],
 	[State('table1','data')]) # ! este q "state" creo que pega la tabla html en la app.
 def update_columns(timestamp,rows):
 	dfr = pd.DataFrame.from_dict(rows)
 	dfr = dfr[df.columns.copy()]
+	print(dfr)
 	dfr = table1_update(dfr)
-
-	return dfr.to_dict('records')
+	# print(dfr['fracam_os'])
+	return dfr.to_dict('records'), dfr[['tenor','days','fracam_os']].to_json()
 
 
 @app.callback(

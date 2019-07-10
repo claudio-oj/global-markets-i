@@ -14,8 +14,11 @@ from app import app
 ##
 """ Corre INICIO procesos NECESARIOS. Crea tabla de puntos fwd , basis, ibasis,
 importa funciones numericas y funciones crea graficos """
-
 import pandas as pd
+
+fra_historic = pd.read_csv("fra_history.csv")
+indicator = pd.read_csv("indicator.csv")
+
 pd.options.mode.chained_assignment = None #apaga warning set with copy
 
 import numpy as np
@@ -57,9 +60,16 @@ def table1_update(df):
 
 		df.carry  = df.apply(lambda x: df.days[4] * weird_division(x.ptos, x.carry_days),axis=1)
 
+<<<<<<< HEAD
 		df.icam_os = df.apply(lambda x: cam_os_simp(x.carry_days, spot, x.ptos, x.ilib), axis=1)
 
 		df.fracam_os = fra1w_v(df[['days','icam_os']])
+=======
+		df.icam_os= df.apply(lambda x: cam_os_simp(x.carry_days if x.carry_days!=0 else float('Nan'),
+												   spot, x.ptos , x.ilib),axis=1)
+
+		df.fracam_os = fra1m_v2(df[['tenor', 'carry_days', 'icam_os']], interp=False)
+>>>>>>> 34463b52930f32b3e481dbcd1a11a67af41f1289
 
 		df.i_ptos = df.apply(lambda x: iptos(t=x.carry_days if x.carry_days!=0 else float('nan'),
 								 spot=spot, iusd=x.ilib, icam=x.icam, b= x.basis,
@@ -100,7 +110,7 @@ layout = html.Div(
 						{'id':'ind',       'name':'ind',      'editable':False, 'hidden':True, 'type': 'numeric'},
 						{'id':'tenor',     'name':'tenor',    'editable':False, 'hidden': False,'width': '40px'},
 						{'id':'daysy',     'name':'daysy',    'editable':False, 'hidden': True, 'type': 'numeric'},
-						{'id':'days',      'name':'days',     'editable':False, 'hidden': True, 'type': 'numeric'},
+						{'id':'days',      'name':'days',     'editable':False, 'hidden': False, 'type': 'numeric'},
 						{'id':'ptosy',     'name':'ptosy',    'editable':False, 'type': 'numeric'},
 						{'id':'ptos',      'name':'ptos',     'editable':True,  'type': 'numeric'},
 						{'id':'odelta',    'name':'change',   'editable':False, 'hidden': False, 'type': 'numeric'},
@@ -181,21 +191,54 @@ layout = html.Div(
 							  # 'text-align':'left',
 							  # 'height':'40vh',
 							  # 'margin-bottom':'0px',
+<<<<<<< HEAD
 							}),
 
 				# https://community.plot.ly/t/sharing-a-dataframe-between-plots/6173/2
 				# ! guarda un objeto escondido, utilitario, la curva fra de hoy
 				html.Div(id='intermediate-value-fra',style={'display': 'none'}),
 				]
+=======
+							},
+							hoverData={'points': [{'customdata': 'm1'}]}),
+				# dcc.Store(id='intermediate-value-fra',storage_type='memory',data={}),
+				],
+   				style={"width": "50%", "display": "none"}
+>>>>>>> 34463b52930f32b3e481dbcd1a11a67af41f1289
 			),
-		html.Div(
-			dcc.Graph(id='id-fra-hist-line-graph',
-					style={
-						# 'textAlign':'right',
-						# 'height':'50vh',
-						# 'margin-top':'0px',
-						}),
-			className='four columns',
+			html.Div(
+				[
+					html.Div(
+						[
+							html.Div(
+								[
+									dcc.Dropdown(
+										id="crossfilter-xaxis-column",
+										options=[
+											{"label": i, "value": i}
+											for i in indicator["indicator"].unique()
+										],
+										value="A",
+									)
+								],
+								style={"width": "50%", "display": "none"},
+							)
+						]
+					),  # inline-block
+					html.Div(
+						[
+							dcc.Graph(
+								id="crossfilter-indicator",
+								hoverData={"points": [{"customdata": "1m"}]},
+							)
+						],
+						style={"width": "32%", "display": "inline-block", "padding": "0 20"},
+					),
+					html.Div(
+						[dcc.Graph(id="x-time-series")],
+						style={"width": "32%", "display": "inline-block"},
+					),
+				]
 			),
 		],
 	className='row',
@@ -227,6 +270,7 @@ def display_outputtt(rows):
 
 
 @app.callback(
+<<<<<<< HEAD
 	Output('id-fra-hist-line-graph', 'figure'),
 	[Input('intermediate-value-fra', 'modified_timestamp')],
 	[State('intermediate-value-fra', 'data')])
@@ -235,6 +279,113 @@ def update_fra_hist_graph(timestamp, data):
 		raise PreventUpdate
 	print(crea_fra_hist_line( data['4'] ))
 	return crea_fra_hist_line( data['4'] )
+=======
+    Output("crossfilter-indicator", "figure"),
+    [Input('table1', 'data'),
+     Input("crossfilter-xaxis-column", "value")],
+)
+def update_graph(rows, xaxis_column_name):
+    
+	l = ['1m', '2m', '3m', '4m', '5m', '6m', '9m', '12m', '18m', '2y']
+    
+	dfr = pd.DataFrame.from_dict(rows).copy()
+	auxiliar = dfr.iloc[4:14, [18, 4, 7]] # * Crea archivo tenor.csv
+	auxiliar.insert(3, "indicator", "A")
+	# auxiliar.to_csv("tenors.csv", index=False)
+
+	df = auxiliar.loc[auxiliar["indicator"] == xaxis_column_name]
+ 
+	trace_fra = go.Scatter(
+        x=l,
+        y=df["fracam_os"],
+        customdata=auxiliar["tenor"],
+        mode='lines+markers+text',
+        name='lines+markers',
+        line=dict(
+            shape='spline',
+            color=('#4176A4')
+        ),
+        opacity=0.8,
+        text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
+        textposition='top center',
+        textfont=dict(size=12),
+    )
+ 
+	layout = dict(
+	    title='FRA 1 month IRS CAM off-shore (f1m-os) ',
+	    titlefont=dict(size=13),
+	    xaxis=dict(
+	        zeroline=False,
+	        automargin=True
+	    ),
+	    yaxis=dict(
+	        zeroline=False,
+	        automargin=True,
+	        titlefont=dict(size=10, ),
+	        # size=8,
+	    ),
+	    # height=400,
+	    margin=dict(l=55, b=50, r=65),
+	)
+
+	fig = dict(data=[trace_fra], layout=layout)
+ 
+	return fig
+ 
+ 
+def create_time_series(dff):
+
+    return {
+        "data": [go.Scatter(x=dff.iloc[:, 0], y=dff.iloc[:, 1]*100, 
+                            mode="lines+markers",
+                            name='FRA history',
+                            line=dict(
+         		   				shape='spline',
+            					color=('#4176A4')
+        					),
+        					opacity=0.8
+             				)],
+        "layout": go.Layout(
+            title="IRS CAM off-shore: FRA 1 month history",
+        	titlefont=dict(size=13),
+        # 	xaxis=dict(
+        #    automargin=True,
+        #    rangeselector=dict(buttons=list([
+        #        dict(count=1, label='1m', step='month', stepmode='backward'),
+        #        dict(count=6, label='6m', step='month', stepmode='backward'),
+        #        dict(step='all'),
+        #    ])),
+        #    rangeslider=dict(visible=True),
+        #    type='date',
+        #    titlefont=dict(size=10)
+        #	),
+         	yaxis=dict(
+            	automargin=True,
+            	titlefont=dict(size=10),
+				hoverformat = '.2f'
+        	),
+        	margin=dict(l=55, b=50, r=65)
+        ),
+    }
+
+@app.callback(
+    Output("x-time-series", "figure"),
+    [Input("table1", "data"),
+     Input("crossfilter-indicator", "hoverData")],
+)
+
+def update_y_timeseries(rows, hoverData):
+    
+	dfr = pd.DataFrame.from_dict(rows).copy()	
+	auxiliar = dfr.iloc[4:14, [18, 4, 7]] # * Crea archivo tenor.csv
+	auxiliar.insert(3, "indicator", "A")
+	col_name = hoverData["points"][0]["customdata"]
+	row_value = auxiliar.loc[auxiliar["tenor"] == col_name].iloc[:, 2]
+	dff = fra_historic[["date", col_name]]
+	dff.iloc[-1, dff.columns.get_loc(col_name)] = float(row_value / 100)
+	dff = dff.iloc[0:390]
+	return create_time_series(dff)
+>>>>>>> 34463b52930f32b3e481dbcd1a11a67af41f1289
 
 
 """ https://community.plot.ly/t/two-graphs-side-by-side/5312 """

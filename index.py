@@ -7,7 +7,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
-from header import header_logo,header_link,tabs_gmi
+from header import header_logo, header_link, tabs_gmi
 
 from app import app, server
 import app_home, app_fx, app_upload
@@ -68,8 +68,12 @@ app.layout = html.Div(
 	html.Br(),
 	html.Br(),
 	html.Br(),
-	html.Div('Binary Analytics, Copyright 2019', style={'textAlign':'center'}),
-	],
+	html.Div(
+        className="footer",
+        children=[
+            html.Div('Binary Analytics ® copyright 2019')
+        ]
+    )],
 	style={
 		'margin-right':8,
 		'margin-left':8,

@@ -60,16 +60,9 @@ def table1_update(df):
 
 		df.carry  = df.apply(lambda x: df.days[4] * weird_division(x.ptos, x.carry_days),axis=1)
 
-<<<<<<< HEAD
 		df.icam_os = df.apply(lambda x: cam_os_simp(x.carry_days, spot, x.ptos, x.ilib), axis=1)
 
 		df.fracam_os = fra1w_v(df[['days','icam_os']])
-=======
-		df.icam_os= df.apply(lambda x: cam_os_simp(x.carry_days if x.carry_days!=0 else float('Nan'),
-												   spot, x.ptos , x.ilib),axis=1)
-
-		df.fracam_os = fra1m_v2(df[['tenor', 'carry_days', 'icam_os']], interp=False)
->>>>>>> 34463b52930f32b3e481dbcd1a11a67af41f1289
 
 		df.i_ptos = df.apply(lambda x: iptos(t=x.carry_days if x.carry_days!=0 else float('nan'),
 								 spot=spot, iusd=x.ilib, icam=x.icam, b= x.basis,
@@ -191,20 +184,11 @@ layout = html.Div(
 							  # 'text-align':'left',
 							  # 'height':'40vh',
 							  # 'margin-bottom':'0px',
-<<<<<<< HEAD
-							}),
-
-				# https://community.plot.ly/t/sharing-a-dataframe-between-plots/6173/2
-				# ! guarda un objeto escondido, utilitario, la curva fra de hoy
-				html.Div(id='intermediate-value-fra',style={'display': 'none'}),
-				]
-=======
 							},
 							hoverData={'points': [{'customdata': 'm1'}]}),
 				# dcc.Store(id='intermediate-value-fra',storage_type='memory',data={}),
 				],
    				style={"width": "50%", "display": "none"}
->>>>>>> 34463b52930f32b3e481dbcd1a11a67af41f1289
 			),
 			html.Div(
 				[
@@ -270,16 +254,6 @@ def display_outputtt(rows):
 
 
 @app.callback(
-<<<<<<< HEAD
-	Output('id-fra-hist-line-graph', 'figure'),
-	[Input('intermediate-value-fra', 'modified_timestamp')],
-	[State('intermediate-value-fra', 'data')])
-def update_fra_hist_graph(timestamp, data):
-	if timestamp is None:
-		raise PreventUpdate
-	print(crea_fra_hist_line( data['4'] ))
-	return crea_fra_hist_line( data['4'] )
-=======
     Output("crossfilter-indicator", "figure"),
     [Input('table1', 'data'),
      Input("crossfilter-xaxis-column", "value")],
@@ -385,7 +359,6 @@ def update_y_timeseries(rows, hoverData):
 	dff.iloc[-1, dff.columns.get_loc(col_name)] = float(row_value / 100)
 	dff = dff.iloc[0:390]
 	return create_time_series(dff)
->>>>>>> 34463b52930f32b3e481dbcd1a11a67af41f1289
 
 
 """ https://community.plot.ly/t/two-graphs-side-by-side/5312 """

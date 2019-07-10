@@ -24,7 +24,8 @@ header_link = html.A(
 	'www.BinaryAnalytics.cl',
 	href='http://www.binaryanalytics.cl',
 	target="_blank",
-	style={"text-decoration": "none" ,'textAlign' :'right', 'color': '#4176A4' ,'fontWeight': 'bold'},
+	style={"text-decoration": "none" ,'textAlign' :'right',
+		   'color': '#FFF' ,'fontWeight': 'bold'},
 			)
 
 

@@ -7,10 +7,10 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
-from header import header_logo,header_link,tabs_gmi
+from header import header_logo, header_link, tabs_gmi
 
 from app import app, server
-import app_home, app_fx
+import app_home, app_fx, app_upload
 
 
 """ DESPLIEGA LA APP """
@@ -32,7 +32,7 @@ app.layout = html.Div(
 				 ),
 		html.H6("Global Markets Insights, Chile - beta v1 Edition",
 				className='five columns',
-				style={'color':'#4176A4',
+				style={'color':'#FFF',
 					   'fontSize':'17px',
 					   'fontWeight':700,
 					   "text-decoration": "none",
@@ -43,25 +43,37 @@ app.layout = html.Div(
 				),
 		html.Div(header_link,
 				 className='six columns',
-				 style={"text-decoration": "none" ,'textAlign' :'right', 'color': '#4176A4' ,'fontWeight': 'bold',
+				 style={"text-decoration": "none" ,'textAlign' :'right',
+						'color': '#4176A4' ,'fontWeight': 'bold',
 						'padding-top':35,
 						'fontSize':15},
 				 ),
 		],
 		className='row',
+		style={'backgroundColor':'#4176A4','borderRadius':'8px',
+			   'marginBottom':4,
+			   }
 	),
 
 	html.Div(
 		# className='custom-tabs',
-		children=[tabs_gmi]),
+		children=[tabs_gmi],
+		# style={'borderRadius':'30px'},
+	),
 
-	html.Div(id='tab-output'),
+	html.Div(id='tab-output',
+			 # style={'borderRadius':'30px'},
+			 ),
 	html.Br(),
 	html.Br(),
 	html.Br(),
 	html.Br(),
-	html.Div('Binary Analytics, Copyright 2019', style={'textAlign':'center'}),
-	],
+	html.Div(
+        className="footer",
+        children=[
+            html.Div('Binary Analytics ® copyright 2019')
+        ]
+    )],
 	style={
 		'margin-right':8,
 		'margin-left':8,
@@ -80,6 +92,8 @@ def show_content(tab_value):
 		return app_home.layout
 	if tab_value == 'tab-2':
 		return app_fx.layout
+	if tab_value == "tab-7":
+		return app_upload.layout
 	else:
 		return html.P('en desarrollo...', style={"text-align":"center","vertical-align":"middle", 'marginTop': 200})
 

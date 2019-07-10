@@ -232,9 +232,17 @@ def ibasis(t,spot,iusd,icam,ptos,tcs,comp=True):
 
 
 def comp_a_z(dias,i_c,periodicity=180):
-	""" transforma tasa compuesta --> a simple zero cupón
-	i_c: tasa anual, compuesta
-	periodicity: 2, i.e. 2 semestres"""
+	""" transforma tasa compuesta --> a tasa zero (a.k.a simple)
+	:param
+		dias: int, dias de carry efectivo
+		i_c: tasa compuesta base 360. i.e 2.85 (notar que 0.0285 NO)
+		peridiocity: int, frecuencia de la composición. i.e. 180 dias
+	:return:
+		tasa zero (tasa simple act/360)
+	"""
+	if dias==0:
+		return i_c
+
 	i_c = i_c/100
 	f = 360 / periodicity
 
@@ -243,23 +251,45 @@ def comp_a_z(dias,i_c,periodicity=180):
 
 
 def cam_os_simp(dias,spot,ptos,iusd,comp=True):
-	"""
-	funcion que calcula tasa camara off shore, convención simple.
+	""" funcion que calcula tasa camara off shore, convención simple.
 	detalles: ver formulario.
 
-	dias: tenor en numero de dias
-	spot:
+	:param
+	dias: int, tenor en numero de dias
+	spot: float, usdclp fx spot rate
 	iusd: tasa fija swap libor, convención cupones semestrales
-	pesocam:
-	ptos
-	comp: boolean. i.e. True if return is compounded rate (not simple rate)
-	return: camara off shore
+	ptos: float, puntos forward
+	comp: boolean. i.e. True if return is compounded rate (not simple rate), false if zero rate
+	:return: camara off shore
 	"""
+	if dias==0:
+		return iusd
+
 	iusd = iusd/100
 
 	# transforma tasa compuesta a --> tasa simple
 	if comp==False:
 		iusd= comp_a_z(dias=dias, i_c= iusd)
+
+	return 100 * ( ( (spot+ptos)/spot )  *  (1+iusd*dias/360) -1) *360/dias
+
+
+def cam_lcl_a_os(dias,spot,ptos,iusd):
+	""" funcion que, a partir de la tasa zero camara local, calcula la
+	tasa zero camara off shore
+
+	:param
+	dias: int, tenor en numero de dias
+	spot: float, usdclp fx spot rate
+	iusd: tasa fija swap libor, convención cupones semestrales
+	ptos: float, puntos forward
+	comp: boolean. i.e. True if return is compounded rate (not simple rate), false if zero rate
+	:return: tasa zero camara off shore
+	"""
+	if dias==0:
+		return iusd
+
+	iusd = iusd/100
 
 	return 100 * ( ( (spot+ptos)/spot )  *  (1+iusd*dias/360) -1) *360/dias
 
@@ -316,6 +346,20 @@ def fra1m_v2(df,interp=False):
 # df = pd.DataFrame([['1w',6,2.78],['2w',13,2.79],['1m',29,2.85],['2m',59,2.00],['3m',89,3.00]], columns= ['tenor','carry_days','icam_os'])
 #
 # fra1m_v2(df)
+
+
+def fra1w(w2,w1,i2,i1):
+	""" Función Calcula tasas FRA de 1 semana. Entre plazos que la distancia
+	sea > 1 semana --> promedio de fra's.
+
+	:param
+	w2: Series of int, numero de SEMANAS asociada a la tasa zero, larga
+	w1: Series of int, numero de SEMANAS asociada a la tasa zero, corta
+	i2: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89, larga
+	i1: Series of floats, same lenght, tasa de interés en base 360, x100... i.e. 2.89, corta
+	:return:
+	Series of floats, tasas de interés FRA 1 semanal. """
+	return 100*(( ((1+i2/100)**w2) / ((1+i1/100)**w1) )**(1/(w2-w1)) - 1 )
 
 
 

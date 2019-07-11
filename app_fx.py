@@ -217,11 +217,11 @@ layout = html.Div(
 								hoverData={"points": [{"customdata": "1m"}]},
 							)
 						],
-						style={"width": "32%", "display": "inline-block", "padding": "0 20"},
-					),
+						style={"width": "33.5%", "display": "inline-block", "padding": "0 20"},
+					), # 'border-color': '#4176a4', 'border-style': 'solid', 'border-width': '1px'
 					html.Div(
 						[dcc.Graph(id="x-time-series")],
-						style={"width": "32%", "display": "inline-block"},
+						style={"width": "33.5%", "display": "inline-block"},
 					),
 				]
 			),

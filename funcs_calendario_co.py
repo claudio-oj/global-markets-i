@@ -150,11 +150,10 @@ def crea_cal_tenors(tod):
 	""" tenors sugeridos en base mensual, se calculan a partir de la fecha settle"""
 
 	df3 = pd.DataFrame(index=['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '10m',
-	 '11m', '12m', '13m', '14m', '15m', '16m', '17m', '18m', '24m', '30m', '3yrs', '3.5yrs',
-	 '4yrs', '4.5yrs', '5yrs', '5.5yrs', '6yrs', '6.5yrs', '7yrs', '7.5yrs', '8yrs', '8.5yrs',
-	 '9yrs', '9.5yrs', '10yrs', '10.5yrs', '11yrs', '11.5yrs', '12yrs', '12.5yrs', '13yrs',
-	 '13.5yrs', '14yrs', '14.5yrs', '15yrs', '15.5yrs', '16yrs', '16.5yrs', '17yrs', '17.5yrs',
-	 '18yrs', '18.5yrs', '19yrs', '19.5yrs', '20yrs'],
+		'11m', '12m', '13m', '14m', '15m', '16m', '17m', '18m', '2y', '2.5y', '3y', '3.5y',
+		'4y', '4.5y', '5y', '5.5y', '6y', '6.5y', '7y', '7.5y', '8y', '8.5y', '9y', '9.5y',
+		'10y', '10.5y', '11y', '11.5y', '12y', '12.5y', '13y','13.5y', '14y', '14.5y', '15y',
+		'15.5y', '16y', '16.5y', '17y', '17.5y', '18y', '18.5y', '19y', '19.5y', '20y'],
 					   columns=['pubdays','fix','pub','val','tenor_s'])
 
 	df3['tenor_s'] = np.arange(1,18+1).tolist() + np.arange(24,240+1,6).tolist()

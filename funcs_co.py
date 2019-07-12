@@ -33,8 +33,8 @@ def imp_calendar():
 
 
 def imp_clos_t():
-
-	""" importa closing entero tradition"""
+	""" # ! DEPRECATED --> ahora usar import_closing()
+	importa closing entero tradition"""
 
 	# importa closing + formatea
 	trad = pd.read_excel('Closing_Run_trad.xlsx', sheet_name='Hoja1', nrows=102, usecols='A:R')
@@ -129,7 +129,45 @@ def live(col='icam'):
 		return df['ilib'].round(2).values
 
 
+def tables_init(fec0,fec1):
+	""" función importa data del batch, para crear los df de las tablas 1,2
+	con la data que se inicilizan al iniciar la app
+	:param:
+		d: Timestamp, dia de batch fec0, (un dia antes del dia de uso)
+	:return: df1, df2, """
+	import os
+	os.chdir('D:\\Dropbox\\Documentos\\Git\\global-markets-i')
 
+	import funcs_calendario_co as fcc
+
+	pik_spot = pd.read_pickle("./batch/p_clp_spot.pkl")[fec0]
+	pik_cam  = pd.read_pickle("./batch/p_icam.pkl")[fec0]
+	pik_ilib = pd.read_pickle("./batch/p_ilib.pkl")[fec0]
+	pik_ptos = pd.read_pickle("./batch/p_ptos.pkl")[fec0]
+
+	tenors = ['tod', 'tom', '1w', '2w'] + [str(x) + 'm' for x in range(1, 6 + 1)]+ ['9m',
+				'12m', '18m'] + [str(x) + 'y' for x in range(2, 10 + 1)]
+
+	cols1 = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos', 'odelta', 'ddelta', 'carry', 'icam',
+			 'ilib', 'tcs', 'icam_os', 'fracam_os', 'basisy', 'basis', 'i_ptos', 'i_basis']
+
+	df = pd.DataFrame(index=range(0,len(tenors)),columns=cols1)
+
+	df['ind']   = df.index.values
+	df['tenor'] = tenors
+
+	# TODO: pub days fecha batch, aqui voyyy, intentando pegar los `daysy`
+	aux = fcc.crea_cal_tenors(fec0).pub
+	df['daysy'].iloc[2:] = (aux[aux.index.isin(tenors)] - fec0)
+
+	# pub days batch + 1 = fecha de uso GMI
+	df['days'] = (fcc.crea_cal_tenors(fec1).pub - fec1).apply(lambda x: x.days)
+
+	df['carry_days'] = df.days - int(df.days[0])
+
+	df['ptosy'] = pik_ptos[fec0].ptos
+
+	return
 
 
 
@@ -415,4 +453,51 @@ def curva_zero(dias, tasas, p):
 	df['discf'] = df.apply(lambda x: 1 / (1 + (x.izero / 3600) * x.d), axis=1)
 
 	return df[['d', 'izero', 'discf']]
+
+
+def rank_perc(x,array):
+	""" función calcula el ranking / 100 de el valor de x en un array
+	:param:
+		x: float or int
+		array: np.array of numbers
+	:return:
+		float, el ranking sobre 100 """
+	return int(100 * sum(x > array) / len(array))
+
+
+
+
+
+
+def update_calc_fx(rows):
+	""" Función que crea & calcula calculadora de puntos fwds
+	:param: rows
+	:return:
+	"""
+	# import pandas as pd
+	# import numpy as np
+	# fra = pd.read_excel('./assets/calculadora_spreads.xlsx', sheet_name='Hoja3',
+	# 			  skiprows=2, usecols='N:Q', index_col=0)
+	# print(rows)
+	fra = pd.read_json(rows, orient='index')
+	# print(fra)
+
+	# voy a buscar en la fra -de hoy- asociada a los plazos "short" y "long"
+	x = pd.to_numeric(dfc.loc[0:1, 'pub_days'].values, errors='coerce')
+	dfc.loc[0:1, 'fra'] = np.interp(x=x, xp=fra['days'].values, fp=fra['fracam_os'].values)
+
+
+	""" evaluo la 'fra input' respecto a la curva de hoy de la fra: 1-365 +18m+24m son 367 plazos
+	son los plazos "operables" en el mercado """
+	plazos = np.array([x for x in range(1,366)] + [fra['days'][12],fra['days'][13]])
+
+	fra_todas = np.interp(x=plazos, xp=fra['days'].values, fp=fra['fracam_os'].values)
+
+	df.loc[0:1,'fra_rank_hoy'] = df.loc[0:1].apply(lambda x: rank_perc(x.fra, fra_todas), axis=1)
+
+	# TODO:
+	""" evaluo la 'fra input' respecto a la historia de un año de su mismo plazo"""
+
+	print(df)
+	return df
 

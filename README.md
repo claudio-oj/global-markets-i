@@ -35,6 +35,7 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 16. Documentación "funciones CO", para hacer más entendible el codigo
 17. **bug**: el calendario correcto para los _IR Swaps USD Libor_ es `settle holidays NY` , ahora estoy calculandolo con el calendario NY&STGO conjunto --> fix
 18. Modificar la lectura de data inicial, de la data dummy que cree originalmente --> al proceso batch
+19. **bug importante**: cada vez que _uso_ o _calculo_ un "precio explicito" i.e puntos, basis, icam, etc... --> **REDONDEAR** según convención.
 
 - ~~analizar si vale la pena modificar callbacks para q sea todo pandas~~
 - desarrollar mini calculadoras en base a fra s. desde \* curva cero fra s
@@ -60,3 +61,6 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 <img src="https://github.com/claudio-oj/global-markets-i/blob/develop/batch/gmi_batch.png" width=900 style="float: center; margin-right: 10px;" />
 
 <!-- https://en.wikipedia.org/wiki/Web_colors#X11_color_names -->
+
+##### recordatorio graficos side-by-side
+""" https://community.plot.ly/t/two-graphs-side-by-side/5312 """

@@ -94,17 +94,11 @@
   display: none !important;
 }
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> 34463b52930f32b3e481dbcd1a11a67af41f1289
 .footer {
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
-<<<<<<< HEAD
   height: 35px;
   background-color: #4176a4;
   color: white;
@@ -112,13 +106,3 @@
   padding-top: 0px;
   font-size: 16px;
 }
->>>>>>> Stashed changes
-=======
-  height: 60px;
-  background-color: #4176a4;
-  color: white;
-  text-align: center;
-  padding-top: 27px;
-  font-size: 16px;
-}
->>>>>>> 34463b52930f32b3e481dbcd1a11a67af41f1289

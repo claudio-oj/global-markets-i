@@ -64,10 +64,7 @@ app.layout = html.Div(
 	html.Div(id='tab-output',
 			 # style={'borderRadius':'30px'},
 			 ),
-	html.Br(),
-	html.Br(),
-	html.Br(),
-	html.Br(),
+
 	html.Div(
         className="footer",
         children=[

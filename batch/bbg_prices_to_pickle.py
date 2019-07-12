@@ -16,8 +16,8 @@ para cada punto de la curva 7d-380d + 18m + 24m.
 
 """
 
-# import os # borrar os al momento de subir a heroku (y solucionar ruta llamado funciones co)
-# os.chdir('D:\Dropbox\Documentos\Git\global-markets-i')
+import os # borrar os al momento de subir a heroku (y solucionar ruta llamado funciones co)
+os.chdir('D:\Dropbox\Documentos\Git\global-markets-i')
 
 import pandas as pd
 import numpy as np
@@ -40,13 +40,10 @@ dfb = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', 
 
 dfb.sort_index(inplace=True)
 
-# fecha uso GMI, input manual del MIddle Office
-fec_uso = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[1,1]
+# fecha historia:`fec0` ,  fecha uso GMI `fec1`, son inputs manuales del Middle Office
+fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
 
-
-# dfb = dfb[-3:] # esta linea es solo para DEBUG, para que corra + rapido
-
-
+dfb = dfb[-10:] # esta linea es solo para DEBUG, para que corra + rapido
 
 
 """ PASO 2.1 PRODUCTO SWAP LIBOR """
@@ -78,7 +75,7 @@ for d in dfb.index:
 	ilib_dict[d] = df_us
 
 # p_ilib es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
-# pd.to_pickle(ilib_dict,"./batch/p_ilib.pkl")
+pd.to_pickle(ilib_dict,"./batch/p_ilib.pkl")
 
 
 
@@ -114,7 +111,7 @@ for d in dfb.index:
 	icam_dict[d] = df_cl
 
 # p_ilib es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
-# pd.to_pickle(icam_dict,"./batch/p_icam.pkl")
+pd.to_pickle(icam_dict,"./batch/p_icam.pkl")
 
 
 """ 2.3. PRODUCTO PUNTOS FORWARD """
@@ -127,11 +124,11 @@ for d in dfb.index:
 	ptos_dict[d] = df_p
 
 # p_ptos es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
-# pd.to_pickle(ptos_dict,"./batch/p_ptos.pkl")
+pd.to_pickle(ptos_dict,"./batch/p_ptos.pkl")
 
 
 """ 2.4. USDCLP SPOT """
-# pd.to_pickle(dfb.spot, "./batch/p_clp_spot.pkl")
+pd.to_pickle(dfb.spot, "./batch/p_clp_spot.pkl")
 
 
 # """ 2.5. PRODUCTO IR USDCLP BASIS + TCS """
@@ -182,7 +179,7 @@ pd.to_pickle(d_icamos, "./batch/icamos_fra.pkl")
 
 """ PASO 4. Crea historia de la FRA para los plazos 7d-380d + 18m + 24m """
 # lista de dias 0-380 + dias del 18m, 24m
-cols = [str(x) for x in range(1,381)] + fcc.crea_cal_tenors(fec_uso).loc[['18m','24m'],'pubdays'].to_list()
+cols = [str(x) for x in range(1,381)] + fcc.crea_cal_tenors(fec1).loc[['18m','24m'],'pubdays'].to_list()
 
 dff = pd.DataFrame(index=dfb.index, columns=cols)
 
@@ -190,7 +187,7 @@ for d in dfb.index:
 	dff.loc[d] = np.interp(x=dff.columns.map(int), xp=d_icamos[d].pubdays.values ,fp=d_icamos[d].fra1w.map(float))
 
 # me quedo solo con data "historica", si hay data del mismo dia, o más nueva.. se elimina.
-dff = dff[dff.index < fec_uso]
+dff = dff[dff.index < fec1]
 
 # pickle que guarda un df, con la historia diaria, del ultimo año, de cada fra 1d-380d + 18m + 24m
 pd.to_pickle(dff.astype('float').round(2),"./batch/hist_fra.pkl")

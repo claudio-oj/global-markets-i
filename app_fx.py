@@ -24,63 +24,74 @@ pd.options.mode.chained_assignment = None #apaga warning set with copy
 import numpy as np
 from numbers import Number
 
-from funcs_co import imp_spot, imp_clos_t, live, cam_os_simp, fra1m, fra1m_v2,fra1w,iptos, ibasis
-from funcs_co import weird_division, round_conv_basis, round_2d, float_or_zero, fra1w_v
-
+import funcs_co as fc
 from graphs import crea_fra_scatter_graph, crea_fra_hist_line
 
-spoty= imp_spot() #spot yesterday closing
+# importa las fechas de batch (fec0) + fecha de uso (fec1)
+from batch.bbg_prices_to_pickle import fec0,fec1
+
+
+
+""" SECCION INICIALIZA TABLA PRINCIPAL """
+spoty= fc.imp_spot() #spot yesterday closing
 spot = 650.58
 
-# importa data closing tradition + crea df
-df = imp_clos_t()
+# importa data closing tradition + crea df1
+df1 = fc.imp_clos_t()
 
 # lee precios live de cam y libor swap
-df.ptos      = df.ptosy.copy(True)
-# df.odelta    = 0
-# df.ddelta    = 0
-# df.carry     = 0
-df.icam      = live(col='icam')
-df.ilib      = live(col='ilib')
-# df.icam_os   = 0
-df.fracam_os = 3.6
-df.basis     = df.basisy.copy(True)
-df.tcs       = 6.5
-# df.i_ptos    = 0
-# df.i_basis   = 0
+df1.ptos      = df1.ptosy.copy(True)
+df1.icam      = fc.live(col='icam')
+df1.ilib      = fc.live(col='ilib')
+df1.fracam_os = 3.6
+df1.basis     = df1.basisy.copy(True)
+df1.tcs       = 6.5
+
+
+""" SECCION INICIALIZA TABLA CALCULADORA FX """
+# lo hago al inicio para no duplicar el proceso en la func del callback
+df2 = pd.DataFrame(data=None, index=[0, 1, 2], columns=['name', 'pub_days', 'fix', 'pub', 'val', 'fra', 'fra_rank_hoy', 'fra_rank_hist'])
+df2.loc[0, 'name':'pub_days'] = ['short-leg', 7]
+df2.loc[1, 'name':'pub_days'] = ['long-leg', 30]
+
 
 
 def table1_update(df):
 	try:
 		for c in ['ptos','ptosy']:
-			df[c] = df[c].map(float_or_zero)
+			df[c] = df[c].map(fc.float_or_zero)
 
 		df.odelta = df['ptos'] - df['ptosy']
-		df.ddelta = 100 * df.apply(lambda x: weird_division(x.odelta, x.carry_days),axis=1)
+		df.ddelta = 100 * df.apply(lambda x: fc.weird_division(x.odelta, x.carry_days),axis=1)
 
-		df.carry  = df.apply(lambda x: df.days[4] * weird_division(x.ptos, x.carry_days),axis=1)
+		df.carry  = df.apply(lambda x: df.days[4] * fc.weird_division(x.ptos, x.carry_days),axis=1)
 
-		df.icam_os = df.apply(lambda x: cam_os_simp(x.carry_days, spot, x.ptos, x.ilib), axis=1)
+		df.icam_os = df.apply(lambda x: fc.cam_os_simp(x.carry_days, spot, x.ptos, x.ilib), axis=1)
 
-		df.fracam_os = fra1w_v(df[['days','icam_os']])
+		df.fracam_os = fc.fra1w_v(df[['days','icam_os']])
 
-		df.i_ptos = df.apply(lambda x: iptos(t=x.carry_days if x.carry_days!=0 else float('nan'),
+		df.i_ptos = df.apply(lambda x: fc.iptos(t=x.carry_days if x.carry_days!=0 else float('nan'),
 								 spot=spot, iusd=x.ilib, icam=x.icam, b= x.basis,
 								 tcs=x.tcs),axis=1)
 
-		df.i_basis = df.apply(lambda x: ibasis(t=x.carry_days if x.carry_days!=0 else float('nan'),
+		df.i_basis = df.apply(lambda x: fc.ibasis(t=x.carry_days if x.carry_days!=0 else float('nan'),
 								 spot=spot, iusd=x.ilib, icam=x.icam, ptos= x.ptos,
 								 tcs=x.tcs),axis=1)
 
-		df = df.applymap(round_2d)
-		df[['basis','i_basis']] = df[['basis','i_basis']].applymap(round_conv_basis)
+		df = df.applymap(fc.round_2d)
+		df[['basis','i_basis']] = df[['basis','i_basis']].applymap(fc.round_conv_basis)
 
 		return df
 
 	except:
 		return df
 
-df = table1_update(df)
+df1 = table1_update(df1)
+
+def table2_update(df):
+	df.loc[2, 'pub_days'] = df.loc[1, 'pub_days'] - df.loc[0, 'pub_days']
+
+	return df
 
 
 ##
@@ -98,7 +109,7 @@ layout = html.Div(
 			children=[
 				dash_table.DataTable(
 					id='table1',
-					data= df.to_dict('records'),
+					data= df1.to_dict('rows_table1'),
 					columns= [
 						{'id':'ind',       'name':'ind',      'editable':False, 'hidden':True, 'type': 'numeric'},
 						{'id':'tenor',     'name':'tenor',    'editable':False, 'hidden': False,'width': '40px'},
@@ -145,7 +156,7 @@ layout = html.Div(
 							# 'border': '1px solid white',
 							# 'backgroundColor': 'white',
 						# },
-						style_cell_conditional=[
+					style_cell_conditional=[
 							{'if': {'column_id':'tenor'}, 'width': '40px'},
 							{'if': {'column_id':'ptosy'}, 'width': '40px',
 							 'color': 'rgb(204, 205, 206)'},
@@ -162,9 +173,8 @@ layout = html.Div(
 							{'if': {'column_id':'i_ptos'},  'width': '50px','backgroundColor':'rgb(251,251,251)'},
 							{'if': {'column_id':'i_basis'}, 'width': '50px','backgroundColor':'rgb(251,251,251)'},
 						],
-						editable=True,
+					editable=True,
 					),
-				# dcc.Markdown('''Prueba Markdown'''),
 				]
 			),
 
@@ -186,7 +196,6 @@ layout = html.Div(
 							  # 'margin-bottom':'0px',
 							},
 							hoverData={'points': [{'customdata': 'm1'}]}),
-				# dcc.Store(id='intermediate-value-fra',storage_type='memory',data={}),
 				],
    				style={"width": "50%", "display": "none"}
 			),
@@ -224,22 +233,37 @@ layout = html.Div(
 					),
 				]
 			),
-		],
+		html.Div(
+			children=[
+				dash_table.DataTable(
+					id='table2',
+					data=df2.to_dict('rows_table2'),
+					columns=df2.columns.to_list(),
+					editable=True,
+					),
+				],
+			),
+	],
 	className='row',
-	)
+)
 
 
 @app.callback(
-	[Output('table1','data'), Output('intermediate-value-fra','children')],
-	[Input('table1','data_timestamp')],
-	[State('table1','data')]) # ! este q "state" creo que pega la tabla html en la app.
-def update_columns(timestamp,rows):
-	dfr = pd.DataFrame.from_dict(rows)
-	dfr = dfr[df.columns.copy()]
-	print(dfr)
-	dfr = table1_update(dfr)
-	# print(dfr['fracam_os'])
-	return dfr.to_dict('records'), dfr[['tenor','days','fracam_os']].to_json()
+	[Output('table1','data'), Output('table2','data')],
+	[Input('table1','data_timestamp'), Input('table2','data_timestamp')],
+	[State('table1','data'), State('table2','data')])
+def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
+	dft1 = pd.DataFrame.from_dict(rows1)
+	dft2 = pd.DataFrame.from_dict(rows2)
+
+	dft1 = dft1[df1.columns.copy()]
+	dft2 = dft2[df2.columns.copy()]
+
+	print(dft1,'\n',dft2)
+
+	dft1 = table1_update(dft1)
+	dft2 = table2_update(dft2)
+	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2')
 
 
 @app.callback(
@@ -248,7 +272,7 @@ def update_columns(timestamp,rows):
 	# [State('table1', 'data')]
 	)
 def display_outputtt(rows):
-	dfr = pd.DataFrame.from_dict(rows).copy()
+	dfr = pd.DataFrame.from_dict(rows)
 	dfr = dfr['fracam_os'][4:14].values
 	return crea_fra_scatter_graph(dfr)
 
@@ -290,10 +314,12 @@ def update_graph(rows, xaxis_column_name):
 	    titlefont=dict(size=13),
 	    xaxis=dict(
 	        zeroline=False,
+			showgrid=False,
 	        automargin=True
 	    ),
 	    yaxis=dict(
 	        zeroline=False,
+			showgrid=False,
 	        automargin=True,
 	        titlefont=dict(size=10, ),
 	        # size=8,
@@ -311,7 +337,7 @@ def create_time_series(dff):
 
     return {
         "data": [go.Scatter(x=dff.iloc[:, 0], y=dff.iloc[:, 1]*100, 
-                            mode="lines+markers",
+                            mode="lines",
                             name='FRA history',
                             line=dict(
          		   				shape='spline',
@@ -322,19 +348,21 @@ def create_time_series(dff):
         "layout": go.Layout(
             title="IRS CAM off-shore: FRA 1 month history",
         	titlefont=dict(size=13),
-        # 	xaxis=dict(
+        	xaxis=dict(
+				showgrid=False,
         #    automargin=True,
         #    rangeselector=dict(buttons=list([
         #        dict(count=1, label='1m', step='month', stepmode='backward'),
         #        dict(count=6, label='6m', step='month', stepmode='backward'),
         #        dict(step='all'),
-        #    ])),
+				),
         #    rangeslider=dict(visible=True),
         #    type='date',
         #    titlefont=dict(size=10)
         #	),
          	yaxis=dict(
             	automargin=True,
+				showgrid=False,
             	titlefont=dict(size=10),
 				hoverformat = '.2f'
         	),
@@ -347,10 +375,8 @@ def create_time_series(dff):
     [Input("table1", "data"),
      Input("crossfilter-indicator", "hoverData")],
 )
-
 def update_y_timeseries(rows, hoverData):
-    
-	dfr = pd.DataFrame.from_dict(rows).copy()	
+	dfr = pd.DataFrame.from_dict(rows).copy()
 	auxiliar = dfr.iloc[4:14, [18, 4, 7]] # * Crea archivo tenor.csv
 	auxiliar.insert(3, "indicator", "A")
 	col_name = hoverData["points"][0]["customdata"]
@@ -360,8 +386,6 @@ def update_y_timeseries(rows, hoverData):
 	dff = dff.iloc[0:390]
 	return create_time_series(dff)
 
-
-""" https://community.plot.ly/t/two-graphs-side-by-side/5312 """
 
 
 

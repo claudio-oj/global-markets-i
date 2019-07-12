@@ -101,6 +101,7 @@ def crea_fra_hist_line(last_val):
         # margin=dict(t=50,b=50),
         xaxis=dict(
             automargin=True,
+			showgrid=False,
             rangeselector=dict(buttons=list([
                 dict(count=1, label='1m', step='month', stepmode='backward'),
                 dict(count=6, label='6m', step='month', stepmode='backward'),

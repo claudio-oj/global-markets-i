@@ -1,6 +1,7 @@
 import base64
 import datetime
 import io
+import os
 
 import dash
 from dash.dependencies import Input, Output, State
@@ -16,27 +17,34 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 layout = html.Div([
+    html.Br(),
+    dcc.Markdown('''
+Los archivos deben tener el nombre, **feriados_base_datos.xlsx** y **bbg_hist_dnlder_excel.xlsx**. 
+    '''),
     dcc.Upload(
         id='upload-data',
-        children=html.Div([
-            'Drag and Drop or ',
-            html.A('Select Files')
-        ]),
+        children=html.Div(['Drag and Drop or ',
+                           html.A('Select Files')]),
         style={
-            'width': '100%',
+            'width': '70%',
             'height': '60px',
             'lineHeight': '60px',
             'borderWidth': '1px',
             'borderStyle': 'dashed',
             'borderRadius': '5px',
             'textAlign': 'center',
-            'margin': '10px'
+            'margin': '10px',
+            'color': '#4176a4',
+            'margin-left': '300px',
+            'background-color': '#ffffff',
+            'box-shadow': '0 .25em .5em #263238',
+            'position': 'fixed'
         },
         # Allow multiple files to be uploaded
-        multiple=True
-    ),
+        multiple=True),
     html.Div(id='output-data-upload')
 ])
+
 
 # TODO: agregar el if para xlsx y resumir código
 def parse_contents(contents, filename, date):
@@ -53,16 +61,15 @@ def parse_contents(contents, filename, date):
             from email.mime.base import MIMEBase
             from email import encoders
             import pandas as pd
-            
 
-            # ! cambiar correo por otro con clave de desarrollador 
-            email_user = 'r2019curso@gmail.com' 
+            # ! cambiar correo por otro con clave de desarrollador
+            email_user = 'r2019curso@gmail.com'
             email_password = 'gtcybxienrydeqix'
-            email_send = 'r2019curso@gmail.com'
+            email_send = 'contacto@binaryanalytics.cl'
 
-            if filename == "tenor.csv":
+            if filename == "feriados_base_datos.csv":
 
-                subject = 'Datos Tenor'
+                subject = 'Datos Feriados'
 
                 msg = MIMEMultipart()
                 msg['From'] = email_user
@@ -73,20 +80,20 @@ def parse_contents(contents, filename, date):
                 msg.attach(MIMEText(body, 'plain'))
 
                 # Assume that the user uploaded a CSV file
-                df = pd.read_csv(
-                    io.StringIO(decoded.decode('utf-8'))
-                )
+                df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
 
                 df.to_csv(filename, index=False)
 
                 filename_csv = filename
                 attachment = open(filename_csv, 'rb')
 
+                os.remove(filename_csv)
+
                 part = MIMEBase('application', 'octet-stream')
                 part.set_payload((attachment).read())
                 encoders.encode_base64(part)
                 part.add_header('Content-Disposition',
-                                "attachment; filename= "+filename)
+                                "attachment; filename= " + filename)
 
                 msg.attach(part)
                 text = msg.as_string()
@@ -99,7 +106,7 @@ def parse_contents(contents, filename, date):
 
             else:
 
-                subject = 'Datos Bloomberg'
+                subject = 'Datos Historicos'
 
                 msg = MIMEMultipart()
                 msg['From'] = email_user
@@ -110,20 +117,20 @@ def parse_contents(contents, filename, date):
                 msg.attach(MIMEText(body, 'plain'))
 
                 # Assume that the user uploaded a CSV file
-                df = pd.read_csv(
-                    io.StringIO(decoded.decode('utf-8'))
-                )
+                df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
 
                 df.to_csv(filename, index=False)
 
                 filename_csv = filename
                 attachment = open(filename_csv, 'rb')
 
+                os.remove(filename_csv)
+
                 part = MIMEBase('application', 'octet-stream')
                 part.set_payload((attachment).read())
                 encoders.encode_base64(part)
                 part.add_header('Content-Disposition',
-                                "attachment; filename= "+filename)
+                                "attachment; filename= " + filename)
 
                 msg.attach(part)
                 text = msg.as_string()
@@ -134,24 +141,109 @@ def parse_contents(contents, filename, date):
                 server.sendmail(email_user, email_send, text)
                 server.quit()
 
-        elif 'xls' in filename:
-            # Assume that the user uploaded an excel file
-            df = pd.read_excel(io.BytesIO(decoded))
+        elif 'xlsx' in filename:
+
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.base import MIMEBase
+            from email import encoders
+            import pandas as pd
+
+            # ! cambiar correo por otro con clave de desarrollador
+            email_user = 'r2019curso@gmail.com'
+            email_password = 'gtcybxienrydeqix'
+            email_send = 'contacto@binaryanalytics.cl'
+
+            if filename == "feriados_base_datos.xlsx":
+
+                subject = 'Datos Feriados'
+
+                msg = MIMEMultipart()
+                msg['From'] = email_user
+                msg['To'] = email_send
+                msg['Subject'] = subject
+
+                body = 'Hola, enviado desde Python!'
+                msg.attach(MIMEText(body, 'plain'))
+                # Assume that the user uploaded an excel file
+                df = pd.read_excel(io.BytesIO(decoded))
+
+                df.to_excel(filename, index=False)
+
+                filename_excel = filename
+                attachment = open(filename_excel, 'rb')
+
+                os.remove(filename_excel)
+
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload((attachment).read())
+                encoders.encode_base64(part)
+                part.add_header('Content-Disposition',
+                                "attachment; filename= " + filename)
+
+                msg.attach(part)
+                text = msg.as_string()
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(email_user, email_password)
+
+                server.sendmail(email_user, email_send, text)
+                server.quit()
+
+            else:
+
+                subject = 'Datos Historicos'
+
+                msg = MIMEMultipart()
+                msg['From'] = email_user
+                msg['To'] = email_send
+                msg['Subject'] = subject
+
+                body = 'Hola, enviado desde Python!'
+                msg.attach(MIMEText(body, 'plain'))
+
+                # Assume that the user uploaded a CSV file
+                df = pd.read_excel(io.BytesIO(decoded), sheet_name="valores")
+
+                df.to_excel(filename, index=False)
+
+                filename_excel = filename
+                attachment = open(filename_excel, 'rb')
+
+                os.remove(filename_excel)
+
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload((attachment).read())
+                encoders.encode_base64(part)
+                part.add_header('Content-Disposition',
+                                "attachment; filename= " + filename)
+
+                msg.attach(part)
+                text = msg.as_string()
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(email_user, email_password)
+
+                server.sendmail(email_user, email_send, text)
+                server.quit()
+
     except Exception as e:
         print(e)
-        return html.Div([
-            'There was an error processing this file.'
-        ])
+        return html.Div(['There was an error processing this file.'])
 
-@app.callback(Output('output-data-upload', 'children'),
-              [Input('upload-data', 'contents')],
-              [State('upload-data', 'filename'),
-               State('upload-data', 'last_modified')])
+
+@app.callback(
+    Output('output-data-upload',
+           'children'), [Input('upload-data', 'contents')],
+    [State('upload-data', 'filename'),
+     State('upload-data', 'last_modified')])
 def update_output(list_of_contents, list_of_names, list_of_dates):
     if list_of_contents is not None:
         children = [
-            parse_contents(c, n, d) for c, n, d in
-            zip(list_of_contents, list_of_names, list_of_dates)]
+            parse_contents(c, n, d)
+            for c, n, d in zip(list_of_contents, list_of_names, list_of_dates)
+        ]
         return children
 
 

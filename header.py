@@ -17,7 +17,7 @@ header_logo = html.Div(
 			html.Div('Global Markets Insights',
 				 className='titulo-GMI-estilo'),
 			],
-				)
+		)
 
 
 header_link = html.A(
@@ -26,10 +26,7 @@ header_link = html.A(
 	target="_blank",
 	style={"text-decoration": "none" ,'textAlign' :'right',
 		   'color': '#FFF' ,'fontWeight': 'bold'},
-			)
-
-
-
+	)
 
 """ TABS """
 

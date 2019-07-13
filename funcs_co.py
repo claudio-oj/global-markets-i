@@ -1,6 +1,6 @@
 """ 
-GM Insights, por Claudio Ortiz
-python 3.6
+Global Markets Insights, por Claudio Ortiz
+python 3.6.6
 """
 
 import os
@@ -10,169 +10,11 @@ from scipy import interpolate
 from numbers import Number
 
 
+def weird_division(n, d):
+	""" función división, que en el caso excepcional de dividir x cero --> 0"""
+	# return n / d if d else float('nan')
+	return n / d if d else 0
 
-def imp_spot():
-
-	""" importa precio spot del closing de tradition """
-
-	return pd.read_excel('Closing_Run_trad.xlsx',usecols='G:H',skiprows=1,nrows=1).mean(axis=1)[0]
-
-
-
-def imp_calendar():
-	""" importa dias calendario segun traductor trad.calypso """
-
-	cal = pd.read_excel('Traductor tenors Tradition-Calypso.xlsm',sheet_name='calend local',skiprows=3,nrows =59,usecols ='B:C')
-	cal.columns= ['name','days']
-
-	botar= [10,11,13,14,16,17,18,19,20] +[x for x in range(23,38,2)] + [x for x in range(39,59,1)]
-	cal= cal.loc[~cal.index.isin(botar)]
-
-	return cal.days
-
-
-
-def imp_clos_t():
-	""" # ! DEPRECATED --> ahora usar import_closing()
-	importa closing entero tradition"""
-
-	# importa closing + formatea
-	trad = pd.read_excel('Closing_Run_trad.xlsx', sheet_name='Hoja1', nrows=102, usecols='A:R')
-	trad.index = np.linspace(0,100,101,dtype=int)
-	trad.columns= ['col'+str(x) for x in range(0,17+1)]
-
-	#set new df index
-	tenors1= ['tod','tom','1w','2w'] + [str(x)+ 'm' for x in range(1,6+1)]
-	tenors2= ['9m','12m','18m'] + [str(x)+'y' for x in range(2,10+1)]
-	tenors = tenors1 + tenors2
-
-	df= pd.DataFrame(index= range(0,len(tenors)), columns=['ind','tenor','daysy','days','carry_days','ptosy','ptos','odelta','ddelta',
-														   'carry','icam','ilib','tcs','icam_os','fracam_os','basisy',
-														   'basis','i_ptos','i_basis'])
-
-	df['ind']= df.index.values
-	df['tenor'] = tenors
-
-	# TODO: eliminar la dependencia al archivo Traductor tenors Tradition-Calypso.xlsm
-	df['daysy']= imp_calendar().values
-
-	#calendario hoy
-	# df['days'] = [1, 2, 7, 14, 30, 62, 93, 121, 154, 184, 274, 366, 549, 730, 1096, 1460, 1827, 2193, 2558, 2922, 3287, 3654]
-	df['days'] = df.daysy.copy()
-
-	df['carry_days'] = df.days - int(df.days[0])
-
-	# import yesterday closing fwd points
-	df['ptosy'].iloc[2:14]= trad.iloc[31:43,16].values
-
-	#importa basis yesterday closing
-	df['basisy'].iloc[11] = trad.iloc[58,4]  # 1yr
-	df['basisy'].iloc[12] = trad.iloc[57,4] #18m
-	df['basisy'].iloc[13:22]= trad.iloc[59:68,4].values # 2yr-10yrs
-
-	return df
-
-
-
-def live(col='icam'):
-
-	"""
-	https://stackoverflow.com/questions/32496062/how-can-i-interpolate-based-on-index-values-when-using-a-pandas-multiindex """
-
-	""" importa closing entero tradition"""
-
-	# importa closing + formatea
-	trad = pd.read_excel('Closing_Run_trad.xlsx', sheet_name='Hoja1', nrows=102, usecols='A:R')
-	trad.index = np.linspace(0, 100, 101, dtype=int)
-	trad.columns = ['col' + str(x) for x in range(0, 17 + 1)]
-
-	# set new df index
-	tenors1= ['tod','tom','1w','2w'] + [str(x)+ 'm' for x in range(1,6+1)]
-	tenors2= ['9m','12m','18m'] + [str(x)+'y' for x in range(2,10+1)]
-	tenors = tenors1 + tenors2
-
-	df = pd.DataFrame(index=range(0, len(tenors)),
-					  columns=['ind', 'tenor', 'daysy', 'days', 'ptosy', 'ptos', 'odelta', 'ddelta',
-							   'carry', 'icam', 'ilib', 'tcs', 'icam_os', 'fracam_os', 'basisy',
-							   'basis', 'i_ptos', 'i_basis'])
-
-	df['ind'] = df.index.values
-	df['tenor'] = tenors
-
-	# calendario yesterday
-	df['daysy'] = imp_calendar().values
-
-	# calendario hoy
-	# df['days'] = [1, 2, 7, 14, 30, 62, 93, 121, 154, 184, 274, 366, 549, 730, 1096, 1460, 1827, 2193, 2558, 2922, 3287,
-	#               3654]
-	df['days'] = df.daysy.copy()
-
-
-	# import icam live  desde la fuente: "yesterday closing " --> CAMBIAR EN EL FUTURO !!
-
-	if col=='icam':
-		df['icam'][df.tenor == 'tod'] = 3.00
-		df['icam'][df.tenor == '3m' ] = 3.00
-		for t,i in zip(df.tenor.iloc[9:22], range(11,24)):
-			df['icam'][df.tenor == t] = trad.iloc[i, 12]
-		df['icam'] = df['icam'].astype(float).interpolate(method='index')
-		return df['icam'].round(2).values
-
-	if col=='ilib':
-		dfilib = pd.read_csv('ICESwapRateHistoricalRates.csv', header=None, index_col=0).squeeze()
-		df['ilib'][df.tenor == 'tod'] = 2.38863
-		df['ilib'][df.tenor == '3m' ] = 2.63863
-		df['ilib'][df.tenor == '6m' ] = 2.69313
-		df['ilib'][df.tenor == '12m'] = dfilib[0]
-		df['ilib'][13:22] = dfilib[1:-3]
-		df['ilib'] = df['ilib'].astype(float).interpolate(method='index')
-		return df['ilib'].round(2).values
-
-
-def tables_init(fec0,fec1):
-	""" función importa data del batch, para crear los df de las tablas 1,2
-	con la data que se inicilizan al iniciar la app
-	:param:
-		d: Timestamp, dia de batch fec0, (un dia antes del dia de uso)
-	:return: df1, df2, """
-	import os
-	os.chdir('D:\\Dropbox\\Documentos\\Git\\global-markets-i')
-
-	import funcs_calendario_co as fcc
-
-	pik_spot = pd.read_pickle("./batch/p_clp_spot.pkl")[fec0]
-	pik_cam  = pd.read_pickle("./batch/p_icam.pkl")[fec0]
-	pik_ilib = pd.read_pickle("./batch/p_ilib.pkl")[fec0]
-	pik_ptos = pd.read_pickle("./batch/p_ptos.pkl")[fec0]
-
-	tenors = ['tod', 'tom', '1w', '2w'] + [str(x) + 'm' for x in range(1, 6 + 1)]+ ['9m',
-				'12m', '18m'] + [str(x) + 'y' for x in range(2, 10 + 1)]
-
-	cols1 = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos', 'odelta', 'ddelta', 'carry', 'icam',
-			 'ilib', 'tcs', 'icam_os', 'fracam_os', 'basisy', 'basis', 'i_ptos', 'i_basis']
-
-	df = pd.DataFrame(index=range(0,len(tenors)),columns=cols1)
-
-	df['ind']   = df.index.values
-	df['tenor'] = tenors
-
-	# TODO: pub days fecha batch, aqui voyyy, intentando pegar los `daysy`
-	aux = fcc.crea_cal_tenors(fec0).pub
-	df['daysy'].iloc[2:] = (aux[aux.index.isin(tenors)] - fec0)
-
-	# pub days batch + 1 = fecha de uso GMI
-	df['days'] = (fcc.crea_cal_tenors(fec1).pub - fec1).apply(lambda x: x.days)
-
-	df['carry_days'] = df.days - int(df.days[0])
-
-	df['ptosy'] = pik_ptos[fec0].ptos
-
-	return
-
-
-
-###############################################################################
-###############################################################################
 
 def float_or_zero(x):
 	""" función que fuerza valor a float o zero"""
@@ -180,13 +22,6 @@ def float_or_zero(x):
 	return round(y,2)
 
 # float_or_zero(2)
-
-
-def weird_division(n, d):
-	""" función división, que en el caso excepcional de dividir x cero --> 0"""
-	return n / d if d else float('nan')
-
-
 
 
 def round_conv_basis(x):
@@ -199,8 +34,6 @@ def round_conv_basis(x):
 	return y
 
 
-
-
 def round_2d(x):
 	""" redondea a dos decimales, y esquiva los nan
  :type x: float
@@ -208,6 +41,92 @@ def round_2d(x):
 
 	y = round(x,2) if isinstance(x,Number)==True else x
 	return y
+
+
+
+
+def tables_init(fec0,fec1):
+	""" función importa data del batch, para crear los df de las tablas 1,2
+	con la data que se inicilizan al iniciar la app
+	:param:
+		d: Timestamp, dia de batch fec0, (un dia antes del dia de uso)
+	:return: df1, df2, """
+
+	# import os
+	# os.chdir('D:\Dropbox\Documentos\Git\global-markets-i')
+
+	# import pandas as pd
+	# import numpy as np
+
+	# import funcs_co as fc
+	import funcs_calendario_co as fcc
+
+	pik_spot = pd.read_pickle("./batch/p_clp_spot.pkl")
+
+
+	tenors = ['TOD', 'TOM', '1w', '2w'] + [str(x) + 'm' for x in range(1, 6 + 1)]+ ['9m',
+				'12m', '18m'] + [str(x) + 'y' for x in range(2, 10 + 1)]
+
+	cols1 = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos', 'odelta', 'ddelta', 'carry', 'icam',
+			 'ilib', 'tcs', 'icam_os', 'fracam_os', 'i_ptos', 'i_basis']
+
+	df = pd.DataFrame(index=range(0,len(tenors)),columns=cols1)
+
+	df['ind']   = df.index.values
+	df['tenor'] = tenors
+
+
+	""" PUNTOS FORWARD fec0 y fec1 """
+	# pub days fecha batch
+	_ = (fcc.crea_cal_tenors(fec0).pub - fec0).apply(lambda x: x.days)
+	df['daysy'] = _[_.index.isin(tenors)].values
+
+	# pub days batch + 1 = fecha de uso GMI
+	_ = (fcc.crea_cal_tenors(fec1).pub - fec1).apply(lambda x: x.days)
+	df['days'] = _[_.index.isin(tenors)].values
+
+	df['carry_days'] = df.days - int(df.days[0])
+
+	# voy a buscar los puntos de ayer al pickle, para ponerlos en el df de hoy
+	pik_ptos = pd.read_pickle("./batch/p_ptos.pkl")
+
+	# calculo ptos hoy breakeven, par iniciar la mañana con los plazos nuevos y la curva corecta
+	_ = pik_ptos[fec0][['pubdays','ptos']].dropna()
+	tenor_pts = _.index
+	df['ptosy'][df.tenor.isin(tenor_pts)] = np.interp(x=df[df.tenor.isin(tenor_pts)].days,
+													  xp=_.pubdays,fp=_.ptos.map(float)).round(2)
+	df.loc[1,'ptosy'] = round(np.interp(x=df.loc[1,'days'],xp=_.pubdays,fp=_.ptos.map(float)) ,2)
+
+	df['ptos'] = df.ptosy.copy()
+
+
+	""" ICAM """
+	pik_cam = pd.read_pickle("./batch/p_icam.pkl")
+	df['icam'] = np.interp(x=df.carry_days,xp=pik_cam[fec0].carry_dias,fp=pik_cam[fec0].icam).round(2)
+
+
+	""" ILIB """
+	pik_ilib = pd.read_pickle("./batch/p_ilib.pkl")
+	df['ilib'] = np.interp(x=df.carry_days,xp=pik_ilib[fec0].carry_dias,fp=pik_ilib[fec0].ilib).round(2)
+
+
+	""" TRES CON SEIS """
+	pik_bt = pd.read_pickle("./batch/p_basis_tcs.pkl")
+	df['tcs'].loc[9:] = np.interp(x=df.days[9:],xp=pik_bt[fec0]['6m':'10y'].carry_dias,fp=pik_bt[fec0]['6m':'10y'].tcs.map(float)).round(3)
+
+
+	""" BASIS """
+	df = df.join(pik_bt[fec0].basis.rename('basisy'), on='tenor',rsuffix='_other')
+	df['basisy'] = df.basisy.map(fc.round_conv_basis) # redondeo convencion basis
+	df['basis'] = df.basisy.copy()
+
+	col_ord = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos',
+       'odelta', 'ddelta', 'carry', 'icam', 'ilib', 'tcs', 'icam_os',
+       'fracam_os','basisy', 'basis', 'i_ptos', 'i_basis']
+
+	df = df[col_ord]
+
+	return df
 
 
 
@@ -389,10 +308,6 @@ def fra1m_v2(df,interp=False):
 	return y.values
 
 
-# df = pd.DataFrame([['1w',6,2.78],['2w',13,2.79],['1m',29,2.85],['2m',59,2.00],['3m',89,3.00]], columns= ['tenor','carry_days','icam_os'])
-#
-# fra1m_v2(df)
-
 
 def fra1w(w2,w1,i2,i1):
 	""" Función Calcula tasas FRA de 1 semana. Entre plazos que la distancia
@@ -418,7 +333,7 @@ def fra1w_v(df):
 	:return:
 		Series of floats, tasas de interés FRA 1 semanal. """
 
-	# w = {'tod':0,'tom':0,'1w':1,'2w':2,'1m':4,'2m':8,'3m':12,'4m':16,'5m':20,'6m':24,
+	# w = {'TOD':0,'TOM':0,'1w':1,'2w':2,'1m':4,'2m':8,'3m':12,'4m':16,'5m':20,'6m':24,
 	# 			  '9m':36,'12m':48,'18m':72,'2y':96}
 	df['w'] = df.days / 7
 	df['w_1'] = df.w.shift(1)
@@ -455,6 +370,7 @@ def curva_zero(dias, tasas, p):
 	return df[['d', 'izero', 'discf']]
 
 
+
 def rank_perc(x,array):
 	""" función calcula el ranking / 100 de el valor de x en un array
 	:param:
@@ -466,21 +382,13 @@ def rank_perc(x,array):
 
 
 
-
-
-
 def update_calc_fx(rows):
 	""" Función que crea & calcula calculadora de puntos fwds
 	:param: rows
 	:return:
 	"""
-	# import pandas as pd
-	# import numpy as np
-	# fra = pd.read_excel('./assets/calculadora_spreads.xlsx', sheet_name='Hoja3',
-	# 			  skiprows=2, usecols='N:Q', index_col=0)
-	# print(rows)
+
 	fra = pd.read_json(rows, orient='index')
-	# print(fra)
 
 	# voy a buscar en la fra -de hoy- asociada a los plazos "short" y "long"
 	x = pd.to_numeric(dfc.loc[0:1, 'pub_days'].values, errors='coerce')
@@ -495,9 +403,7 @@ def update_calc_fx(rows):
 
 	df.loc[0:1,'fra_rank_hoy'] = df.loc[0:1].apply(lambda x: rank_perc(x.fra, fra_todas), axis=1)
 
-	# TODO:
-	""" evaluo la 'fra input' respecto a la historia de un año de su mismo plazo"""
+	# TODO: evaluar la 'fra input' respecto a la historia de un año de su mismo plazo
 
-	print(df)
 	return df
 

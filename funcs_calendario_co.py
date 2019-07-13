@@ -5,7 +5,7 @@ pd.options.mode.chained_assignment = None
 import numpy as np
 
 # df feriados
-df_h = pd.read_excel('batch/feriados_base_datos.xlsx', parse_dates=[0])
+df_h = pd.read_excel("./batch/feriados_base_datos.xlsx", parse_dates=[0])
 
 h_stgo_or_ny = df_h[(df_h.holiday_STGO == True) | (df_h.holiday_NY == True)]['date']
 h_stgo = df_h[df_h.holiday_STGO == True]['date']
@@ -68,8 +68,8 @@ def next_lab_settle(d0, offset, cal_spot=False, cal_cl=False, cal_ny=False):
 
 def settle_rule(d0, m):
 	"""settle calendar rule calculator, including end of month rule
-	le sumo 30 dias a d0. Si es feriado le sumo un día, si ese dia cambió de mes --> le resto días tal que
-	quedemos en el business month end.
+	le sumo un mes a d0. Si cae feriado le sumo un día, si ese dia saltó al mes siguiente -->
+	 le resto días tal que quedemos en el business month end.
 
 	PARAMETERS:
 		d0: pd.Timestamp, starting date
@@ -89,14 +89,14 @@ def settle_rule(d0, m):
 	else:
 		d2 = d1
 
-	# end of month rule
+	# end of month rule TODO: aqui sumé un 1 a m ... veremos...
 	if d2.month != d1.month:
-		d3 = d0 + pd.tseries.offsets.CustomBusinessMonthEnd(m, holidays=h_both)
+		d3 = pd.tseries.offsets.CustomBusinessMonthEnd(holidays=h_both).rollback(d1)
 	else:
 		d3 = d2
 
 	return d3
-
+# settle_rule(pd.Timestamp(2018,8,30), 1)
 
 def crea_cal_tenors(tod):
 	""" función que crea calendario completo
@@ -170,4 +170,32 @@ def crea_cal_tenors(tod):
 
 	df['carry_days'] = ( df.pub - df.pub[0] ).apply(lambda x: x.days)
 
+	return df
+
+# y = crea_cal_tenors(pd.Timestamp(2018,8,28))
+
+
+def crea_cal_IRS_us(d):
+	""" CREA CALENDARIO DE TASAS US, sirve para irs usd, basis usdclp, y tcs
+	:param:
+		d: Timestamp, dia de calculo del calendario
+	:return: df con el calendario crado """
+
+	tenors_us = ['o/n','3m','6m','12m']+[str(x)+'y' for x in range(2,11)]+['12y','15y','20y','30y']
+	meses_us  = [0,3,6]+[12*int(x) for x in range(1,11)]+[12*12,15*12,20*12,30*12]
+
+	# df = pd.DataFrame(index=tenors_us, columns=['meses', 'val', 'carry_dias', 'ilib', 'ilib_z'])
+	df = pd.DataFrame(index=tenors_us, columns=['meses', 'val', 'carry_dias'])
+
+	# numero de meses para cada tenor
+	df.meses = meses_us
+
+	# fecha settle del tenor o/n
+	df.val['o/n'] = next_lab_settle(d, 2, cal_ny=True)
+
+	# fecha settle para los tenors largos en base al 1er settle
+	df.val = df.apply(lambda x: settle_rule(df.val['o/n'], x.meses), axis=1)
+
+	# calcula carry days en base al primer settle date
+	df.carry_dias = (df.val - df.val[0]).apply(lambda x: x.days)
 	return df

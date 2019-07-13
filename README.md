@@ -36,6 +36,10 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 17. **bug**: el calendario correcto para los _IR Swaps USD Libor_ es `settle holidays NY` , ahora estoy calculandolo con el calendario NY&STGO conjunto --> fix
 18. Modificar la lectura de data inicial, de la data dummy que cree originalmente --> al proceso batch
 19. **bug importante**: cada vez que _uso_ o _calculo_ un "precio explicito" i.e puntos, basis, icam, etc... --> **REDONDEAR** según convención.
+20. acordarnos de modificar el email a gmi.usdclp@gmail.com
+21. limitar el ancho de `table1` para que en monitores anchos se compagine bien. y sean solo los graficos los que se extiendan
+22. contraseña gmail *tobrjciaqyuzywkq*
+23. Cerciorzrse de subir los `.pkl` al master branch para el deployment
 
 - ~~analizar si vale la pena modificar callbacks para q sea todo pandas~~
 - desarrollar mini calculadoras en base a fra s. desde \* curva cero fra s
@@ -51,6 +55,8 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 
 1. en Pestaña FX ptos: permitir input manual en tabla html de `ilib`, `tcs`
 2. eliminar post batch las variables que ocupa el batch. Para ocupar menos memoria durante el día, cuando el usuario final ocupa la calculadora.
+3. calcular los _puntos>2yrs_ en el df inicial, para `table1`
+4. En el gráfico fra transversal incluir `1w`,`2w`
 
 ### Explicaciones Batch
 

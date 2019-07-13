@@ -7,45 +7,30 @@ import dash_table
 from dash_table.Format import Format  # https://dash.plot.ly/datatable/typing
 import plotly.graph_objs as go
 
-from app import app
-
-
-
-##
-""" Corre INICIO procesos NECESARIOS. Crea tabla de puntos fwd , basis, ibasis,
-importa funciones numericas y funciones crea graficos """
 import pandas as pd
-
-fra_historic = pd.read_csv("fra_history.csv")
-indicator = pd.read_csv("indicator.csv")
-
 pd.options.mode.chained_assignment = None #apaga warning set with copy
-
 import numpy as np
 from numbers import Number
 
-import funcs_co as fc
-from graphs import crea_fra_scatter_graph, crea_fra_hist_line
 
-# importa las fechas de batch (fec0) + fecha de uso (fec1)
-from batch.bbg_prices_to_pickle import fec0,fec1
+""" Corre INICIO procesos """
+
+from app import app
+
+import funcs_co as fc
+from graphs import crea_fra_scatter_graph
+
+fra_historic = pd.read_csv("./batch/fra_history.csv")
+indicator = pd.read_csv("indicator.csv")
+
+# importa fechas batch (fec0) + fecha de uso (fec1)
+fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
 
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
-spoty= fc.imp_spot() #spot yesterday closing
-spot = 650.58
-
-# importa data closing tradition + crea df1
-df1 = fc.imp_clos_t()
-
-# lee precios live de cam y libor swap
-df1.ptos      = df1.ptosy.copy(True)
-df1.icam      = fc.live(col='icam')
-df1.ilib      = fc.live(col='ilib')
-df1.fracam_os = 3.6
-df1.basis     = df1.basisy.copy(True)
-df1.tcs       = 6.5
+spot = 650.58 # TODO: insertar de alguna manera un input eficiente para el spot (para el cliente)
+df1 = pd.read_pickle("./batch/table1_init.pkl")
 
 
 """ SECCION INICIALIZA TABLA CALCULADORA FX """
@@ -94,7 +79,7 @@ def table2_update(df):
 	return df
 
 
-##
+
 
 layout = html.Div(
 	# className='row',
@@ -112,23 +97,24 @@ layout = html.Div(
 					data= df1.to_dict('rows_table1'),
 					columns= [
 						{'id':'ind',       'name':'ind',      'editable':False, 'hidden':True, 'type': 'numeric'},
-						{'id':'tenor',     'name':'tenor',    'editable':False, 'hidden': False,'width': '40px'},
+						{'id':'tenor',     'name':'t',    'editable':False, 'hidden': False,'width': '40px'},
 						{'id':'daysy',     'name':'daysy',    'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'days',      'name':'days',     'editable':False, 'hidden': False, 'type': 'numeric'},
 						{'id':'ptosy',     'name':'ptosy',    'editable':False, 'type': 'numeric'},
 						{'id':'ptos',      'name':'ptos',     'editable':True,  'type': 'numeric'},
-						{'id':'odelta',    'name':'change',   'editable':False, 'hidden': False, 'type': 'numeric'},
+						{'id':'odelta',    'name':'+-',   'editable':False, 'hidden': False, 'type': 'numeric'},
 						{'id':'ddelta',    'name':'ddelta',   'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'carry',     'name':'carry',    'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'icam',      'name':'icam',     'editable':True, 'hidden': False, 'type': 'numeric'},
-						{'id':'ilib',      'name':'ilib',     'editable':False, 'hidden': True, 'type': 'numeric'},
+						{'id':'ilib',      'name':'ilib',     'editable':True, 'hidden': False, 'type': 'numeric'},
 						{'id':'tcs',       'name':'tcs',      'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'icam_os',   'name':'icam-os',  'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'fracam_os', 'name':'fra-os',   'editable':False, 'hidden': False, 'type': 'numeric'},
 						{'id':'basisy',    'name':'basisy',   'editable':False, 'hidden': True, 'type': 'numeric'},
 						{'id':'basis',     'name':'basis',    'editable':True, 'type': 'numeric'},
-						{'id':'i_ptos',    'name':'i_ptos',   'editable':False, 'type': 'numeric'},
-						{'id':'i_basis',   'name':'i_basis',  'editable':False, 'type': 'numeric'},
+						{'id':'i_ptos',    'name':'i-ptos',   'editable':False, 'type': 'numeric'},
+						{'id':'i_basis',   'name':'i-basis',  'editable':False, 'type': 'numeric'},
+						{'id':'blank',   'name':'',  'editable':False},
 						],
 					style_as_list_view= True,
 					n_fixed_rows=1,
@@ -157,21 +143,20 @@ layout = html.Div(
 							# 'backgroundColor': 'white',
 						# },
 					style_cell_conditional=[
-							{'if': {'column_id':'tenor'}, 'width': '40px'},
-							{'if': {'column_id':'ptosy'}, 'width': '40px',
-							 'color': 'rgb(204, 205, 206)'},
-							{'if': {'column_id':'ptos'}, 'width': '45px',
-							 'fontWeight': 600, 'color': '#4176A4'},
-							{'if': {'column_id':'odelta'}, 'width': '48px'},
-							{'if': {'column_id':'ddelta'}, 'width': '48px'},
-							{'if': {'column_id':'carry'}, 'width': '48px'},
-							{'if': {'column_id':'icam'}, 'width': '48px'},
-							{'if': {'column_id':'ilib'}, 'width': '48px'},
-							{'if': {'column_id':'fracam_os'}, 'width': '50px'},
-							{'if': {'column_id':'basis'}, 'width': '48px',
-							 'fontWeight': 600, 'color': '#4176A4'},
-							{'if': {'column_id':'i_ptos'},  'width': '50px','backgroundColor':'rgb(251,251,251)'},
-							{'if': {'column_id':'i_basis'}, 'width': '50px','backgroundColor':'rgb(251,251,251)'},
+						{'if': {'column_id':'tenor'}, 'width': '31px'},
+						{'if': {'column_id':'days'}, 'width': '32px'},
+						{'if': {'column_id':'ptosy'}, 'width': '40px', 'color': 'rgb(204, 205, 206)'},
+						{'if': {'column_id':'ptos'}, 'width': '45px', 'fontWeight': 600, 'color': '#4176A4'},
+						{'if': {'column_id':'odelta'}, 'width': '35px'},
+						{'if': {'column_id':'ddelta'}, 'width': '48px'},
+						{'if': {'column_id':'carry'}, 'width': '48px'},
+						{'if': {'column_id':'icam'}, 'width': '48px'},
+						{'if': {'column_id':'ilib'}, 'width': '48px'},
+						{'if': {'column_id':'fracam_os'}, 'width': '50px'},
+						{'if': {'column_id':'basis'}, 'width': '48px', 'fontWeight': 600, 'color': '#4176A4'},
+						{'if': {'column_id':'i_ptos'}, 'width': '50px','fontWeight': 600,'color':'#81C3D7','backgroundColor':'rgb(251,251,251)'}, #20A4F3
+						{'if': {'column_id':'i_basis'}, 'width': '50px','fontWeight': 600,'color':'#81C3D7','backgroundColor':'rgb(251,251,251)'},
+						{'if': {'column_id':'blank'}, 'width': '2px', 'backgroundColor':'rgb(251,251,251)'},
 						],
 					editable=True,
 					),
@@ -259,7 +244,7 @@ def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 	dft1 = dft1[df1.columns.copy()]
 	dft2 = dft2[df2.columns.copy()]
 
-	print(dft1,'\n',dft2)
+	# print(dft1,'\n',dft2)
 
 	dft1 = table1_update(dft1)
 	dft2 = table2_update(dft2)
@@ -283,16 +268,16 @@ def display_outputtt(rows):
      Input("crossfilter-xaxis-column", "value")],
 )
 def update_graph(rows, xaxis_column_name):
-    
+
 	l = ['1m', '2m', '3m', '4m', '5m', '6m', '9m', '12m', '18m', '2y']
-    
+
 	dfr = pd.DataFrame.from_dict(rows).copy()
 	auxiliar = dfr.iloc[4:14, [18, 4, 7]] # * Crea archivo tenor.csv
 	auxiliar.insert(3, "indicator", "A")
 	# auxiliar.to_csv("tenors.csv", index=False)
 
 	df = auxiliar.loc[auxiliar["indicator"] == xaxis_column_name]
- 
+
 	trace_fra = go.Scatter(
         x=l,
         y=df["fracam_os"],
@@ -308,7 +293,7 @@ def update_graph(rows, xaxis_column_name):
         textposition='top center',
         textfont=dict(size=12),
     )
- 
+
 	layout = dict(
 	    title='FRA 1 month IRS CAM off-shore (f1m-os) ',
 	    titlefont=dict(size=13),
@@ -329,14 +314,14 @@ def update_graph(rows, xaxis_column_name):
 	)
 
 	fig = dict(data=[trace_fra], layout=layout)
- 
+
 	return fig
- 
- 
+
+
 def create_time_series(dff):
 
     return {
-        "data": [go.Scatter(x=dff.iloc[:, 0], y=dff.iloc[:, 1]*100, 
+        "data": [go.Scatter(x=dff.iloc[:, 0], y=dff.iloc[:, 1]*100,
                             mode="lines",
                             name='FRA history',
                             line=dict(
@@ -361,7 +346,9 @@ def create_time_series(dff):
         #    titlefont=dict(size=10)
         #	),
          	yaxis=dict(
-            	automargin=True,
+            	# automargin=True,
+				range= [0, 4.3],
+				zeroline=False,
 				showgrid=False,
             	titlefont=dict(size=10),
 				hoverformat = '.2f'
@@ -382,7 +369,7 @@ def update_y_timeseries(rows, hoverData):
 	col_name = hoverData["points"][0]["customdata"]
 	row_value = auxiliar.loc[auxiliar["tenor"] == col_name].iloc[:, 2]
 	dff = fra_historic[["date", col_name]]
-	dff.iloc[-1, dff.columns.get_loc(col_name)] = float(row_value / 100)
+	dff.iloc[-1, dff.columns.get_loc(col_name)] = float(row_value / 100) # TODO: aqui esta la division por 100 q quiero elminar
 	dff = dff.iloc[0:390]
 	return create_time_series(dff)
 

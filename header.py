@@ -14,7 +14,7 @@ header_logo = html.Div(
 				src='static/ba_logo.gif',
 				width=75,
 				),
-			html.Div('Global Markets Insights',
+			html.Div('Global-Markets Insights',
 				 className='titulo-GMI-estilo'),
 			],
 				)

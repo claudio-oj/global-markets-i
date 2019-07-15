@@ -30,7 +30,7 @@ app.layout = html.Div(
 				# 'padding-top':2,
 			 },
 				 ),
-		html.H6("Global Markets Insights, Chile - beta v1 Edition",
+		html.H6("Global-Markets Insights",
 				className='five columns',
 				style={'color':'#FFF',
 					   'fontSize':'17px',
@@ -68,7 +68,7 @@ app.layout = html.Div(
 	html.Div(
         className="footer",
         children=[
-            html.Div('Binary Analytics ® copyright 2019')
+            html.Div('Global-Markets Insights, Chile - v1 beta edition. Binary Analytics ® copyright 2019')
         ]
     )],
 	style={
@@ -96,4 +96,4 @@ def show_content(tab_value):
 
 
 if __name__ == '__main__':
-	app.run_server(debug=True)
+	app.run_server(debug=False)

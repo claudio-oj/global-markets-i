@@ -17,11 +17,20 @@ def weird_division(n, d):
 
 
 def float_or_zero(x):
-	""" función que fuerza valor a float o zero"""
+	""" función que fuerza valor a float, de lo contrario --> 0 """
+	# TODO: sospecho que sobra el True de esta if condition, algún dia probar
 	y = float(x) if isinstance(x,Number)==True else 0
 	return round(y,2)
 
-# float_or_zero(2)
+
+def float_or_None(x):
+	""" función que fuerza valor a float, de lo contrario --> o None"""
+	if isinstance(x,Number):
+		y = float(x)
+		return round(y,2)
+	else:
+		return None
+
 
 
 def round_conv_basis(x):
@@ -58,11 +67,8 @@ def tables_init(fec0,fec1):
 	# import pandas as pd
 	# import numpy as np
 
-	# import funcs_co as fc
+
 	import funcs_calendario_co as fcc
-
-	pik_spot = pd.read_pickle("./batch/p_clp_spot.pkl")
-
 
 	tenors = ['TOD', 'TOM', '1w', '2w'] + [str(x) + 'm' for x in range(1, 6 + 1)]+ ['9m',
 				'12m', '18m'] + [str(x) + 'y' for x in range(2, 10 + 1)]
@@ -74,6 +80,10 @@ def tables_init(fec0,fec1):
 
 	df['ind']   = df.index.values
 	df['tenor'] = tenors
+
+
+	""" SPOT INICIO """
+	df.odelta[0] = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 
 
 	""" PUNTOS FORWARD fec0 y fec1 """
@@ -99,6 +109,8 @@ def tables_init(fec0,fec1):
 
 	df['ptos'] = df.ptosy.copy()
 
+	df[1:].odelta = df[1:].ptos - df[1:].ptosy
+
 
 	""" ICAM """
 	pik_cam = pd.read_pickle("./batch/p_icam.pkl")
@@ -117,7 +129,7 @@ def tables_init(fec0,fec1):
 
 	""" BASIS """
 	df = df.join(pik_bt[fec0].basis.rename('basisy'), on='tenor',rsuffix='_other')
-	df['basisy'] = df.basisy.map(fc.round_conv_basis) # redondeo convencion basis
+	df['basisy'] = df.basisy.map(round_conv_basis) # redondeo convencion basis
 	df['basis'] = df.basisy.copy()
 
 	col_ord = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos',
@@ -343,7 +355,6 @@ def fra1w_v(df):
 	y = 5200*(( ((1+df.icam_os/5200)**df.w) / ((1+df.icam_os_1/5200)**df.w_1) )**(1/(df.w-df.w_1)) - 1 )
 	y.loc[0:1] = df.icam_os.loc[0:1].copy()
 	return y
-
 
 
 

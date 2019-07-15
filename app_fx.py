@@ -8,45 +8,47 @@ from dash_table.Format import Format  # https://dash.plot.ly/datatable/typing
 import plotly.graph_objs as go
 
 import pandas as pd
-pd.options.mode.chained_assignment = None #apaga warning set with copy
+pd.options.mode.chained_assignment = None
 import numpy as np
 from numbers import Number
 
 
-""" Corre INICIO procesos """
+
+""" CORRE INICIO PROCESOS """
 
 from app import app
 
 import funcs_co as fc
 from graphs import crea_fra_scatter_graph
 
-fra_historic = pd.read_csv("./batch/fra_history.csv")
-indicator = pd.read_csv("indicator.csv")
-
-# importa fechas batch (fec0) + fecha de uso (fec1)
+# importa fechas batch fec0, y fecha de uso fec1 = fec0 + 1
 fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
 
+fra_historic = pd.read_csv("./batch/fra_history.csv")
+fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
+indicator = pd.read_csv("indicator.csv")
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
-spot = 650.58 # TODO: insertar de alguna manera un input eficiente para el spot (para el cliente)
 df1 = pd.read_pickle("./batch/table1_init.pkl")
 
 
-""" SECCION INICIALIZA TABLA CALCULADORA FX """
-# lo hago al inicio para no duplicar el proceso en la func del callback
-df2 = pd.DataFrame(data=None, index=[0, 1, 2], columns=['name', 'pub_days', 'fix', 'pub', 'val', 'fra', 'fra_rank_hoy', 'fra_rank_hist'])
+""" SECCION INICIALIZA TABLA CALCULADORA FX """ # lo hago al inicio para no duplicar el proceso en la func del callback
+df2 = pd.DataFrame(index=[0, 1, 2],columns=['name', 'pub_days','dates','ptos','4','5','6'])
 df2.loc[0, 'name':'pub_days'] = ['short-leg', 7]
 df2.loc[1, 'name':'pub_days'] = ['long-leg', 30]
 
 
-
 def table1_update(df):
 	try:
-		for c in ['ptos','ptosy']:
+		for c in ['ptos','ptosy','odelta']:
 			df[c] = df[c].map(fc.float_or_zero)
 
-		df.odelta = df['ptos'] - df['ptosy']
+		spot = df.odelta[0]
+
+		df[1:].odelta = df[1:].ptos - df[1:].ptosy
+		# if x==0 for x in
+
 		df.ddelta = 100 * df.apply(lambda x: fc.weird_division(x.odelta, x.carry_days),axis=1)
 
 		df.carry  = df.apply(lambda x: df.days[4] * fc.weird_division(x.ptos, x.carry_days),axis=1)
@@ -65,20 +67,11 @@ def table1_update(df):
 
 		df = df.applymap(fc.round_2d)
 		df[['basis','i_basis']] = df[['basis','i_basis']].applymap(fc.round_conv_basis)
-
 		return df
 
 	except:
 		return df
-
 df1 = table1_update(df1)
-
-def table2_update(df):
-	df.loc[2, 'pub_days'] = df.loc[1, 'pub_days'] - df.loc[0, 'pub_days']
-
-	return df
-
-
 
 
 layout = html.Div(
@@ -96,31 +89,32 @@ layout = html.Div(
 					id='table1',
 					data= df1.to_dict('rows_table1'),
 					columns= [
-						{'id':'ind',       'name':'ind',      'editable':False, 'hidden':True, 'type': 'numeric'},
-						{'id':'tenor',     'name':'t',    'editable':False, 'hidden': False,'width': '40px'},
-						{'id':'daysy',     'name':'daysy',    'editable':False, 'hidden': True, 'type': 'numeric'},
-						{'id':'days',      'name':'days',     'editable':False, 'hidden': False, 'type': 'numeric'},
-						{'id':'ptosy',     'name':'ptosy',    'editable':False, 'type': 'numeric'},
-						{'id':'ptos',      'name':'ptos',     'editable':True,  'type': 'numeric'},
-						{'id':'odelta',    'name':'+-',   'editable':False, 'hidden': False, 'type': 'numeric'},
-						{'id':'ddelta',    'name':'ddelta',   'editable':False, 'hidden': True, 'type': 'numeric'},
-						{'id':'carry',     'name':'carry',    'editable':False, 'hidden': True, 'type': 'numeric'},
+						{'id':'ind',       'name':'ind',      'editable':True, 'hidden':True, 'type': 'numeric'},
+						{'id':'tenor',     'name':'t',    'editable':True, 'hidden': False,'width': '40px'},
+						{'id':'daysy',     'name':'daysy',    'editable':True, 'hidden': True, 'type': 'numeric'},
+						{'id':'days',      'name':'days',     'editable':True, 'hidden': True, 'type': 'numeric'},
+						{'id':'ptosy',     'name':'ptsy',    'editable':True, 'type': 'numeric'},
+						{'id':'ptos',      'name':'pts',     'editable':True,  'type': 'numeric'},
+						{'id':'odelta',    'name':'+-',   'editable':True, 'hidden': False, 'type': 'numeric'},
+						{'id':'ddelta',    'name':'ddelta',   'editable':True, 'hidden': True, 'type': 'numeric'},
+						{'id':'carry',     'name':'carry',    'editable':True, 'hidden': True, 'type': 'numeric'},
 						{'id':'icam',      'name':'icam',     'editable':True, 'hidden': False, 'type': 'numeric'},
 						{'id':'ilib',      'name':'ilib',     'editable':True, 'hidden': False, 'type': 'numeric'},
-						{'id':'tcs',       'name':'tcs',      'editable':False, 'hidden': True, 'type': 'numeric'},
-						{'id':'icam_os',   'name':'icam-os',  'editable':False, 'hidden': True, 'type': 'numeric'},
-						{'id':'fracam_os', 'name':'fra-os',   'editable':False, 'hidden': False, 'type': 'numeric'},
-						{'id':'basisy',    'name':'basisy',   'editable':False, 'hidden': True, 'type': 'numeric'},
+						{'id':'tcs',       'name':'tcs',      'editable':True, 'hidden': True, 'type': 'numeric'},
+						{'id':'icam_os',   'name':'icam-os',  'editable':True, 'hidden': True, 'type': 'numeric'},
+						{'id':'fracam_os', 'name':'fra-os',   'editable':True, 'hidden': False, 'type': 'numeric'},
+						{'id':'basisy',    'name':'basisy',   'editable':True, 'hidden': True, 'type': 'numeric'},
 						{'id':'basis',     'name':'basis',    'editable':True, 'type': 'numeric'},
-						{'id':'i_ptos',    'name':'i-ptos',   'editable':False, 'type': 'numeric'},
-						{'id':'i_basis',   'name':'i-basis',  'editable':False, 'type': 'numeric'},
-						{'id':'blank',   'name':'',  'editable':False},
+						{'id':'i_ptos',    'name':'i-pts',   'editable':True, 'type': 'numeric'},
+						{'id':'i_basis',   'name':'i-basis',  'editable':True, 'type': 'numeric'},
+						{'id':'blank',   'name':'',  'editable':True},
 						],
 					style_as_list_view= True,
 					n_fixed_rows=1,
+					# fixed_rows={ 'headers': True, 'data': 0 },
 					style_table={
 						# 'margin':'5px',
-						# 'maxHeight': '250',
+						'height': '460px',
 						'overflowY': 'auto'
 						},
 					# css=[{
@@ -147,18 +141,50 @@ layout = html.Div(
 						{'if': {'column_id':'days'}, 'width': '32px'},
 						{'if': {'column_id':'ptosy'}, 'width': '40px', 'color': 'rgb(204, 205, 206)'},
 						{'if': {'column_id':'ptos'}, 'width': '45px', 'fontWeight': 600, 'color': '#4176A4'},
-						{'if': {'column_id':'odelta'}, 'width': '35px'},
+						{'if': {'column_id':'odelta'}, 'width': '42px'},
 						{'if': {'column_id':'ddelta'}, 'width': '48px'},
 						{'if': {'column_id':'carry'}, 'width': '48px'},
 						{'if': {'column_id':'icam'}, 'width': '48px'},
 						{'if': {'column_id':'ilib'}, 'width': '48px'},
 						{'if': {'column_id':'fracam_os'}, 'width': '50px'},
-						{'if': {'column_id':'basis'}, 'width': '48px', 'fontWeight': 600, 'color': '#4176A4'},
-						{'if': {'column_id':'i_ptos'}, 'width': '50px','fontWeight': 600,'color':'#81C3D7','backgroundColor':'rgb(251,251,251)'}, #20A4F3
+						{'if': {'column_id':'basis'}, 'width': '48px', 'fontWeight': 600, 'color': '#81C3D7'},
+						{'if': {'column_id':'i_ptos'}, 'width': '50px','fontWeight': 600,'color':'#4176A4','backgroundColor':'rgb(251,251,251)'}, #20A4F3
 						{'if': {'column_id':'i_basis'}, 'width': '50px','fontWeight': 600,'color':'#81C3D7','backgroundColor':'rgb(251,251,251)'},
 						{'if': {'column_id':'blank'}, 'width': '2px', 'backgroundColor':'rgb(251,251,251)'},
 						],
 					editable=True,
+					style_data_conditional=[
+						{
+							'if':{
+								'column_id':'odelta',
+								'filter':'{odelta} >= 0.01',
+							},
+							'color':'mediumseagreen',
+						},
+						{
+							'if':{
+								'column_id':'odelta',
+								'filter':'{odelta} <= -0.01',
+							},
+							'color':'red',
+						},
+					]
+					),
+				dash_table.DataTable(
+					id='table2',
+					data=df2.to_dict('rows_table2'),
+					columns=[
+						{'id':'name', 'name':'name', 'editable':True},
+						{'id':'pub_days', 'name':'pub-days', 'editable':True, 'type': 'numeric'},
+						{'id':'dates', 'name':'dates', 'editable':True},
+						{'id':'ptos', 'name':'pts'},
+						{'id':'4', 'name':' '},
+						{'id':'5', 'name':' '},
+						{'id':'6', 'name':' '},
+					],
+					editable=True,
+					style_as_list_view= True,
+					# style_table={'width':'170px'},
 					),
 				]
 			),
@@ -174,15 +200,16 @@ layout = html.Div(
 			# 	'height': '70vh',
 			# 	},
 			children=[
-				dcc.Graph(id='id-fra-line-graph',
-						  style={
-							  # 'text-align':'left',
-							  # 'height':'40vh',
-							  # 'margin-bottom':'0px',
-							},
-							hoverData={'points': [{'customdata': 'm1'}]}),
+				html.Div(
+					[
+						dcc.Graph(
+							id="grafico1",
+							hoverData={"points": [{"customdata": "1m"}]},
+						)
+					],
+					# style={"width": "32%", "display": "inline-block", "padding": "0 20"},
+				)
 				],
-   				style={"width": "50%", "display": "none"}
 			),
 			html.Div(
 				[
@@ -191,7 +218,7 @@ layout = html.Div(
 							html.Div(
 								[
 									dcc.Dropdown(
-										id="crossfilter-xaxis-column",
+										id="data-escondida",
 										options=[
 											{"label": i, "value": i}
 											for i in indicator["indicator"].unique()
@@ -199,73 +226,92 @@ layout = html.Div(
 										value="A",
 									)
 								],
-								style={"width": "50%", "display": "none"},
+								style={"display": "none"},
 							)
 						]
-					),  # inline-block
+					),
+
 					html.Div(
-						[
-							dcc.Graph(
-								id="crossfilter-indicator",
-								hoverData={"points": [{"customdata": "1m"}]},
-							)
-						],
-						style={"width": "32%", "display": "inline-block", "padding": "0 20"},
+						[dcc.Graph(id="grafico2")],
+						# style={"width": "100%", "display": "inline-block"},
 					),
-					html.Div(
-						[dcc.Graph(id="x-time-series")],
-						style={"width": "32%", "display": "inline-block"},
-					),
-				]
-			),
-		html.Div(
-			children=[
-				dash_table.DataTable(
-					id='table2',
-					data=df2.to_dict('rows_table2'),
-					columns=df2.columns.to_list(),
-					editable=True,
-					),
+					html.Div(dcc.Graph(id='grafico3')),
 				],
+			className='four columns',
 			),
+		dcc.Store(id='data-grafico3', storage_type='local')
 	],
 	className='row',
+	style={'height': '50%','width':'100%','max-height':'600px'},
 )
 
 
+
 @app.callback(
-	[Output('table1','data'), Output('table2','data')],
+	[Output('table1','data'), Output('table2','data'), Output('data-grafico3','data')],
 	[Input('table1','data_timestamp'), Input('table2','data_timestamp')],
 	[State('table1','data'), State('table2','data')])
 def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 	dft1 = pd.DataFrame.from_dict(rows1)
 	dft2 = pd.DataFrame.from_dict(rows2)
 
+	# SANITY CHECKS: pisa las col según data original. para bloquear typos ...
+	dft1.tenor = df1.tenor
+	dft1.ptosy = df1.ptosy
+	if dft2.loc[0,'pub_days'] > 370:
+		dft2.loc[0, 'pub_days'] = 370
+	if dft2.loc[0,'pub_days'] >= dft2.loc[1,'pub_days']:
+		dft2.loc[1, 'pub_days'] = dft2.loc[0,'pub_days'] + 1
+
+
+
+	# ordena las columnas según orden original (el dict las "ordena" alfabeticamente)
 	dft1 = dft1[df1.columns.copy()]
 	dft2 = dft2[df2.columns.copy()]
 
-	# print(dft1,'\n',dft2)
-
+	""" FUNCIÓN UPDATE TABLE1 """
 	dft1 = table1_update(dft1)
-	dft2 = table2_update(dft2)
-	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2')
+
+	""" FUNCIÓN UPDATE TABLE2 """
+	dft2['name'] = ['short-leg','long-leg','spread']
+
+	for c in ['pub_days','ptos']:
+		dft2[c] = dft2[c].map(fc.float_or_None)
+	dft2.loc[:2, 'ptos'] = np.interp(x=dft2.loc[:2,'pub_days'],xp=dft1[:14].days.values,fp=dft1[:14].ptos.values).round(2)
+
+	# calcula la fra implicita en el spread
+	fras_array = np.interp(x=dft2.loc[:2,'pub_days'], xp=dft1.days.values,fp=dft1.fracam_os.values).round(2)
+	dft2.loc[2, '4'] = round(fc.fra1w(w2=dft2.iloc[1, 1], w1=dft2.iloc[0, 1], i2=fras_array[1], i1=fras_array[0]),2)
+
+	# ultima fila ptos la resta de las dos primeras
+	dft2.loc[2, 'ptos'] = round(dft2.loc[1, 'ptos'] - dft2.loc[0, 'ptos'], 2)
+
+	# setea nombres en la fila
+	dft2.loc[1, '4':'6'] = ['fra','rank_tod','rank_his']
+
+	# calcula rank percentil "transversal" de la fra del spread
+	_ = fc.rank_perc(x=dft2.loc[2,'4'],array=np.interp(x=np.arange(1,371,1,int),xp=dft1.days.values,fp=dft1.fracam_os.values))
+	dft2.loc[2, '5'] = str( _ ) + '/100'
+
+	# calcula rank percentil "historico" de la fra del spread
+	w2 = dft2.iloc[1,1]
+	w1 = dft2.iloc[0,1]
+	slice_ = fra_hist_total[[w1,w2]]
+	slice_['fra'] = slice_.apply(lambda x: round( fc.fra1w(w2=w2,w1=w1,i2=x[w2],i1=x[w1]), 2) , axis=1)
+	_ = fc.rank_perc(x=dft2.loc[2, '4'],array=slice_.fra)
+	dft2.loc[2, '6'] = str( _ ) + '/100'
+
+	# append fra de hoy en dataframe "slice_" , es input para --> grafico3
+	slice_.loc[fec1] = [None,None,dft2.loc[2,'4']]
+
+	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_.fra.to_json()
+
 
 
 @app.callback(
-	Output('id-fra-line-graph', 'figure'),
-	[Input('table1', 'data')],
-	# [State('table1', 'data')]
-	)
-def display_outputtt(rows):
-	dfr = pd.DataFrame.from_dict(rows)
-	dfr = dfr['fracam_os'][4:14].values
-	return crea_fra_scatter_graph(dfr)
-
-
-@app.callback(
-    Output("crossfilter-indicator", "figure"),
+    Output("grafico1", "figure"),
     [Input('table1', 'data'),
-     Input("crossfilter-xaxis-column", "value")],
+     Input("data-escondida", "value")],
 )
 def update_graph(rows, xaxis_column_name):
 
@@ -288,14 +334,15 @@ def update_graph(rows, xaxis_column_name):
             shape='spline',
             color=('#4176A4')
         ),
-        opacity=0.8,
+        # opacity=0.8,
         text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
+		hoverinfo='x',
         textposition='top center',
         textfont=dict(size=12),
     )
 
 	layout = dict(
-	    title='FRA 1 month IRS CAM off-shore (f1m-os) ',
+	    title='IRS CAM FRA-os per tenor ',
 	    titlefont=dict(size=13),
 	    xaxis=dict(
 	        zeroline=False,
@@ -326,12 +373,12 @@ def create_time_series(dff):
                             name='FRA history',
                             line=dict(
          		   				shape='spline',
-            					color=('#4176A4')
+            					color=('#73BA9B')  #92B6B1 otro verde ...
         					),
         					opacity=0.8
              				)],
         "layout": go.Layout(
-            title="IRS CAM off-shore: FRA 1 month history",
+            title="IRS CAM FRA-os history",
         	titlefont=dict(size=13),
         	xaxis=dict(
 				showgrid=False,
@@ -358,9 +405,9 @@ def create_time_series(dff):
     }
 
 @app.callback(
-    Output("x-time-series", "figure"),
+    Output("grafico2", "figure"),
     [Input("table1", "data"),
-     Input("crossfilter-indicator", "hoverData")],
+     Input("grafico1", "hoverData")],
 )
 def update_y_timeseries(rows, hoverData):
 	dfr = pd.DataFrame.from_dict(rows).copy()
@@ -374,6 +421,52 @@ def update_y_timeseries(rows, hoverData):
 	return create_time_series(dff)
 
 
+
+@app.callback(
+	Output('grafico3','figure'),
+	[Input('table2','data_timestamp'),Input('data-grafico3','data')]
+)
+def update_grafico3(timestamp,rows):
+	series = pd.read_json(rows,typ='series')
+
+	trace = go.Scatter(
+        x=series.index,
+        y=series,
+        # customdata=auxiliar["tenor"],
+        mode='lines',
+        # name='lines+markers',
+        line=dict(
+            shape='spline',
+            color=('#73BA9B')
+        ),
+        opacity=0.8,
+        # text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
+        textposition='top center',
+        textfont=dict(size=12),
+    )
+
+	layout = dict(
+	    title='FRA-os implicit in spread ',
+	    titlefont=dict(size=13),
+	    xaxis=dict(
+	        zeroline=False,
+			showgrid=False,
+	        automargin=True
+	    ),
+	    yaxis=dict(
+	        zeroline=False,
+			showgrid=False,
+	        automargin=True,
+	        titlefont=dict(size=10, ),
+	        # size=8,
+	    ),
+	    # height=400,
+	    margin=dict(l=55, b=50, r=65),
+	)
+
+	fig = dict(data=[trace], layout=layout)
+
+	return fig
 
 
 

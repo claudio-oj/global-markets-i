@@ -19,6 +19,9 @@ para cada punto de la curva 7d-380d + 18m + 2y.
 import os # borrar os al momento de subir a heroku (y solucionar ruta llamado funciones co)
 os.chdir('D:\Dropbox\Documentos\Git\global-markets-i')
 
+import time
+clock0 = time.clock()
+
 import pandas as pd
 import numpy as np
 import pickle
@@ -218,14 +221,18 @@ fras_hoy.columns = ['date','1m','2m','3m','4m','5m','6m','9m','12m','18m','2y']
 fras_hoy.to_csv('./batch/fra_history.csv')
 
 
-
 """ Calcula la inicializacion de la tabla1, la guarda en un pickle para importarse mañana mas liviana en la sesión del cliente """
 pd.to_pickle(fc.tables_init(fec0,fec1), "./batch/table1_init.pkl")
 
 
+# mide el tiempo
+clock1 = time.clock()
+print('runtime ',clock1-clock0,' segundos')
+
 
 """ LIMPIA MEMORIA VARIABLES QUE NO SE USAN EN LA SESION DEL CLIENTE Y SOLO SIRVEN EN EL BATCH """
-del _,X,cols,d_basis_tcs,d_icamos,df_b,df_cl,df_p,df_us,dfb,dff,dfio,fras_hoy,icam_dict,ilib_dict,ptos_dict
+del _,X,cols,d_basis_tcs,d_icamos,df_b,df_cl,df_p,df_us,dfb,dff,dfio,fras_hoy,icam_dict,ilib_dict,ptos_dict,clock1,clock0
 
 import gc
 gc.collect()
+

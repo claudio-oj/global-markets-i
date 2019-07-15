@@ -3,11 +3,12 @@ Global Markets Insights, por Claudio Ortiz
 python 3.6.6
 """
 
-import os
+# import os
 import pandas as pd 
 import numpy as np
 from scipy import interpolate
 from numbers import Number
+from itertools import permutations
 
 
 def weird_division(n, d):
@@ -418,3 +419,49 @@ def update_calc_fx(rows):
 
 	return df
 
+
+
+def spreads_finder(range_days, gap, icamos):
+	"""	función para segmentar la curva a los spreads potenciales a analizar.
+	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.
+	:param:
+		range_days: iterable i.e (7,45), segmento de la curva a analizar: pub days min,max,
+		gap: iterable (2,10) restringe la estensión min,max de los spreads a analizar
+		icamos: df con index = dias publish 1-370 y 'icamos' = la tasa fra asociada a ese dia
+	:return: dataframe cols: "dia corto, dias largo, fra implicita en el spread" 	"""
+	l = list(permutations(range(range_days[0], range_days[1] + 1), 2))
+	df = pd.DataFrame(l, columns=['short', 'long'])
+
+	df = df[df.long > df.short]
+	df = df[(df.long - df.short <= gap[1]) & (df.long - df.short >= gap[0])]
+
+	# re index los dias que faltan, e interpola.
+	new_index = np.arange(1,376,1,int)
+	icamos = icamos.reindex(new_index, fill_value=np.nan)
+	icamos.interpolate(inplace=True)
+
+
+	# slice de solo las fra's que voy a necesitar
+	icamos = icamos[icamos.index.isin(range(range_days[0], range_days[1] + 1))]
+
+	df['spread'] = df.apply(lambda x: str(x.short) + 'x' + str(x.long), axis=1)
+
+	# merge plazos con icamos...
+	df = df.merge(icamos, how='left', left_on='short', right_index=True)
+	df = df.merge(icamos, how='left', left_on='long', right_index=True)
+	df = df.rename(columns={df.columns[-2]: 'i1', df.columns[-1]: 'i2'})
+
+	# calcula fra implicita en el spread
+	df['fra'] = fra1w(w2=df.long, w1=df.short, i2=df.i2, i1=df.i1)
+	df['fra'] = df.fra.round(2)
+
+	# rankea los spread
+	df.sort_values(by=['fra'], inplace=True)
+
+	# slice los spread más baratos
+	cheap = df[['spread', 'fra']][:10]
+
+	# slice los spread más caros
+	rich = df[['spread', 'fra']][-10:].sort_values(by=['fra'], ascending=False)
+
+	return {'cheap': cheap, 'rich': rich}

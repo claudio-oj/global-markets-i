@@ -106,3 +106,14 @@
   padding-top: 0px;
   font-size: 12px;
 }
+
+.dcc-inputs-css {
+  #height: 10px;
+  #width: 0.05%;
+  display: inline !important;
+
+}
+
+.dcc-button-css {
+
+}

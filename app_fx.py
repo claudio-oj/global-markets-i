@@ -13,7 +13,6 @@ import numpy as np
 from numbers import Number
 
 
-
 """ CORRE INICIO PROCESOS """
 
 from app import app
@@ -27,6 +26,7 @@ fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valo
 fra_historic = pd.read_csv("./batch/fra_history.csv")
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
 indicator = pd.read_csv("indicator.csv")
+dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['spread','fra'])
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
@@ -73,7 +73,7 @@ def table1_update(df):
 		return df
 df1 = table1_update(df1)
 
-
+# noinspection PyUnboundLocalVariable
 layout = html.Div(
 	# className='row',
 	# style={
@@ -184,6 +184,13 @@ layout = html.Div(
 					],
 					editable=True,
 					style_as_list_view= True,
+					style_data_conditional=[
+						{
+							'if':{'row_index': 2},
+							'fontWeight': 600,
+							'color':'#4176A4',
+						},
+					]
 					# style_table={'width':'170px'},
 					),
 				]
@@ -208,7 +215,8 @@ layout = html.Div(
 						)
 					],
 					# style={"width": "32%", "display": "inline-block", "padding": "0 20"},
-				)
+				),
+				html.Div(dcc.Graph(id='grafico3')),
 				],
 			),
 			html.Div(
@@ -235,10 +243,51 @@ layout = html.Div(
 						[dcc.Graph(id="grafico2")],
 						# style={"width": "100%", "display": "inline-block"},
 					),
-					html.Div(dcc.Graph(id='grafico3')),
+					html.Div(
+						[
+							dcc.Input(id='spread-finder-input-days',type='text',value='7,45',
+									  style={'width':'20%'}),
+							dcc.Input(id='spread-finder-input-gap' ,type='text',value='5,10',
+									  style={'width':'20%'}),
+							html.Button('Submit', id='spreads-finder-button'),
+						],
+						className="dcc-inputs-css",
+					),
+					# html.Div(
+					# 	[
+					#
+					# 	],
+					# 	className="dcc-button-css",
+					# ),
+					html.Div(
+						[
+							dash_table.DataTable(
+								id='table-cheap',
+								columns=[
+									{'id':'spread', 'name':'spread'},
+									{'id':'fra', 'name':'fra'},
+								],
+								data=dfNone.to_dict('records'),
+								style_as_list_view= True,
+								style_table={'width':'50%'},
+							),
+							dash_table.DataTable(
+								id='table-rich',
+								columns=[
+									{'id':'spread', 'name':'spread'},
+									{'id':'fra', 'name':'fra'},
+								],
+								data=dfNone.to_dict('records'),
+								style_as_list_view= True,
+								style_table={'width':'50%'},
+							),
+						],
+						style={"display": "inlineBlock"},
+					),
 				],
 			className='four columns',
 			),
+
 		dcc.Store(id='data-grafico3', storage_type='local')
 	],
 	className='row',
@@ -246,6 +295,10 @@ layout = html.Div(
 )
 
 
+"""
+##################################################################################
+##################################################################################
+"""
 
 @app.callback(
 	[Output('table1','data'), Output('table2','data'), Output('data-grafico3','data')],
@@ -260,9 +313,10 @@ def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 	dft1.ptosy = df1.ptosy
 	if dft2.loc[0,'pub_days'] > 370:
 		dft2.loc[0, 'pub_days'] = 370
+	if dft2.loc[1,'pub_days'] > 370:
+		dft2.loc[1, 'pub_days'] = 370
 	if dft2.loc[0,'pub_days'] >= dft2.loc[1,'pub_days']:
 		dft2.loc[1, 'pub_days'] = dft2.loc[0,'pub_days'] + 1
-
 
 
 	# ordena las columnas según orden original (el dict las "ordena" alfabeticamente)
@@ -279,8 +333,8 @@ def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 		dft2[c] = dft2[c].map(fc.float_or_None)
 	dft2.loc[:2, 'ptos'] = np.interp(x=dft2.loc[:2,'pub_days'],xp=dft1[:14].days.values,fp=dft1[:14].ptos.values).round(2)
 
-	# calcula la fra implicita en el spread
-	fras_array = np.interp(x=dft2.loc[:2,'pub_days'], xp=dft1.days.values,fp=dft1.fracam_os.values).round(2)
+	# calcula la fra implicita en el spread TODO: Aquiiiiiiiiiiiiiii fracam_os
+	fras_array = np.interp(x=dft2.loc[:2,'pub_days'], xp=dft1.days.values,fp=dft1.icam_os.values).round(2)
 	dft2.loc[2, '4'] = round(fc.fra1w(w2=dft2.iloc[1, 1], w1=dft2.iloc[0, 1], i2=fras_array[1], i1=fras_array[0]),2)
 
 	# ultima fila ptos la resta de las dos primeras
@@ -468,6 +522,23 @@ def update_grafico3(timestamp,rows):
 
 	return fig
 
+
+@app.callback(
+	[Output('table-cheap','data'),Output('table-rich','data')],
+	[Input('spreads-finder-button','n_clicks')],
+	[State('spread-finder-input-days','value'),State('spread-finder-input-gap','value'),
+	 State('table1','data')],
+)
+def run_spread_finder(n_clicks,range_days,gap,rows):
+	dft1 = pd.DataFrame.from_dict(rows)
+	dft1 = dft1.set_index('days')['icam_os']
+	range_days = [int(x) for x in range_days.split(',')]
+	gap        = [int(x) for x in gap.split(',')]
+
+	dfaux = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1)
+
+	# return tables cheap & rich
+	return dfaux['cheap'].to_dict('rows-table-cheap'), dfaux['rich'].to_dict('rows-table-rich')
 
 
 

@@ -37,7 +37,7 @@ app.layout = html.Div(
 					   'fontWeight':700,
 					   "text-decoration": "none",
 					   # 'padding-left':2,
-					   'padding-top':10,
+					   'padding-top':'28px',
 					   'float': 'left',
 					   },
 				),

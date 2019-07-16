@@ -76,7 +76,8 @@ for d in dfb.index:
 	df_b = fcc.crea_cal_IRS_us(d)
 
 	df_b['basis'], df_b['tcs']   = None, None
-	df_b.loc['12m':'20y','basis'] = dfb.loc[d][-13:].apply(lambda x: fc.round_conv_basis(x)).values
+	df_b.loc['12m':'20y','basis']= dfb.loc[d][-13:].apply(lambda x: fc.round_conv_basis(x)).values
+	df_b.loc['o/n':'3m', 'tcs']  = 0
 	df_b.loc['6m':'30y','tcs']   = dfb.loc[d][18:33].values
 	d_basis_tcs[d] = df_b
 
@@ -97,7 +98,7 @@ for d in dfb.index:
 	df_cl.meses = meses_cl
 
 	# fecha settle del tenor o/n
-	df_cl.val['o/n'] = fcc.next_lab_settle(d,2,cal_ny=True)
+	df_cl.val['o/n'] = fcc.next_lab_settle(d,2,cal_spot=True)
 
 	# fecha settle para los tenors largos en base al 1er settle
 	df_cl.val = df_cl.apply(lambda x: fcc.settle_rule(df_cl.val['o/n'],x.meses), axis=1)
@@ -134,12 +135,6 @@ pd.to_pickle(ptos_dict,"./batch/p_ptos.pkl")
 
 """ 2.4. USDCLP SPOT """
 pd.to_pickle(dfb.spot, "./batch/p_clp_spot.pkl")
-
-
-
-
-
-
 
 
 """ PROCESO 3 CREA TASAS CAMARA OFF SHORE: convención simple act/360  y  TASAS FRA 1W """
@@ -198,14 +193,15 @@ pd.to_pickle(dff,"./batch/hist_total_fra.pkl")
 
 
 
-
 """ a partir de `de hist_total_fra` --> creo un slice con los tenors válidos para hoy: `fra_history.csv`,
  PARA EL GRAFICO DE ARRIBA A LA DERECHA DE GABRIEL """
 
 # los dias de los tenors de hoy
-_ = fcc.crea_cal_tenors(fec1).loc[['1m','2m','3m','4m','5m','6m','9m','12m','18m','2y']].pubdays.to_list()
+l =['1w','2w','1m','2m','3m','4m','5m','6m','9m','12m','18m','2y']
 
-fras_hoy = dff.loc[:,_] / 100 # TODO: aqui divido x100 para adaptar al formato actual del grafico 2. En el futuro modificar .csv llevar tasas a 2.39
+_ = fcc.crea_cal_tenors(fec1).loc[l].pubdays.to_list()
+
+fras_hoy = dff.loc[:,_]
 
 # outliers control
 # fras_hoy[127].plot()
@@ -216,7 +212,7 @@ fras_hoy['date'] = fras_hoy.index
 
 fras_hoy = fras_hoy[['date']+_]
 
-fras_hoy.columns = ['date','1m','2m','3m','4m','5m','6m','9m','12m','18m','2y']
+fras_hoy.columns = ['date'] + l
 
 fras_hoy.to_csv('./batch/fra_history.csv')
 
@@ -227,7 +223,7 @@ pd.to_pickle(fc.tables_init(fec0,fec1), "./batch/table1_init.pkl")
 
 # mide el tiempo
 clock1 = time.clock()
-print('runtime ',clock1-clock0,' segundos')
+print('Me demoré ',clock1-clock0,' segundos, en correr el batch')
 
 
 """ LIMPIA MEMORIA VARIABLES QUE NO SE USAN EN LA SESION DEL CLIENTE Y SOLO SIRVEN EN EL BATCH """

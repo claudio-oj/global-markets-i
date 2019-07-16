@@ -18,6 +18,7 @@ from numbers import Number
 from app import app
 
 import funcs_co as fc
+import funcs_calendario_co as fcc
 from graphs import crea_fra_scatter_graph
 
 # importa fechas batch fec0, y fecha de uso fec1 = fec0 + 1
@@ -47,15 +48,25 @@ def table1_update(df):
 		spot = df.odelta[0]
 
 		df[1:].odelta = df[1:].ptos - df[1:].ptosy
-		# if x==0 for x in
+		df.odelta = df.odelta.round(2)
 
-		df.ddelta = 100 * df.apply(lambda x: fc.weird_division(x.odelta, x.carry_days),axis=1)
+		# estas metricas no las estamos mostrando --> x eso están desactivadas
+		# df.ddelta = 100 * df.apply(lambda x: fc.weird_division(x.odelta, x.carry_days),axis=1)
 
-		df.carry  = df.apply(lambda x: df.days[4] * fc.weird_division(x.ptos, x.carry_days),axis=1)
+		# df.carry  = df.apply(lambda x: df.days[4] * fc.weird_division(x.ptos, x.carry_days),axis=1)
 
-		df.icam_os = df.apply(lambda x: fc.cam_os_simp(x.carry_days, spot, x.ptos, x.ilib), axis=1)
+		# TODO: tasa ilib de convención normal a tasa zero.   AQUI VOOOY !!!
+		df.ilibz = df.apply(lambda x: fc.comp_a_z(x.carry_days, x.ilib, periodicity=90), axis=1)
+		df.icam_osz = df.apply(lambda x: fc.cam_os_simp(x.carry_days, spot, x.ptos, x.ilibz), axis=1)
+		df.icam_os[:13] = df.icam_osz[:13]
+		df.icam_os[13:] = df[13:].apply(lambda x: fc.z_a_comp(x.carry_days, x.icam_osz), axis=1)
 
-		df.fracam_os = fc.fra1w_v(df[['days','icam_os']])
+		# TODO: aqui le puse carry_days en vez de days
+		df.fracam_os = fc.fra1w_v(df[['carry_days','icam_os']])
+		# df.fracam_os = df.fracam_os.apply(lambda x: round(x,2))
+
+		df.icamz[:13] = df.icam[:13].values
+		df.icamz[13:] = df[13:].apply(lambda x: fc.comp_a_z(x.carry_days, x.icam, periodicity=180), axis=1)
 
 		df.i_ptos = df.apply(lambda x: fc.iptos(t=x.carry_days if x.carry_days!=0 else float('nan'),
 								 spot=spot, iusd=x.ilib, icam=x.icam, b= x.basis,
@@ -65,15 +76,15 @@ def table1_update(df):
 								 spot=spot, iusd=x.ilib, icam=x.icam, ptos= x.ptos,
 								 tcs=x.tcs),axis=1)
 
-		df = df.applymap(fc.round_2d)
 		df[['basis','i_basis']] = df[['basis','i_basis']].applymap(fc.round_conv_basis)
+		df = df.applymap(fc.round_2d)
 		return df
 
 	except:
 		return df
 df1 = table1_update(df1)
 
-# noinspection PyUnboundLocalVariable
+
 layout = html.Div(
 	# className='row',
 	# style={
@@ -101,12 +112,12 @@ layout = html.Div(
 						{'id':'icam',      'name':'icam',     'editable':True, 'hidden': False, 'type': 'numeric'},
 						{'id':'ilib',      'name':'ilib',     'editable':True, 'hidden': False, 'type': 'numeric'},
 						{'id':'tcs',       'name':'tcs',      'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'icam_os',   'name':'icam-os',  'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'fracam_os', 'name':'fra-os',   'editable':True, 'hidden': False, 'type': 'numeric'},
-						{'id':'basisy',    'name':'basisy',   'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'basis',     'name':'basis',    'editable':True, 'type': 'numeric'},
-						{'id':'i_ptos',    'name':'i-pts',   'editable':True, 'type': 'numeric'},
-						{'id':'i_basis',   'name':'i-basis',  'editable':True, 'type': 'numeric'},
+						{'id':'icam_os',   'name':'icamos',  'editable':True, 'hidden': False, 'type': 'numeric'},
+						{'id':'fracam_os', 'name':'fra',   'editable':True, 'hidden': False, 'type': 'numeric'},
+						{'id':'basisy',    'name':'bsisy',   'editable':True, 'hidden': True, 'type': 'numeric'},
+						{'id':'basis',     'name':'bsis',    'editable':True, 'type': 'numeric'},
+						{'id':'i_ptos',    'name':'ipts',   'editable':True, 'type': 'numeric'},
+						{'id':'i_basis',   'name':'ibsis',  'editable':True, 'type': 'numeric'},
 						{'id':'blank',   'name':'',  'editable':True},
 						],
 					style_as_list_view= True,
@@ -137,20 +148,21 @@ layout = html.Div(
 							# 'backgroundColor': 'white',
 						# },
 					style_cell_conditional=[
-						{'if': {'column_id':'tenor'}, 'width': '31px'},
+						{'if': {'column_id':'tenor'}, 'width': '30px'},
 						{'if': {'column_id':'days'}, 'width': '32px'},
-						{'if': {'column_id':'ptosy'}, 'width': '40px', 'color': 'rgb(204, 205, 206)'},
-						{'if': {'column_id':'ptos'}, 'width': '45px', 'fontWeight': 600, 'color': '#4176A4'},
-						{'if': {'column_id':'odelta'}, 'width': '42px'},
-						{'if': {'column_id':'ddelta'}, 'width': '48px'},
-						{'if': {'column_id':'carry'}, 'width': '48px'},
-						{'if': {'column_id':'icam'}, 'width': '48px'},
-						{'if': {'column_id':'ilib'}, 'width': '48px'},
-						{'if': {'column_id':'fracam_os'}, 'width': '50px'},
-						{'if': {'column_id':'basis'}, 'width': '48px', 'fontWeight': 600, 'color': '#81C3D7'},
-						{'if': {'column_id':'i_ptos'}, 'width': '50px','fontWeight': 600,'color':'#4176A4','backgroundColor':'rgb(251,251,251)'}, #20A4F3
-						{'if': {'column_id':'i_basis'}, 'width': '50px','fontWeight': 600,'color':'#81C3D7','backgroundColor':'rgb(251,251,251)'},
-						{'if': {'column_id':'blank'}, 'width': '2px', 'backgroundColor':'rgb(251,251,251)'},
+						{'if': {'column_id':'ptosy'}, 'width': '39px', 'color': 'rgb(204, 205, 206)'},
+						{'if': {'column_id':'ptos'}, 'width': '43px', 'fontWeight': 600, 'color': '#4176A4'},
+						# {'if': {'column_id':'odelta'}, 'width': '42px'},
+						# {'if': {'column_id':'ddelta'}, 'width': '48px'},
+						# {'if': {'column_id':'carry'}, 'width': '48px'},
+						{'if': {'column_id':'icam'}, 'width': '45px'},
+						{'if': {'column_id':'ilib'}, 'width': '45px'},
+						{'if': {'column_id':'icam_os'}, 'width': '45px'},
+						{'if': {'column_id':'fracam_os'}, 'width': '45px'},
+						{'if': {'column_id':'basis'}, 'width': '43px', 'fontWeight': 600, 'color': '#81C3D7'},
+						{'if': {'column_id':'i_ptos'}, 'width': '43px','fontWeight': 600,'color':'#4176A4','backgroundColor':'rgb(251,251,251)'}, #20A4F3
+						{'if': {'column_id':'i_basis'}, 'width': '43px','fontWeight': 600,'color':'#81C3D7','backgroundColor':'rgb(251,251,251)'},
+						{'if': {'column_id':'blank'}, 'width': '1px', 'backgroundColor':'rgb(251,251,251)'},
 						],
 					editable=True,
 					style_data_conditional=[
@@ -174,9 +186,9 @@ layout = html.Div(
 					id='table2',
 					data=df2.to_dict('rows_table2'),
 					columns=[
-						{'id':'name', 'name':'name', 'editable':True},
+						{'id':'name', 'name':'name'},
 						{'id':'pub_days', 'name':'pub-days', 'editable':True, 'type': 'numeric'},
-						{'id':'dates', 'name':'dates', 'editable':True},
+						{'id':'dates', 'name':'dates'},
 						{'id':'ptos', 'name':'pts'},
 						{'id':'4', 'name':' '},
 						{'id':'5', 'name':' '},
@@ -253,12 +265,6 @@ layout = html.Div(
 						],
 						className="dcc-inputs-css",
 					),
-					# html.Div(
-					# 	[
-					#
-					# 	],
-					# 	className="dcc-button-css",
-					# ),
 					html.Div(
 						[
 							dash_table.DataTable(
@@ -293,6 +299,7 @@ layout = html.Div(
 	className='row',
 	style={'height': '50%','width':'100%','max-height':'600px'},
 )
+
 
 
 """
@@ -333,6 +340,8 @@ def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 		dft2[c] = dft2[c].map(fc.float_or_None)
 	dft2.loc[:2, 'ptos'] = np.interp(x=dft2.loc[:2,'pub_days'],xp=dft1[:14].days.values,fp=dft1[:14].ptos.values).round(2)
 
+	dft2[:2]['dates'] = ( dft2[:2].apply(lambda x: fcc.date_output(fec1,x.pub_days),axis=1) ).to_list()
+
 	# calcula la fra implicita en el spread TODO: Aquiiiiiiiiiiiiiii fracam_os
 	fras_array = np.interp(x=dft2.loc[:2,'pub_days'], xp=dft1.days.values,fp=dft1.icam_os.values).round(2)
 	dft2.loc[2, '4'] = round(fc.fra1w(w2=dft2.iloc[1, 1], w1=dft2.iloc[0, 1], i2=fras_array[1], i1=fras_array[0]),2)
@@ -369,10 +378,11 @@ def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 )
 def update_graph(rows, xaxis_column_name):
 
-	l = ['1m', '2m', '3m', '4m', '5m', '6m', '9m', '12m', '18m', '2y']
+	l = ['1w','2w','1m', '2m', '3m', '4m', '5m', '6m', '9m', '12m', '18m', '2y']
 
 	dfr = pd.DataFrame.from_dict(rows).copy()
-	auxiliar = dfr.iloc[4:14, [18, 4, 7]] # * Crea archivo tenor.csv
+	# auxiliar = dfr.iloc[4:14, [18, 4, 7]] # * Crea archivo tenor.csv
+	auxiliar = dfr.loc[2:13,['tenor','days','fracam_os']]
 	auxiliar.insert(3, "indicator", "A")
 	# auxiliar.to_csv("tenors.csv", index=False)
 
@@ -388,16 +398,16 @@ def update_graph(rows, xaxis_column_name):
             shape='spline',
             color=('#4176A4')
         ),
-        # opacity=0.8,
+		opacity=0.8,
         text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
 		hoverinfo='x',
         textposition='top center',
-        textfont=dict(size=12),
+        textfont=dict(size=10),
     )
 
 	layout = dict(
 	    title='IRS CAM FRA-os per tenor ',
-	    titlefont=dict(size=13),
+	    titlefont=dict(size=11),
 	    xaxis=dict(
 	        zeroline=False,
 			showgrid=False,
@@ -405,13 +415,13 @@ def update_graph(rows, xaxis_column_name):
 	    ),
 	    yaxis=dict(
 	        zeroline=False,
-			showgrid=False,
+			showgrid=True,
 	        automargin=True,
 	        titlefont=dict(size=10, ),
 	        # size=8,
 	    ),
-	    # height=400,
-	    margin=dict(l=55, b=50, r=65),
+	    height=300,
+	    margin=dict(l=45, b=20, r=50, t=35),
 	)
 
 	fig = dict(data=[trace_fra], layout=layout)
@@ -422,18 +432,19 @@ def update_graph(rows, xaxis_column_name):
 def create_time_series(dff):
 
     return {
-        "data": [go.Scatter(x=dff.iloc[:, 0], y=dff.iloc[:, 1]*100,
+        "data": [go.Scatter(x=dff.iloc[:, 0], y=dff.iloc[:, 1],
                             mode="lines",
                             name='FRA history',
                             line=dict(
          		   				shape='spline',
             					color=('#73BA9B')  #92B6B1 otro verde ...
         					),
-        					opacity=0.8
+        					opacity=1,
+							textfont=dict(size=10),
              				)],
         "layout": go.Layout(
-            title="IRS CAM FRA-os history",
-        	titlefont=dict(size=13),
+            title="IRS CAM FRA-os, tenor:"+str(dff.columns[-1]) ,
+        	titlefont=dict(size=11),
         	xaxis=dict(
 				showgrid=False,
         #    automargin=True,
@@ -450,11 +461,12 @@ def create_time_series(dff):
             	# automargin=True,
 				range= [0, 4.3],
 				zeroline=False,
-				showgrid=False,
-            	titlefont=dict(size=10),
+				showgrid=True,
+            	titlefont=dict(size=9),
 				hoverformat = '.2f'
         	),
-        	margin=dict(l=55, b=50, r=65)
+			height=300,
+			margin=dict(l=45, b=25, r=50, t=35),
         ),
     }
 
@@ -465,23 +477,25 @@ def create_time_series(dff):
 )
 def update_y_timeseries(rows, hoverData):
 	dfr = pd.DataFrame.from_dict(rows).copy()
-	auxiliar = dfr.iloc[4:14, [18, 4, 7]] # * Crea archivo tenor.csv
+	auxiliar = dfr.loc[2:13,['tenor','days','fracam_os']]
 	auxiliar.insert(3, "indicator", "A")
 	col_name = hoverData["points"][0]["customdata"]
 	row_value = auxiliar.loc[auxiliar["tenor"] == col_name].iloc[:, 2]
+
 	dff = fra_historic[["date", col_name]]
-	dff.iloc[-1, dff.columns.get_loc(col_name)] = float(row_value / 100) # TODO: aqui esta la division por 100 q quiero elminar
-	dff = dff.iloc[0:390]
-	return create_time_series(dff)
+	dff.loc[dff.index[-1]+1] = [fec1,float(row_value)]
+
+	return create_time_series( dff.iloc[0:390] )
 
 
 
 @app.callback(
 	Output('grafico3','figure'),
-	[Input('table2','data_timestamp'),Input('data-grafico3','data')]
+	[Input('table2','data'),Input('data-grafico3','data')]
 )
-def update_grafico3(timestamp,rows):
-	series = pd.read_json(rows,typ='series')
+def update_grafico3(rows0,rows1):
+	spread_d = pd.DataFrame.from_dict(rows0)['pub_days'].to_list()
+	series = pd.read_json(rows1,typ='series')
 
 	trace = go.Scatter(
         x=series.index,
@@ -493,15 +507,15 @@ def update_grafico3(timestamp,rows):
             shape='spline',
             color=('#73BA9B')
         ),
-        opacity=0.8,
+        opacity=1,
         # text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
         textposition='top center',
-        textfont=dict(size=12),
+        textfont=dict(size=10),
     )
 
 	layout = dict(
-	    title='FRA-os implicit in spread ',
-	    titlefont=dict(size=13),
+	    title='FRA-os implicit in spread: '+str(int(spread_d[0]))+'x'+str(int(spread_d[1])),
+	    titlefont=dict(size=11),
 	    xaxis=dict(
 	        zeroline=False,
 			showgrid=False,
@@ -509,13 +523,13 @@ def update_grafico3(timestamp,rows):
 	    ),
 	    yaxis=dict(
 	        zeroline=False,
-			showgrid=False,
+			showgrid=True,
 	        automargin=True,
 	        titlefont=dict(size=10, ),
 	        # size=8,
 	    ),
-	    # height=400,
-	    margin=dict(l=55, b=50, r=65),
+	    height=300,
+		margin=dict(l=45, b=20, r=50, t=35),
 	)
 
 	fig = dict(data=[trace], layout=layout)

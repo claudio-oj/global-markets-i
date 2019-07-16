@@ -12,6 +12,9 @@ h_stgo = df_h[df_h.holiday_STGO == True]['date']
 h_ny = df_h[df_h.holiday_NY == True]['date']
 h_both = df_h[(df_h.holiday_STGO == True) & (df_h.holiday_NY == True)]['date']
 
+months_dict = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep',
+				   10: 'Oct', 11: 'Nov', 12: 'Dec'}
+
 
 
 def next_cal_day(d0, offset):
@@ -39,17 +42,14 @@ def next_cal_day(d0, offset):
 
 def next_lab_settle(d0, offset, cal_spot=False, cal_cl=False, cal_ny=False):
 	""" calcula el dia laboral siguiente, segun calendarios de feriados
-
 	PARAMETERS:
 		d: pandas timestamp
 		offset: int
 		cal_spot: boolean, intersección calendario holidays STGO & NY
 		cal_cl: boolean, calendario holidays STGO
 		cal_ny: boolean, calendario holidays NY
-
 	RETURNS:
-			next_lab_settle
-		"""
+			next_lab_settle """
 
 	# SPOT
 	if cal_spot:
@@ -96,7 +96,7 @@ def settle_rule(d0, m):
 		d3 = d2
 
 	return d3
-# settle_rule(pd.Timestamp(2018,8,30), 1)
+
 
 def crea_cal_tenors(tod):
 	""" función que crea calendario completo
@@ -104,19 +104,7 @@ def crea_cal_tenors(tod):
 	:param
 		tod:
 	:return:
-		df calendario completo
-	"""
-
-	# tod = pd.Timestamp(2019,7,4)
-
-	# df feriados
-	# df_h = pd.read_excel('batch/feriados_base_datos.xlsx', parse_dates=[0])
-	#
-	# h_stgo_or_ny = df_h[(df_h.holiday_STGO == True) | (df_h.holiday_NY == True)]['date']
-	# h_stgo       = df_h[df_h.holiday_STGO == True]['date']
-	# h_ny         = df_h[df_h.holiday_NY == True]['date']
-	# h_both       = df_h[(df_h.holiday_STGO == True) & (df_h.holiday_NY == True)]['date']
-
+		df calendario completo """
 
 	# today's value date
 	tod_v = next_lab_settle(tod,2,cal_spot=True)
@@ -199,3 +187,30 @@ def crea_cal_IRS_us(d):
 	# calcula carry days en base al primer settle date
 	df.carry_dias = (df.val - df.val[0]).apply(lambda x: x.days)
 	return df
+
+
+def date_output(fec1,pub):
+	""" función que calcula los dias fix-pub-value en formato mercado fx
+	:param:
+		fec1: pd.Timestamp , fecha de hoy
+		pub: int
+	:return string """
+
+	# pub date: fecha input usuario
+	pub = fec1 + pd.DateOffset(pub)
+
+	# fix date
+	# fix = next_cal_day(pub, -1)
+	fix = pub + pd.tseries.offsets.CustomBusinessDay(-1, holidays=h_stgo)
+
+	# settle date
+	val = next_lab_settle(fix, 2, cal_spot=True)
+
+	if pub.day_name() in ['Saturday','Sunday']:
+		return pub.day_name()
+
+	elif fix in h_stgo.to_list() or pub in h_stgo.to_list():
+		return 'stgo_holiday'
+
+	else:
+		return str(fix.day) + '-' + str(pub.day) + '-' + str(val.day) + ' ' + months_dict[val.month]

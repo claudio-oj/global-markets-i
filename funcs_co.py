@@ -9,10 +9,11 @@ import numpy as np
 from scipy import interpolate
 from numbers import Number
 from itertools import permutations
+import funcs_calendario_co as fcc
 
 
 def weird_division(n, d):
-	""" función división, que en el caso excepcional de dividir x cero --> 0"""
+	""" función división, que en el caso excepcional de dividir x cero --> return: 0"""
 	# return n / d if d else float('nan')
 	return n / d if d else 0
 
@@ -54,93 +55,41 @@ def round_2d(x):
 
 
 
+def comp_a_z(dias,i_c,periodicity=182.5):
+	""" transforma tasa compuesta --> a tasa zero (a.k.a simple)
+	... ver su función inversa: z_a_comp mas abajo ...
+	:param
+		dias: int, dias de carry efectivo
+		i_c: tasa compuesta base 360. i.e 2.85 (notar que 0.0285 NO)
+		peridiocity: int, frecuencia de la composición. i.e. 180 dias
+	:return:
+		tasa zero (tasa simple act/360) """
+	if dias <= periodicity:
+		return i_c
 
-def tables_init(fec0,fec1):
-	""" función importa data del batch, para crear los df de las tablas 1,2
-	con la data que se inicilizan al iniciar la app
-	:param:
-		d: Timestamp, dia de batch fec0, (un dia antes del dia de uso)
-	:return: df1, df2, """
+	i_c = i_c/100
+	f = 360 / periodicity
 
-	# import os
-	# os.chdir('D:\Dropbox\Documentos\Git\global-markets-i')
-
-	# import pandas as pd
-	# import numpy as np
-
-
-	import funcs_calendario_co as fcc
-
-	tenors = ['TOD', 'TOM', '1w', '2w'] + [str(x) + 'm' for x in range(1, 6 + 1)]+ ['9m',
-				'12m', '18m'] + [str(x) + 'y' for x in range(2, 10 + 1)]
-
-	cols1 = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos', 'odelta', 'ddelta', 'carry', 'icam',
-			 'ilib', 'tcs', 'icam_os', 'fracam_os', 'i_ptos', 'i_basis']
-
-	df = pd.DataFrame(index=range(0,len(tenors)),columns=cols1)
-
-	df['ind']   = df.index.values
-	df['tenor'] = tenors
+	return 100 * ( ( (1+i_c/f)**(f*dias/360) )-1 ) * 360/dias
 
 
-	""" SPOT INICIO """
-	df.odelta[0] = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 
+def z_a_comp(dias,i_z,periodicity=182.5):
+	""" transforma tasa zero (a.k.a simple) --> a compuesta
+	... ver su función inversa: comp_a_z mas arriba ...
+	:param
+		dias: int, dias de carry efectivo
+		i_z: tasa zero (tasa simple act/360)
+		peridiocity: int, frecuencia de la composición. i.e. 180 dias
+	:return:
+		tasa compuesta base 360. i.e 2.85 (notar que 0.0285 NO) """
+	if dias <= periodicity:
+		return i_z
 
-	""" PUNTOS FORWARD fec0 y fec1 """
-	# pub days fecha batch
-	_ = (fcc.crea_cal_tenors(fec0).pub - fec0).apply(lambda x: x.days)
-	df['daysy'] = _[_.index.isin(tenors)].values
+	i_z = i_z/100
+	f = 360 / periodicity
 
-	# pub days batch + 1 = fecha de uso GMI
-	_ = (fcc.crea_cal_tenors(fec1).pub - fec1).apply(lambda x: x.days)
-	df['days'] = _[_.index.isin(tenors)].values
-
-	df['carry_days'] = df.days - int(df.days[0])
-
-	# voy a buscar los puntos de ayer al pickle, para ponerlos en el df de hoy
-	pik_ptos = pd.read_pickle("./batch/p_ptos.pkl")
-
-	# calculo ptos hoy breakeven, par iniciar la mañana con los plazos nuevos y la curva corecta
-	_ = pik_ptos[fec0][['pubdays','ptos']].dropna()
-	tenor_pts = _.index
-	df['ptosy'][df.tenor.isin(tenor_pts)] = np.interp(x=df[df.tenor.isin(tenor_pts)].days,
-													  xp=_.pubdays,fp=_.ptos.map(float)).round(2)
-	df.loc[1,'ptosy'] = round(np.interp(x=df.loc[1,'days'],xp=_.pubdays,fp=_.ptos.map(float)) ,2)
-
-	df['ptos'] = df.ptosy.copy()
-
-	df[1:].odelta = df[1:].ptos - df[1:].ptosy
-
-
-	""" ICAM """
-	pik_cam = pd.read_pickle("./batch/p_icam.pkl")
-	df['icam'] = np.interp(x=df.carry_days,xp=pik_cam[fec0].carry_dias,fp=pik_cam[fec0].icam).round(2)
-
-
-	""" ILIB """
-	pik_ilib = pd.read_pickle("./batch/p_ilib.pkl")
-	df['ilib'] = np.interp(x=df.carry_days,xp=pik_ilib[fec0].carry_dias,fp=pik_ilib[fec0].ilib).round(2)
-
-
-	""" TRES CON SEIS """
-	pik_bt = pd.read_pickle("./batch/p_basis_tcs.pkl")
-	df['tcs'].loc[9:] = np.interp(x=df.days[9:],xp=pik_bt[fec0]['6m':'10y'].carry_dias,fp=pik_bt[fec0]['6m':'10y'].tcs.map(float)).round(3)
-
-
-	""" BASIS """
-	df = df.join(pik_bt[fec0].basis.rename('basisy'), on='tenor',rsuffix='_other')
-	df['basisy'] = df.basisy.map(round_conv_basis) # redondeo convencion basis
-	df['basis'] = df.basisy.copy()
-
-	col_ord = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos',
-       'odelta', 'ddelta', 'carry', 'icam', 'ilib', 'tcs', 'icam_os',
-       'fracam_os','basisy', 'basis', 'i_ptos', 'i_basis']
-
-	df = df[col_ord]
-
-	return df
-
+	return 100 * f * ( (1+i_z*dias/360)**(360/(f*dias)) -1 )
 
 
 
@@ -195,28 +144,9 @@ def ibasis(t,spot,iusd,icam,ptos,tcs,comp=True):
 	if comp==False:
 		return print('hacer función tasa simple')
 
-	t = t/180  # son cupones semestrales
+	t = t/182.5  # son cupones semestrales
 
 	return 10000* (((   (spot/(spot+ptos))**(1/t) )*  (1+icam/2)-1)*2-iusd-tcs  )
-
-
-
-def comp_a_z(dias,i_c,periodicity=180):
-	""" transforma tasa compuesta --> a tasa zero (a.k.a simple)
-	:param
-		dias: int, dias de carry efectivo
-		i_c: tasa compuesta base 360. i.e 2.85 (notar que 0.0285 NO)
-		peridiocity: int, frecuencia de la composición. i.e. 180 dias
-	:return:
-		tasa zero (tasa simple act/360)
-	"""
-	if dias==0:
-		return i_c
-
-	i_c = i_c/100
-	f = 360 / periodicity
-
-	return 100 * ( ( (1+i_c/f)**(f*dias/360) )-1 ) * 360/dias
 
 
 
@@ -324,7 +254,7 @@ def fra1m_v2(df,interp=False):
 
 def fra1w(w2,w1,i2,i1):
 	""" Función Calcula tasas FRA de 1 semana. Entre plazos que la distancia
-	sea > 1 semana --> promedio de fra's.
+	sea > 1 semana --> promedio compuesto de fra's.
 	:param
 		w2: Series of int, numero de SEMANAS asociada a la tasa zero, larga
 		w1: Series of int, numero de SEMANAS asociada a la tasa zero, corta
@@ -348,13 +278,14 @@ def fra1w_v(df):
 
 	# w = {'TOD':0,'TOM':0,'1w':1,'2w':2,'1m':4,'2m':8,'3m':12,'4m':16,'5m':20,'6m':24,
 	# 			  '9m':36,'12m':48,'18m':72,'2y':96}
-	df['w'] = df.days / 7
+	df.rename({df.columns[0]:'d',df.columns[1]:'i'},axis='columns',inplace=True)
+	df['w'] = df.d / 7
 	df['w_1'] = df.w.shift(1)
-	df['icam_os_1'] = df.icam_os.shift(1)
+	df['i_1'] = df.i.shift(1)
 
 	# 1yr tiene 52 semanas
-	y = 5200*(( ((1+df.icam_os/5200)**df.w) / ((1+df.icam_os_1/5200)**df.w_1) )**(1/(df.w-df.w_1)) - 1 )
-	y.loc[0:1] = df.icam_os.loc[0:1].copy()
+	y = 5200*(( ((1+df.i/5200)**df.w) / ((1+df.i_1/5200)**df.w_1) )**(1/(df.w-df.w_1)) - 1 )
+	y.loc[0:1] = df.i.loc[0:1].copy()
 	return y
 
 
@@ -391,6 +322,95 @@ def rank_perc(x,array):
 	:return:
 		float, el ranking sobre 100 """
 	return int(100 * sum(x > array) / len(array))
+
+
+
+def tables_init(fec0,fec1):
+	""" función importa data del batch, para crear los df de table1
+	con la data que se inicilizan al iniciar la app
+	:param:
+		fec0: Timestamp, dia de batch fec0, (un dia antes del dia de uso)
+		fec1: Timestamp, dia de batch fec1, (dia de uso calculadora)
+	:return: df1 """
+
+	tenors = ['TOD', 'TOM', '1w', '2w'] + [str(x) + 'm' for x in range(1, 6 + 1)]+ ['9m',
+				'12m', '18m'] + [str(x) + 'y' for x in range(2, 10 + 1)]
+
+	cols1 = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos',
+	       'odelta', 'ddelta', 'carry', 'icam','icamz', 'ilib','ilibz', 'tcs', 'icam_osz','icam_os',
+	       'fracam_os','basisy', 'basis', 'i_ptos', 'i_basis']
+
+	df = pd.DataFrame(index=range(0,len(tenors)),columns=cols1)
+
+	df['ind']   = df.index.values
+	df['tenor'] = tenors
+
+
+	""" SPOT INICIO """
+	df.odelta[0] = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
+
+
+	""" PUNTOS FORWARD fec0 y fec1 """
+	# pub days fecha batch
+	_ = (fcc.crea_cal_tenors(fec0).pub - fec0).apply(lambda x: x.days)
+	df['daysy'] = _[_.index.isin(tenors)].values
+
+	# pub days batch + 1 = fecha de uso GMI
+	_ = (fcc.crea_cal_tenors(fec1).pub - fec1).apply(lambda x: x.days)
+	df['days'] = _[_.index.isin(tenors)].values
+
+	df['carry_days'] = df.days - int(df.days[0])
+
+	# voy a buscar los puntos de ayer al pickle, para ponerlos en el df de hoy
+	pik_ptos = pd.read_pickle("./batch/p_ptos.pkl")
+
+	# calculo ptos hoy breakeven, par iniciar la mañana con los plazos nuevos y la curva corecta
+	_ = pik_ptos[fec0][['pubdays','ptos']].dropna()
+	tenor_pts = _.index
+	df['ptosy'][df.tenor.isin(tenor_pts)] = np.interp(x=df[df.tenor.isin(tenor_pts)].days,
+													  xp=_.pubdays,fp=_.ptos.map(float)).round(2)
+	df.loc[1,'ptosy'] = round(np.interp(x=df.loc[1,'days'],xp=_.pubdays,fp=_.ptos.map(float)) ,2)
+
+	df['ptos'] = df.ptosy.copy()
+
+	df[1:].odelta = df[1:].ptos - df[1:].ptosy
+
+
+	""" ICAM """
+	pik_cam = pd.read_pickle("./batch/p_icam.pkl")
+	df['icam'] = np.interp(x=df.carry_days,xp=pik_cam[fec0].carry_dias,fp=pik_cam[fec0].icam).round(2)
+	df['icamz'][:13] = df['icam'][:13].values
+	df['icamz'][13:] = df[13:].apply(lambda x: comp_a_z(x.days,x.icam,periodicity=182.5),axis=1)
+
+
+	""" ILIB """
+	pik_ilib = pd.read_pickle("./batch/p_ilib.pkl")
+	df['ilib'] = np.interp(x=df.carry_days,xp=pik_ilib[fec0].carry_dias,fp=pik_ilib[fec0].ilib).round(2)
+	df['ilibz']= df.apply(lambda x: comp_a_z(x.days,x.ilib,periodicity=91.25),axis=1)
+
+
+	""" TRES CON SEIS """
+	pik_bt = pd.read_pickle("./batch/p_basis_tcs.pkl")
+	df['tcs'].loc[9:] = np.interp(x=df.days[9:],xp=pik_bt[fec0]['6m':'10y'].carry_dias,fp=pik_bt[fec0]['6m':'10y'].tcs.map(float)).round(3)
+
+
+	""" CALCULO icam_osz , icam_os : primero tasa zero cupon --> después la paso a convención! """
+	df['icam_osz'] = df.apply(lambda x: cam_os_simp(dias=x.carry_days,spot=df.odelta[0],ptos=x.ptos,iusd=x.ilibz),axis=1)
+	df['icam_os'][:13] = df['icam_osz'][:13]
+	df['icam_os'][13:] = df[13:].apply(lambda x: z_a_comp(x.carry_days,x.icam_osz),axis=1)
+
+
+	""" CALCULO 	fracam_os, desde icam-os convención mercado... """
+	df['fracam_os'] = fra1w_v(df[['carry_days','icam_os']])
+
+
+	""" BASIS """
+	df = df.join(pik_bt[fec0].basis.rename('basisy'), on='tenor',rsuffix='_other')
+	df['basisy']= df.basisy_other.map(round_conv_basis) # redondeo convencion basis
+	df['basis'] = df.basisy.copy()
+	df.drop(labels=['basisy_other'],axis=1,inplace=True)
+
+	return df
 
 
 

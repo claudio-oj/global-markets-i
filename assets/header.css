@@ -98,11 +98,12 @@
   position: fixed;
   bottom: 0;
   width: 98.5%;
-  height: 25px;
+  height: 22px;
   background-color: #4176a4;
   color: white;
   text-align: center;
-  padding-top: 5px;
+  vertical-align: center;
+  #padding-top: 5px;
   font-size: 12px;
   border-radius: 6px;
 }

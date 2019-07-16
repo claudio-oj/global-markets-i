@@ -20,7 +20,7 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 ### To Do:
 1. pasar dominio host de heroku a uno .cl http://ivdevs.com/blog/2017/05/17/personalizando-dominio-de-una-app-alojada-en-heroku/
 2. ver donde inspeccionar _users log history_
-3. **aumentar los dynos**
+3. Chequeo de capacidad _heroku_ de uso en paralelo **+dynos?**
 4. **bug**: fix funciones inestables calendario
 5. **bug**: en `bbg_hist_dnlder_excel.xlsx` arreglar consulta bbg que rellene nan's con dato del dia anterior: icam 30yrs vino con nan's
 6. **bug**: arreglar favicon. O decidir eliminar el x defecto de dash
@@ -47,7 +47,6 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 9 ~~Documentación "funciones CO", para hacer más entendible el codigo~~
 10. ~~Modificar la lectura de data inicial, de la data dummy que cree originalmente --> al proceso batch~~
 11. ~~acordarnos de modificar el email a gmi.usdclp@gmail.com, contraseña gmail *tobrjciaqyuzywkq*~~
-
 
 ### Metodología de Desarrollo:
 - master branch (producción), develop branch, features branches  

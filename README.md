@@ -7,8 +7,9 @@
 Master Branch deployment en producción @ https://global-markets-i.herokuapp.com/
 
 ### Instrucciones run local:
-- correr archivo index.py en el _terminal_
+- correr archivo _index.py_ en el _terminal_
 - celdas bloqueadas en excel batch, password: _108_
+- email de contacto app _gmi.usdclp@gmail.com_, contraseña gmail _tobrjciaqyuzywkq_
 
 <img src="https://github.com/claudio-oj/global-markets-i/blob/develop/assets/gmi_img_snapshot2.png" width=800 style="float: center; margin-right: 10px;" />
 
@@ -25,15 +26,11 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 5. **bug**: en `bbg_hist_dnlder_excel.xlsx` arreglar consulta bbg que rellene nan's con dato del dia anterior: icam 30yrs vino con nan's
 6. **bug**: arreglar favicon. O decidir eliminar el x defecto de dash
 7. Titulo header a `Klavika` font. Aprendear a incoporarlo al codigo.
-8. **bug**: el calendario correcto para los _IR Swaps USD Libor_ es `settle holidays NY` , ahora estoy calculandolo con el calendario NY&STGO conjunto --> fix
-9. **bug importante**: cada vez que _uso_ o _calculo_ un "precio explicito" i.e puntos, basis, icam, etc... --> **REDONDEAR** según convención.
 10. limitar el ancho de `table1` para que en monitores anchos se compagine bien. y sean solo los graficos los que se extiendan
-11. **bug importante**: en el grafico de arriba a la derecha muestra la última tasa fra con fecha `fec0`, siendo que debiese ser `fec1`. Idealmente arreglar antes del deploymente
-12. Terminar table2: `dates`
-13. Hacer grafico3, con la time series historia de la fra de la tabla2
-14. Hacer la función corre _loop_, busca spreads baratos/caros
-15. compaginar _row / columns_ satisfactoriamente
 16. chequear que funcione bien el envio de excels del cliente
+17. cambiar color tabla basis al verde de los graficos
+18. colorear en blanco (para que no se vean) los numeros de las celdas que no debieran ser editables. Y encima aplicar una formula de
+interpolación que incluya solo los plazos operables
 
 ### To Do s terminados.
 1. ~~agregar user y password~~
@@ -47,6 +44,13 @@ A primera hora de la mañana el cliente final inicia sesión en la **app** e int
 9 ~~Documentación "funciones CO", para hacer más entendible el codigo~~
 10. ~~Modificar la lectura de data inicial, de la data dummy que cree originalmente --> al proceso batch~~
 11. ~~acordarnos de modificar el email a gmi.usdclp@gmail.com, contraseña gmail *tobrjciaqyuzywkq*~~
+13. ~~Hacer grafico3, con la time series historia de la fra de la tabla2~~
+14. ~~Hacer la función corre _loop_, busca spreads baratos/caros~~
+15. ~~compaginar _row / columns_ satisfactoriamente~~
+8. ~~**bug**: el calendario correcto para los _IR Swaps USD Libor_ es `settle holidays NY` , ahora estoy calculandolo con el calendario NY&STGO conjunto --> fix~~
+9. ~~**bug importante**: cada vez que _uso_ o _calculo_ un "precio explicito" i.e puntos, basis, icam, etc... --> **REDONDEAR** según convención.~~
+11. ~~**bug importante**: en el grafico de arriba a la derecha muestra la última tasa fra con fecha `fec0`, siendo que debiese ser `fec1`. Idealmente arreglar antes del deploymente~~
+
 
 ### Metodología de Desarrollo:
 - master branch (producción), develop branch, features branches  

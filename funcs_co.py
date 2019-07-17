@@ -457,8 +457,11 @@ def spreads_finder(range_days, gap, icamos):
 
 	# re index los dias que faltan, e interpola.
 	new_index = np.arange(1,376,1,int)
+	aux = np.interp(x=new_index, xp=icamos.index.values,fp=icamos.values)
+
 	icamos = icamos.reindex(new_index, fill_value=np.nan)
-	icamos.interpolate(inplace=True)
+	icamos = pd.Series(aux,index=icamos.index,name='icamos')
+	# icamos.interpolate(inplace=True)
 
 
 	# slice de solo las fra's que voy a necesitar

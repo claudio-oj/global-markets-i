@@ -55,15 +55,13 @@ def table1_update(df):
 
 		# df.carry  = df.apply(lambda x: df.days[4] * fc.weird_division(x.ptos, x.carry_days),axis=1)
 
-		# TODO: tasa ilib de convención normal a tasa zero.   AQUI VOOOY !!!
 		df.ilibz = df.apply(lambda x: fc.comp_a_z(x.carry_days, x.ilib, periodicity=90), axis=1)
 		df.icam_osz = df.apply(lambda x: fc.cam_os_simp(x.carry_days, spot, x.ptos, x.ilibz), axis=1)
 		df.icam_os[:13] = df.icam_osz[:13]
 		df.icam_os[13:] = df[13:].apply(lambda x: fc.z_a_comp(x.carry_days, x.icam_osz), axis=1)
 
-		# TODO: aqui le puse carry_days en vez de days
+		# aqui le puse carry_days en vez de days
 		df.fracam_os = fc.fra1w_v(df[['carry_days','icam_os']])
-		# df.fracam_os = df.fracam_os.apply(lambda x: round(x,2))
 
 		df.icamz[:13] = df.icam[:13].values
 		df.icamz[13:] = df[13:].apply(lambda x: fc.comp_a_z(x.carry_days, x.icam, periodicity=180), axis=1)
@@ -83,6 +81,60 @@ def table1_update(df):
 	except:
 		return df
 df1 = table1_update(df1)
+
+def table2_update(dft1,dft2):
+	""" actualiza la tabla 2
+	:param:
+		dft1: pd.Dataframe imagen inicio table1
+		dft1: pd.Dataframe imagen inicio table2
+	:return: pd.Dataframe 	"""
+
+	dft2['name'] = ['short-leg', 'long-leg', 'spread']
+
+	# Sanity checks
+	if dft2.loc[0,'pub_days'] > 370:
+		dft2.loc[0, 'pub_days'] = 370
+	if dft2.loc[1,'pub_days'] > 370:
+		dft2.loc[1, 'pub_days'] = 370
+	if dft2.loc[0,'pub_days'] >= dft2.loc[1,'pub_days']:
+		dft2.loc[1, 'pub_days'] = dft2.loc[0,'pub_days'] + 1
+
+	for c in ['pub_days', 'ptos']:
+		dft2[c] = dft2[c].map(fc.float_or_None)
+	dft2.loc[:2, 'ptos'] = np.interp(x=dft2.loc[:2, 'pub_days'], xp=dft1[:14].days.values,
+									 fp=dft1[:14].ptos.values).round(2)
+
+	dft2[:2]['dates'] = (dft2[:2].apply(lambda x: fcc.date_output(fec1, x.pub_days), axis=1)).to_list()
+
+	# calcula la fra implicita en el spread
+	fras_array = np.interp(x=dft2.loc[:2, 'pub_days'], xp=dft1.carry_days.values, fp=dft1.icam_os.values)
+	dft2.loc[2, '4'] = round(fc.fra1w(w2=dft2.iloc[1, 1], w1=dft2.iloc[0, 1], i2=fras_array[1], i1=fras_array[0]), 2)
+
+	# ultima fila ptos la resta de las dos primeras
+	dft2.loc[2, 'ptos'] = round(dft2.loc[1, 'ptos'] - dft2.loc[0, 'ptos'], 2)
+
+	# setea nombres en la fila
+	dft2.loc[1, '4':'6'] = ['fra', 'rank_tod', 'rank_his']
+
+	# calcula rank percentil "transversal" de la fra del spread
+	_ = fc.rank_perc(x=dft2.loc[2, '4'],
+					 array=np.interp(x=np.arange(1, 371, 1, int), xp=dft1.days.values, fp=dft1.fracam_os.values))
+	dft2.loc[2, '5'] = str(_) + '/100'
+
+	# calcula rank percentil "historico" de la fra del spread
+	w2 = dft2.iloc[1, 1]
+	w1 = dft2.iloc[0, 1]
+	slice_ = fra_hist_total[[w1, w2]]
+	slice_['fra'] = slice_.apply(lambda x: round(fc.fra1w(w2=w2, w1=w1, i2=x[w2], i1=x[w1]), 2), axis=1)
+	_ = fc.rank_perc(x=dft2.loc[2, '4'], array=slice_.fra)
+	dft2.loc[2, '6'] = str(_) + '/100'
+
+	# append fra de hoy en dataframe "slice_" , es input para --> grafico3
+	slice_.loc[fec1] = [None, None, dft2.loc[2, '4']]
+
+	return dft2, slice_.fra
+df2,slice_fra = table2_update(df1,df2)
+
 
 
 layout = html.Div(
@@ -330,44 +382,10 @@ def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 	dft1 = dft1[df1.columns.copy()]
 	dft2 = dft2[df2.columns.copy()]
 
-	""" FUNCIÓN UPDATE TABLE1 """
 	dft1 = table1_update(dft1)
+	dft2, slice_fra = table2_update(dft1,dft2)
 
-	""" FUNCIÓN UPDATE TABLE2 """
-	dft2['name'] = ['short-leg','long-leg','spread']
-
-	for c in ['pub_days','ptos']:
-		dft2[c] = dft2[c].map(fc.float_or_None)
-	dft2.loc[:2, 'ptos'] = np.interp(x=dft2.loc[:2,'pub_days'],xp=dft1[:14].days.values,fp=dft1[:14].ptos.values).round(2)
-
-	dft2[:2]['dates'] = ( dft2[:2].apply(lambda x: fcc.date_output(fec1,x.pub_days),axis=1) ).to_list()
-
-	# calcula la fra implicita en el spread TODO: Aquiiiiiiiiiiiiiii fracam_os
-	fras_array = np.interp(x=dft2.loc[:2,'pub_days'], xp=dft1.days.values,fp=dft1.icam_os.values).round(2)
-	dft2.loc[2, '4'] = round(fc.fra1w(w2=dft2.iloc[1, 1], w1=dft2.iloc[0, 1], i2=fras_array[1], i1=fras_array[0]),2)
-
-	# ultima fila ptos la resta de las dos primeras
-	dft2.loc[2, 'ptos'] = round(dft2.loc[1, 'ptos'] - dft2.loc[0, 'ptos'], 2)
-
-	# setea nombres en la fila
-	dft2.loc[1, '4':'6'] = ['fra','rank_tod','rank_his']
-
-	# calcula rank percentil "transversal" de la fra del spread
-	_ = fc.rank_perc(x=dft2.loc[2,'4'],array=np.interp(x=np.arange(1,371,1,int),xp=dft1.days.values,fp=dft1.fracam_os.values))
-	dft2.loc[2, '5'] = str( _ ) + '/100'
-
-	# calcula rank percentil "historico" de la fra del spread
-	w2 = dft2.iloc[1,1]
-	w1 = dft2.iloc[0,1]
-	slice_ = fra_hist_total[[w1,w2]]
-	slice_['fra'] = slice_.apply(lambda x: round( fc.fra1w(w2=w2,w1=w1,i2=x[w2],i1=x[w1]), 2) , axis=1)
-	_ = fc.rank_perc(x=dft2.loc[2, '4'],array=slice_.fra)
-	dft2.loc[2, '6'] = str( _ ) + '/100'
-
-	# append fra de hoy en dataframe "slice_" , es input para --> grafico3
-	slice_.loc[fec1] = [None,None,dft2.loc[2,'4']]
-
-	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_.fra.to_json()
+	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_fra.to_json()
 
 
 
@@ -545,7 +563,7 @@ def update_grafico3(rows0,rows1):
 )
 def run_spread_finder(n_clicks,range_days,gap,rows):
 	dft1 = pd.DataFrame.from_dict(rows)
-	dft1 = dft1.set_index('days')['icam_os']
+	dft1 = dft1.set_index('carry_days')['icam_os']
 	range_days = [int(x) for x in range_days.split(',')]
 	gap        = [int(x) for x in gap.split(',')]
 

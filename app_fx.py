@@ -427,7 +427,7 @@ def update_graph(rows, xaxis_column_name):
 		yaxis='y2',
 		showlegend=False,
 		marker_color='LightBlue',
-		opacity=0.5,
+		opacity=0.4,
 	)
 
 	trace_fra = go.Scatter(
@@ -440,7 +440,7 @@ def update_graph(rows, xaxis_column_name):
 			shape='spline',
 			color=('#4176A4')
 		),
-		opacity=0.6,
+		opacity=0.8,
 		text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
 		hoverinfo='x',
 		textposition='top center',

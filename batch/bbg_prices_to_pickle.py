@@ -50,8 +50,6 @@ fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valo
 
 
 
-
-
 """ PASO 2.1.1 PRODUCTO SWAP LIBOR """
 ilib_dict={}
 for d in dfb.index:

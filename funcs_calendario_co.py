@@ -160,7 +160,7 @@ def crea_cal_tenors(tod):
 
 	return df
 
-# y = crea_cal_tenors(pd.Timestamp(2018,8,28))
+y = crea_cal_tenors(pd.Timestamp(2019,7,8))
 
 
 def crea_cal_IRS_us(d):

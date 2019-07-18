@@ -5,7 +5,10 @@ from dash.exceptions import PreventUpdate
 
 import dash_table
 from dash_table.Format import Format  # https://dash.plot.ly/datatable/typing
+
+# import plotly.plotly as py
 import plotly.graph_objs as go
+# from plotly.tools import make_subplots
 
 import pandas as pd
 pd.options.mode.chained_assignment = None
@@ -52,8 +55,13 @@ def table1_update(df):
 
 		# estas metricas no las estamos mostrando --> x eso están desactivadas
 		# df.ddelta = 100 * df.apply(lambda x: fc.weird_division(x.odelta, x.carry_days),axis=1)
-
 		# df.carry  = df.apply(lambda x: df.days[4] * fc.weird_division(x.ptos, x.carry_days),axis=1)
+
+		#interpolate icam, ilib, en los plazos que no son operables.
+		days_interp = df.set_index('tenor').drop(labels=['TOM', '1w', '2w', '1m', '2m', '4m', '5m'])['carry_days'].values
+		for c in ['icam','ilib']:
+			i_interp = df.set_index('tenor').drop(labels=['TOM','1w','2w','1m','2m','4m','5m'])[c].values
+			df[c] = np.round(np.interp(x=df.carry_days,xp=days_interp,fp=i_interp),2)
 
 		df.ilibz = df.apply(lambda x: fc.comp_a_z(x.carry_days, x.ilib, periodicity=90), axis=1)
 		df.icam_osz = df.apply(lambda x: fc.cam_os_simp(x.carry_days, spot, x.ptos, x.ilibz), axis=1)
@@ -76,6 +84,9 @@ def table1_update(df):
 
 		df[['basis','i_basis']] = df[['basis','i_basis']].applymap(fc.round_conv_basis)
 		df = df.applymap(fc.round_2d)
+
+		df['show'] = [1,0,0,0,0,0,1,0,0]+[1 for x in range(1,14)] # para style cell conditional, define si se muestra
+
 		return df
 
 	except:
@@ -180,25 +191,6 @@ layout = html.Div(
 						'height': '460px',
 						'overflowY': 'auto'
 						},
-					# css=[{
-						#     'selector': '.dash-cell div.dash-cell-value',
-						#     'rule': 'display: inline; white-space: inherit; overflow: inherit; text-overflow: inherit;'
-						# }],
-						# style_cell={
-
-						# 'minWidth': '10px',
-						# 'width': '15px',
-						# 'maxWidth': '20px',
-						# 'whiteSpace': 'no-wrap',
-						# },
-						# style_header={
-							# 'column_id': 'ptos',
-							# 'height':'35px',
-							# 'textOverflow': 'clip',
-							# 'borderBottom':'0px',
-							# 'border': '1px solid white',
-							# 'backgroundColor': 'white',
-						# },
 					style_cell_conditional=[
 						{'if': {'column_id':'tenor'}, 'width': '30px'},
 						{'if': {'column_id':'days'}, 'width': '32px'},
@@ -217,6 +209,9 @@ layout = html.Div(
 						{'if': {'column_id':'blank'}, 'width': '1px', 'backgroundColor':'rgb(251,251,251)'},
 						],
 					editable=True,
+					style_data=[
+
+					],
 					style_data_conditional=[
 						{
 							'if':{
@@ -231,6 +226,20 @@ layout = html.Div(
 								'filter':'{odelta} <= -0.01',
 							},
 							'color':'red',
+						},
+						{
+							'if':{
+								'column_id':'icam',
+								'filter':'{show} eq 0',
+								},
+							'color': 'lightgray ',
+						},
+						{
+							'if': {
+								'column_id': 'ilib',
+								'filter': '{show} eq 0',
+							},
+							'color': 'lightgray ',
 						},
 					]
 					),
@@ -339,7 +348,7 @@ layout = html.Div(
 								data=dfNone.to_dict('records'),
 								style_as_list_view= True,
 								style_cell={'minWidth': '90px', 'width': '100px', 'maxWidth': '100px'},
-								style_table={'width':'50%','float':'right', 'padding-right': '50%'},
+								style_table={'width':'50%','float':'right', 'padding-right': '50%',},
 							),
 						],
 						style={"display": "inlineBlock"},
@@ -408,40 +417,43 @@ def update_graph(rows, xaxis_column_name):
 
 	df = auxiliar.loc[auxiliar["indicator"] == xaxis_column_name]
 
+	# _ = dfr.set_index('tenor')['1w':'2y']
+	# dif = _.icam_os - _.icam
+
 	trace_fra = go.Scatter(
-        x=l,
-        y=df["fracam_os"],
-        customdata=auxiliar["tenor"],
-        mode='lines+markers+text',
-        name='lines+markers',
-        line=dict(
-            shape='spline',
-            color=('#4176A4')
-        ),
+		x=l,
+		y=df["fracam_os"],
+		customdata=auxiliar["tenor"],
+		mode='lines+markers+text',
+		name='lines+markers',
+		line=dict(
+			shape='spline',
+			color=('#4176A4')
+		),
 		opacity=0.8,
-        text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
+		text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
 		hoverinfo='x',
-        textposition='top center',
-        textfont=dict(size=10),
-    )
+		textposition='top center',
+		textfont=dict(size=10),
+	)
 
 	layout = dict(
-	    title='IRS CAM FRA-os per tenor ',
-	    titlefont=dict(size=11),
-	    xaxis=dict(
-	        zeroline=False,
+		title='IRS CAM FRA-os per tenor ',
+		titlefont=dict(size=11),
+		xaxis=dict(
+			zeroline=False,
 			showgrid=False,
-	        automargin=True
-	    ),
-	    yaxis=dict(
-	        zeroline=False,
+			automargin=True
+		),
+		yaxis=dict(
+			zeroline=False,
 			showgrid=True,
-	        automargin=True,
-	        titlefont=dict(size=10, ),
-	        # size=8,
-	    ),
-	    height=300,
-	    margin=dict(l=45, b=20, r=50, t=35),
+			automargin=True,
+			titlefont=dict(size=10, ),
+			# size=8,
+		),
+		height=300,
+		margin=dict(l=45, b=20, r=50, t=35),
 	)
 
 	fig = dict(data=[trace_fra], layout=layout)

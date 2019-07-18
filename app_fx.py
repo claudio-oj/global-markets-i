@@ -417,28 +417,39 @@ def update_graph(rows, xaxis_column_name):
 
 	df = auxiliar.loc[auxiliar["indicator"] == xaxis_column_name]
 
-	# _ = dfr.set_index('tenor')['1w':'2y']
-	# dif = _.icam_os - _.icam
+	_ = dfr.set_index('tenor')['1w':'2y']
+	dif = _.icam_os - _.icam
+
+	trace_bar = go.Bar(
+		name='os-spread',
+		x=l,
+		y=dif,
+		yaxis='y2',
+		showlegend=False,
+		marker_color='LightBlue',
+		opacity=0.5,
+	)
 
 	trace_fra = go.Scatter(
+		name='fra',
 		x=l,
 		y=df["fracam_os"],
 		customdata=auxiliar["tenor"],
 		mode='lines+markers+text',
-		name='lines+markers',
 		line=dict(
 			shape='spline',
 			color=('#4176A4')
 		),
-		opacity=0.8,
+		opacity=0.6,
 		text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
 		hoverinfo='x',
 		textposition='top center',
 		textfont=dict(size=10),
+		showlegend=False,
 	)
 
 	layout = dict(
-		title='IRS CAM FRA-os per tenor ',
+		title='IRS CAM os FRA (LHS) v/s lcl-os spread (RHS) ',
 		titlefont=dict(size=11),
 		xaxis=dict(
 			zeroline=False,
@@ -447,16 +458,23 @@ def update_graph(rows, xaxis_column_name):
 		),
 		yaxis=dict(
 			zeroline=False,
-			showgrid=True,
+			showgrid=False,
 			automargin=True,
-			titlefont=dict(size=10, ),
+			titlefont=dict(size=10),
 			# size=8,
+		),
+		yaxis2=dict(
+			range=[-0.5,0.5],
+			overlaying='y',
+			anchor='x',
+			side='right',
+			showgrid=True,
 		),
 		height=300,
 		margin=dict(l=45, b=20, r=50, t=35),
 	)
 
-	fig = dict(data=[trace_fra], layout=layout)
+	fig = dict(data=[trace_bar,trace_fra], layout=layout)
 
 	return fig
 

@@ -396,7 +396,7 @@ def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 	dft1 = table1_update(dft1)
 	dft2, slice_fra = table2_update(dft1,dft2)
 
-	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_fra.to_json()
+	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_fra.to_json('data_graf3')
 
 
 

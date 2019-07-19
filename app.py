@@ -14,10 +14,14 @@ import dash_auth
 app = dash.Dash(__name__)
 
 credentials = [
-    ['admin','almuerzoalas12'],
+    ['admin','108'],
     ['gjara', 'chile2019'],
 	['fferrada', 'ptosfernando2020'],
 	['jzamora', 'basispapurri2029'],
+	['cgomez','binary'],
+	['fberly','fabi'],
+	['dlizana','golf1'],
+	['crosas','pizza'],
 ]
 
 auth = dash_auth.BasicAuth(app,credentials)

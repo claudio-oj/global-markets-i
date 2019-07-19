@@ -22,7 +22,7 @@ from app import app
 
 import funcs_co as fc
 import funcs_calendario_co as fcc
-from graphs import crea_fra_scatter_graph
+from graphs import crea_fra_scatter_graph,crea_grafico3
 
 # importa fechas batch fec0, y fecha de uso fec1 = fec0 + 1
 fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
@@ -137,11 +137,10 @@ def table2_update(dft1,dft2):
 	w1 = dft2.iloc[0, 1]
 	slice_ = fra_hist_total[[w1, w2]]
 	slice_['fra'] = slice_.apply(lambda x: round(fc.fra1w(w2=w2, w1=w1, i2=x[w2], i1=x[w1]), 2), axis=1)
-	_ = fc.rank_perc(x=dft2.loc[2, '4'], array=slice_.fra)
-	dft2.loc[2, '6'] = str(_) + '/100'
-
-	# append fra de hoy en dataframe "slice_" , es input para --> grafico3
 	slice_.loc[fec1] = [None, None, dft2.loc[2, '4']]
+
+	aux = fc.rank_perc(x=dft2.loc[2, '4'], array=slice_.fra)
+	dft2.loc[2, '6'] = str(aux) + '/100'
 
 	return dft2, slice_.fra
 df2,slice_fra = table2_update(df1,df2)
@@ -149,12 +148,6 @@ df2,slice_fra = table2_update(df1,df2)
 
 
 layout = html.Div(
-	# className='row',
-	# style={
-		# 'margin':'0px',
-		# 'textAlign':'justify',
-		# 'padding-left':'25px',
-	# },
 	children=[
 		html.Div(
 			className='four columns',
@@ -289,7 +282,12 @@ layout = html.Div(
 					],
 					# style={"width": "32%", "display": "inline-block", "padding": "0 20"},
 				),
-				html.Div(dcc.Graph(id='grafico3')),
+				html.Div(
+					dcc.Graph(
+						id='grafico3',
+						figure= crea_grafico3([7,30],slice_fra),
+						),
+					),
 				],
 			),
 			html.Div(
@@ -314,7 +312,6 @@ layout = html.Div(
 
 					html.Div(
 						[dcc.Graph(id="grafico2")],
-						# style={"width": "100%", "display": "inline-block"},
 					),
 					html.Div(
 						[
@@ -357,7 +354,7 @@ layout = html.Div(
 			className='four columns',
 			),
 
-		dcc.Store(id='data-grafico3', storage_type='local')
+		# dcc.Store(id='data-grafico3', storage_type='local')
 	],
 	className='row',
 	style={'height': '50%','width':'100%','max-height':'600px'},
@@ -371,7 +368,8 @@ layout = html.Div(
 """
 
 @app.callback(
-	[Output('table1','data'), Output('table2','data'), Output('data-grafico3','data')],
+	# [Output('table1','data'), Output('table2','data'), Output('data-grafico3','data')],
+	[Output('table1','data'), Output('table2','data')],
 	[Input('table1','data_timestamp'), Input('table2','data_timestamp')],
 	[State('table1','data'), State('table2','data')])
 def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
@@ -396,14 +394,15 @@ def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 	dft1 = table1_update(dft1)
 	dft2, slice_fra = table2_update(dft1,dft2)
 
-	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_fra.to_json('data_graf3')
+	# return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_fra.to_json('data_graf3')
+	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2')
 
 
 
 @app.callback(
-    Output("grafico1", "figure"),
-    [Input('table1', 'data'),
-     Input("data-escondida", "value")],
+	Output("grafico1", "figure"),
+	[Input('table1', 'data'),
+	 Input("data-escondida", "value")],
 )
 def update_graph(rows, xaxis_column_name):
 
@@ -481,49 +480,49 @@ def update_graph(rows, xaxis_column_name):
 
 def create_time_series(dff):
 
-    return {
-        "data": [go.Scatter(x=dff.iloc[:, 0], y=dff.iloc[:, 1],
-                            mode="lines",
-                            name='FRA history',
-                            line=dict(
-         		   				shape='spline',
-            					color=('#73BA9B')  #92B6B1 otro verde ...
-        					),
-        					opacity=1,
+	return {
+		"data": [go.Scatter(x=dff.iloc[:, 0], y=dff.iloc[:, 1],
+							mode="lines",
+							name='FRA history',
+							line=dict(
+								shape='spline',
+								color=('#73BA9B')  #92B6B1 otro verde ...
+							),
+							opacity=1,
 							textfont=dict(size=10),
-             				)],
-        "layout": go.Layout(
-            title="IRS CAM FRA-os, tenor:"+str(dff.columns[-1]) ,
-        	titlefont=dict(size=11),
-        	xaxis=dict(
+							)],
+		"layout": go.Layout(
+			title="IRS CAM FRA-os, tenor:"+str(dff.columns[-1]) ,
+			titlefont=dict(size=11),
+			xaxis=dict(
 				showgrid=False,
-        #    automargin=True,
-        #    rangeselector=dict(buttons=list([
-        #        dict(count=1, label='1m', step='month', stepmode='backward'),
-        #        dict(count=6, label='6m', step='month', stepmode='backward'),
-        #        dict(step='all'),
+		#    automargin=True,
+		#    rangeselector=dict(buttons=list([
+		#        dict(count=1, label='1m', step='month', stepmode='backward'),
+		#        dict(count=6, label='6m', step='month', stepmode='backward'),
+		#        dict(step='all'),
 				),
-        #    rangeslider=dict(visible=True),
-        #    type='date',
-        #    titlefont=dict(size=10)
-        #	),
-         	yaxis=dict(
-            	# automargin=True,
+		#    rangeslider=dict(visible=True),
+		#    type='date',
+		#    titlefont=dict(size=10)
+		#	),
+			yaxis=dict(
+				# automargin=True,
 				range= [0, 4.3],
 				zeroline=False,
 				showgrid=True,
-            	titlefont=dict(size=9),
+				titlefont=dict(size=9),
 				hoverformat = '.2f'
-        	),
+			),
 			height=300,
 			margin=dict(l=45, b=25, r=50, t=35),
-        ),
-    }
+		),
+	}
 
 @app.callback(
-    Output("grafico2", "figure"),
-    [Input("table1", "data"),
-     Input("grafico1", "hoverData")],
+	Output("grafico2", "figure"),
+	[Input("table1", "data"),
+	 Input("grafico1", "hoverData")],
 )
 def update_y_timeseries(rows, hoverData):
 	dfr = pd.DataFrame.from_dict(rows).copy()
@@ -541,50 +540,22 @@ def update_y_timeseries(rows, hoverData):
 
 @app.callback(
 	Output('grafico3','figure'),
-	[Input('table2','data'),Input('data-grafico3','data')]
+	# [Input('table2','data'),Input('data-grafico3','data')]
+	[Input('table2','data')]
 )
-def update_grafico3(rows0,rows1):
-	spread_d = pd.DataFrame.from_dict(rows0)['pub_days'].to_list()
-	series = pd.read_json(rows1,typ='series')
+# def update_grafico3(rows0,rows1):
+def update_grafico3(rows0):
+	# spread_d = pd.DataFrame.from_dict(rows0)['pub_days'].to_list()
+	# series = pd.read_json(rows1, typ='series')
 
-	trace = go.Scatter(
-        x=series.index,
-        y=series,
-        # customdata=auxiliar["tenor"],
-        mode='lines',
-        # name='lines+markers',
-        line=dict(
-            shape='spline',
-            color=('#73BA9B')
-        ),
-        opacity=1,
-        # text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
-        textposition='top center',
-        textfont=dict(size=10),
-    )
+	dft2 = pd.DataFrame.from_dict(rows0)
+	w1,w2 = dft2['pub_days'][0], dft2['pub_days'][1]
 
-	layout = dict(
-	    title='FRA-os implicit in spread: '+str(int(spread_d[0]))+'x'+str(int(spread_d[1])),
-	    titlefont=dict(size=11),
-	    xaxis=dict(
-	        zeroline=False,
-			showgrid=False,
-	        automargin=True
-	    ),
-	    yaxis=dict(
-	        zeroline=False,
-			showgrid=True,
-	        automargin=True,
-	        titlefont=dict(size=10, ),
-	        # size=8,
-	    ),
-	    height=300,
-		margin=dict(l=45, b=20, r=50, t=35),
-	)
+	slice = fra_hist_total[[w1, w2]]
+	slice['fra'] = slice.apply(lambda x: round(fc.fra1w(w2=w2, w1=w1, i2=x[w2], i1=x[w1]), 2), axis=1)
+	slice.loc[fec1] = [None, None, dft2.loc[2, '4']]
 
-	fig = dict(data=[trace], layout=layout)
-
-	return fig
+	return crea_grafico3( [w1,w2] , slice.fra ) # fig
 
 
 @app.callback(
@@ -599,7 +570,7 @@ def run_spread_finder(n_clicks,range_days,gap,rows):
 	range_days = [int(x) for x in range_days.split(',')]
 	gap        = [int(x) for x in gap.split(',')]
 
-	dfaux = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1)
+	dfaux = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1,fec=fec1)
 
 	# return tables cheap & rich
 	return dfaux['cheap'].to_dict('rows-table-cheap'), dfaux['rich'].to_dict('rows-table-rich')

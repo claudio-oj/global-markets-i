@@ -10,6 +10,7 @@ from scipy import interpolate
 from numbers import Number
 from itertools import permutations
 import funcs_calendario_co as fcc
+from datetime import timedelta
 
 
 def weird_division(n, d):
@@ -365,11 +366,11 @@ def tables_init(fec0,fec1):
 	pik_ptos = pd.read_pickle("./batch/p_ptos.pkl")
 
 	# calculo ptos hoy breakeven, par iniciar la mañana con los plazos nuevos y la curva corecta
-	_ = pik_ptos[fec0][['pubdays','ptos']].dropna()
+	_ = pik_ptos[fec0][['carry_days','ptos']].dropna()
 	tenor_pts = _.index
-	df['ptosy'][df.tenor.isin(tenor_pts)] = np.interp(x=df[df.tenor.isin(tenor_pts)].days,
-													  xp=_.pubdays,fp=_.ptos.map(float)).round(2)
-	df.loc[1,'ptosy'] = round(np.interp(x=df.loc[1,'days'],xp=_.pubdays,fp=_.ptos.map(float)) ,2)
+	df['ptosy'][df.tenor.isin(tenor_pts)] = np.interp(x=df[df.tenor.isin(tenor_pts)].carry_days,
+													  xp=_.carry_days,fp=_.ptos.map(float)).round(2)
+	df.loc[1,'ptosy'] = round(np.interp(x=df.loc[1,'days'],xp=_.carry_days,fp=_.ptos.map(float)) ,2)
 
 	df['ptos'] = df.ptosy.copy()
 
@@ -411,7 +412,8 @@ def tables_init(fec0,fec1):
 	df.drop(labels=['basisy_other'],axis=1,inplace=True)
 
 	return df
-
+# fec0, fec1 = pd.Timestamp(2019,7,18) , pd.Timestamp(2019,7,19)
+# tables_init(fec0,fec1)
 
 
 def update_calc_fx(rows):
@@ -441,10 +443,11 @@ def update_calc_fx(rows):
 
 
 
-def spreads_finder(range_days, gap, icamos):
+def spreads_finder(range_days, gap, icamos,fec):
 	"""	función para segmentar la curva a los spreads potenciales a analizar.
 	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.
 	:param:
+		fec1: pd.Timestamp: la fecha de uso GMI (para filtrar feriados)
 		range_days: iterable i.e (7,45), segmento de la curva a analizar: pub days min,max,
 		gap: iterable (2,10) restringe la estensión min,max de los spreads a analizar
 		icamos: df con index = dias publish 1-370 y 'icamos' = la tasa fra asociada a ese dia
@@ -455,18 +458,30 @@ def spreads_finder(range_days, gap, icamos):
 	df = df[df.long > df.short]
 	df = df[(df.long - df.short <= gap[1]) & (df.long - df.short >= gap[0])]
 
+
 	# re index los dias que faltan, e interpola.
-	new_index = np.arange(1,376,1,int)
-	aux = np.interp(x=new_index, xp=icamos.index.values,fp=icamos.values)
+	aux = np.interp(x=np.arange(1,376,1,int), xp=icamos.index.values,fp=icamos.values)
 
-	icamos = icamos.reindex(new_index, fill_value=np.nan)
+	icamos = icamos.reindex(np.arange(1,376,1,int), fill_value=np.nan)
 	icamos = pd.Series(aux,index=icamos.index,name='icamos')
-	# icamos.interpolate(inplace=True)
 
-
-	# slice de solo las fra's que voy a necesitar
+	# slice de solo las fra's que voy a necesitar, segun la consulta
 	icamos = icamos[icamos.index.isin(range(range_days[0], range_days[1] + 1))]
 
+	# crea fechas para correr filtros dias inhabiles
+	df['date_short'] = df.apply(lambda x: fec+pd.DateOffset(days=int(x.short)),axis=1)
+	df['date_long']  = df.apply(lambda x: fec+pd.DateOffset(days=int(x.long)), axis=1)
+
+	# filtro fines de semana
+	df['date_s'] = df.date_short.apply(lambda x: x.dayofweek)
+	df['date_l'] = df.date_long.apply(lambda x: x.dayofweek)
+	df = df[(df.date_s< 5) & (df.date_l < 5)] # sab,dom son 5,6 cueck...
+
+	# filtro feriados
+	df = df[~df.date_short.isin(fcc.h_stgo_or_ny.to_list())]
+	df = df[~df.date_long.isin( fcc.h_stgo_or_ny.to_list())]
+
+	#calculo spreads
 	df['spread'] = df.apply(lambda x: str(x.short) + 'x' + str(x.long), axis=1)
 
 	# merge plazos con icamos...

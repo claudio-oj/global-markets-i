@@ -347,8 +347,9 @@ def tables_init(fec0,fec1):
 	df['tenor'] = tenors
 
 
-	""" SPOT INICIO """
-	df.odelta[0] = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
+	""" SPOT INICIO """ # TODO: aqui cambié el spot
+	# df.odelta[0] = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
+	spot = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 
 
 	""" PUNTOS FORWARD fec0 y fec1 """
@@ -396,7 +397,7 @@ def tables_init(fec0,fec1):
 
 
 	""" CALCULO icam_osz , icam_os : primero tasa zero cupon --> después la paso a convención! """
-	df['icam_osz'] = df.apply(lambda x: cam_os_simp(dias=x.carry_days,spot=df.odelta[0],ptos=x.ptos,iusd=x.ilibz),axis=1)
+	df['icam_osz'] = df.apply(lambda x: cam_os_simp(dias=x.carry_days,spot=spot,ptos=x.ptos,iusd=x.ilibz),axis=1)
 	df['icam_os'][:13] = df['icam_osz'][:13]
 	df['icam_os'][13:] = df[13:].apply(lambda x: z_a_comp(x.carry_days,x.icam_osz),axis=1)
 
@@ -502,4 +503,4 @@ def spreads_finder(range_days, gap, icamos,fec):
 	# slice los spread más caros
 	rich = df[['spread', 'fra']][-10:].sort_values(by=['fra'], ascending=False)
 
-	return {'cheap': cheap, 'rich': rich}
+	return {'cheap': cheap, 'rich': rich, 'num_s':len(df)}

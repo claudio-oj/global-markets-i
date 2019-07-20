@@ -27,6 +27,7 @@ from graphs import crea_fra_scatter_graph,crea_grafico3
 # importa fechas batch fec0, y fecha de uso fec1 = fec0 + 1
 fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
 
+spot0 = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 fra_historic = pd.read_csv("./batch/fra_history.csv")
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
 indicator = pd.read_csv("indicator.csv")
@@ -43,12 +44,12 @@ df2.loc[0, 'name':'pub_days'] = ['short-leg', 7]
 df2.loc[1, 'name':'pub_days'] = ['long-leg', 30]
 
 
-def table1_update(df):
+def table1_update(df,spot):
 	try:
 		for c in ['ptos','ptosy','odelta']:
 			df[c] = df[c].map(fc.float_or_zero)
 
-		spot = df.odelta[0]
+		# spot = df.odelta[0] # TODO: aqui cambié el spot
 
 		df[1:].odelta = df[1:].ptos - df[1:].ptosy
 		df.odelta = df.odelta.round(2)
@@ -68,7 +69,6 @@ def table1_update(df):
 		df.icam_os[:13] = df.icam_osz[:13]
 		df.icam_os[13:] = df[13:].apply(lambda x: fc.z_a_comp(x.carry_days, x.icam_osz), axis=1)
 
-		# aqui le puse carry_days en vez de days
 		df.fracam_os = fc.fra1w_v(df[['carry_days','icam_os']])
 
 		df.icamz[:13] = df.icam[:13].values
@@ -91,7 +91,7 @@ def table1_update(df):
 
 	except:
 		return df
-df1 = table1_update(df1)
+df1 = table1_update(df1,spot=spot0)
 
 def table2_update(dft1,dft2):
 	""" actualiza la tabla 2
@@ -152,6 +152,8 @@ layout = html.Div(
 		html.Div(
 			className='four columns',
 			children=[
+				dcc.Input(id='spot-input',type='number',value=spot0,name='USD.CLP Spot',
+						  style={'height':'50%','width':'18%','fontSize':12}),
 				dash_table.DataTable(
 					id='table1',
 					data= df1.to_dict('rows_table1'),
@@ -182,41 +184,46 @@ layout = html.Div(
 					style_table={
 						# 'margin':'5px',
 						'height': '460px',
-						'overflowY': 'auto'
+						'width':'100%',
+						'overflowY': 'auto',
 						},
 					style_cell_conditional=[
-						{'if': {'column_id':'tenor'}, 'width': '30px'},
-						{'if': {'column_id':'days'}, 'width': '32px'},
-						{'if': {'column_id':'ptosy'}, 'width': '39px', 'color': 'rgb(204, 205, 206)'},
-						{'if': {'column_id':'ptos'}, 'width': '43px', 'fontWeight': 600, 'color': '#4176A4'},
+						# {'if': {'column_id':'tenor'}, 'width': '30px'},
+						# {'if': {'column_id':'days'}, 'width': '32px'},
+						# {'if': {'column_id':'ptosy'}, 'width': '39px', 'color': 'rgb(204, 205, 206)'},
+						{'if': {'column_id':'ptos'}, 'fontWeight': 600, 'color': '#4176A4'},
 						# {'if': {'column_id':'odelta'}, 'width': '42px'},
 						# {'if': {'column_id':'ddelta'}, 'width': '48px'},
 						# {'if': {'column_id':'carry'}, 'width': '48px'},
-						{'if': {'column_id':'icam'}, 'width': '45px'},
-						{'if': {'column_id':'ilib'}, 'width': '45px'},
-						{'if': {'column_id':'icam_os'}, 'width': '45px'},
-						{'if': {'column_id':'fracam_os'}, 'width': '45px'},
-						{'if': {'column_id':'basis'}, 'width': '43px', 'fontWeight': 600, 'color': '#81C3D7'},
-						{'if': {'column_id':'i_ptos'}, 'width': '43px','fontWeight': 600,'color':'#4176A4','backgroundColor':'rgb(251,251,251)'}, #20A4F3
-						{'if': {'column_id':'i_basis'}, 'width': '43px','fontWeight': 600,'color':'#81C3D7','backgroundColor':'rgb(251,251,251)'},
-						{'if': {'column_id':'blank'}, 'width': '1px', 'backgroundColor':'rgb(251,251,251)'},
+						# {'if': {'column_id':'icam'}, 'width': '45px'},
+						# {'if': {'column_id':'ilib'}, 'width': '45px'},
+						# {'if': {'column_id':'icam_os'}, 'width': '45px'},
+						# {'if': {'column_id':'fracam_os'}, 'width': '45px'},
+						{'if': {'column_id':'basis'}, 'fontWeight': 600, 'color': '#81C3D7'},
+						{'if': {'column_id':'i_ptos'}, 'fontWeight': 600,'color':'#4176A4','backgroundColor':'rgb(251,251,251)'}, #20A4F3
+						{'if': {'column_id':'i_basis'}, 'fontWeight': 600,'color':'#81C3D7','backgroundColor':'rgb(251,251,251)'},
+						{'if': {'column_id':'blank'}, 'backgroundColor':'rgb(251,251,251)'},
 						],
 					editable=True,
-					style_data=[
-
-					],
 					style_data_conditional=[
 						{
 							'if':{
 								'column_id':'odelta',
-								'filter':'{odelta} >= 0.01',
+								'filter':'{odelta} = 0',
+							},
+							'color':'white',
+						},
+						{
+							'if':{
+								'column_id':'odelta',
+								'filter':'{odelta} > 0',
 							},
 							'color':'mediumseagreen',
 						},
 						{
 							'if':{
 								'column_id':'odelta',
-								'filter':'{odelta} <= -0.01',
+								'filter':'{odelta} < 0',
 							},
 							'color':'red',
 						},
@@ -259,19 +266,16 @@ layout = html.Div(
 					]
 					# style_table={'width':'170px'},
 					),
+				html.Br(),
+				html.P('Ready to use on {}'.format(fec1.date()),
+					   style={'fontSize':'12px'},
+					   title='Ready to use on this date',
+					   )
 				]
 			),
 
 		html.Div(
 			className='four columns',
-			# style={
-			# 	# 'margin': '40px',
-			# 	'display': 'inline',
-			# 	# 'max-height':'600px',
-			# 	'width': '40%',
-			# 	'textAlign': 'justify',
-			# 	'height': '70vh',
-			# 	},
 			children=[
 				html.Div(
 					[
@@ -315,13 +319,16 @@ layout = html.Div(
 					),
 					html.Div(
 						[
-							dcc.Input(id='spread-finder-input-days',type='text',value='7,45',
-									  style={'width':'20%'}),
-							dcc.Input(id='spread-finder-input-gap' ,type='text',value='5,10',
-									  style={'width':'20%'}),
-							html.Button('Submit', id='spreads-finder-button'),
+							dcc.Input(id='spread-finder-input-days',type='text',value='7-65',
+									  style={'height':'50%','width':'15%'}),
+							dcc.Input(id='spread-finder-input-gap' ,type='text',value='7-10',
+									  style={'height':'50%','width':'15%'}),
+							html.Button('Submit', id='spreads-finder-button',
+										style={'width':'15%',"padding": "0 0 0 0"}),
+							html.Div(id='output-submit-button',
+									 style={'width':'85%',"padding": "0 0 0 0",'margin':'1px','display':'inlineBlock'}),
 						],
-						className="dcc-inputs-css",
+						style={'fontSize':12,'display':'inlineBlock'}
 					),
 					html.Div(
 						[
@@ -353,8 +360,6 @@ layout = html.Div(
 				],
 			className='four columns',
 			),
-
-		# dcc.Store(id='data-grafico3', storage_type='local')
 	],
 	className='row',
 	style={'height': '50%','width':'100%','max-height':'600px'},
@@ -367,12 +372,13 @@ layout = html.Div(
 ##################################################################################
 """
 
+
 @app.callback(
-	# [Output('table1','data'), Output('table2','data'), Output('data-grafico3','data')],
 	[Output('table1','data'), Output('table2','data')],
-	[Input('table1','data_timestamp'), Input('table2','data_timestamp')],
-	[State('table1','data'), State('table2','data')])
-def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
+	[Input('table1','data_timestamp'), Input('table2','data_timestamp'),Input('spot-input','n_blur')],
+	[State('table1','data'), State('table2','data'),State('spot-input','value')])
+def update_tables_cback(timestamp1,timestamp2,spot_submit,rows1,rows2,spot):
+
 	dft1 = pd.DataFrame.from_dict(rows1)
 	dft2 = pd.DataFrame.from_dict(rows2)
 
@@ -391,7 +397,7 @@ def update_tables_cback(timestamp1,timestamp2,rows1,rows2):
 	dft1 = dft1[df1.columns.copy()]
 	dft2 = dft2[df2.columns.copy()]
 
-	dft1 = table1_update(dft1)
+	dft1 = table1_update(dft1,spot=spot)
 	dft2, slice_fra = table2_update(dft1,dft2)
 
 	# return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_fra.to_json('data_graf3')
@@ -448,12 +454,13 @@ def update_graph(rows, xaxis_column_name):
 	)
 
 	layout = dict(
-		title='IRS CAM os FRA (LHS) v/s lcl-os spread (RHS) ',
+		title='IRS CAM os FRA (LHS) v/s os-lcl spread (RHS) ',
 		titlefont=dict(size=11),
 		xaxis=dict(
 			zeroline=False,
 			showgrid=False,
-			automargin=True
+			automargin=True,
+			fixedrange=True,
 		),
 		yaxis=dict(
 			zeroline=False,
@@ -463,7 +470,7 @@ def update_graph(rows, xaxis_column_name):
 			# size=8,
 		),
 		yaxis2=dict(
-			range=[-0.5,0.5],
+			# range=[-0.5,0.5],
 			overlaying='y',
 			anchor='x',
 			side='right',
@@ -543,11 +550,7 @@ def update_y_timeseries(rows, hoverData):
 	# [Input('table2','data'),Input('data-grafico3','data')]
 	[Input('table2','data')]
 )
-# def update_grafico3(rows0,rows1):
 def update_grafico3(rows0):
-	# spread_d = pd.DataFrame.from_dict(rows0)['pub_days'].to_list()
-	# series = pd.read_json(rows1, typ='series')
-
 	dft2 = pd.DataFrame.from_dict(rows0)
 	w1,w2 = dft2['pub_days'][0], dft2['pub_days'][1]
 
@@ -559,7 +562,7 @@ def update_grafico3(rows0):
 
 
 @app.callback(
-	[Output('table-cheap','data'),Output('table-rich','data')],
+	[Output('table-cheap','data'),Output('table-rich','data'),Output('output-submit-button','children')],
 	[Input('spreads-finder-button','n_clicks')],
 	[State('spread-finder-input-days','value'),State('spread-finder-input-gap','value'),
 	 State('table1','data')],
@@ -567,13 +570,17 @@ def update_grafico3(rows0):
 def run_spread_finder(n_clicks,range_days,gap,rows):
 	dft1 = pd.DataFrame.from_dict(rows)
 	dft1 = dft1.set_index('carry_days')['icam_os']
-	range_days = [int(x) for x in range_days.split(',')]
-	gap        = [int(x) for x in gap.split(',')]
+	range_days = [int(x) for x in range_days.split('-')]
+	gap        = [int(x) for x in gap.split('-')]
 
 	dfaux = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1,fec=fec1)
 
+	# text output submit button
+	t = 'Top-10 of {} Fx spreads:   within {}d - {}d curve , and {} to {} days gap'.format(dfaux['num_s'],
+															range_days[0],range_days[1],gap[0],gap[1])
+
 	# return tables cheap & rich
-	return dfaux['cheap'].to_dict('rows-table-cheap'), dfaux['rich'].to_dict('rows-table-rich')
+	return dfaux['cheap'].to_dict('rows-table-cheap'), dfaux['rich'].to_dict('rows-table-rich'),t
 
 
 

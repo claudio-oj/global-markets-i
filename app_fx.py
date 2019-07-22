@@ -31,7 +31,7 @@ spot0 = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 fra_historic = pd.read_csv("./batch/fra_history.csv")
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
 indicator = pd.read_csv("indicator.csv")
-dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['spread','fra'])
+dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['days','i_rate'])
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
@@ -152,8 +152,13 @@ layout = html.Div(
 		html.Div(
 			className='four columns',
 			children=[
-				dcc.Input(id='spot-input',type='number',value=spot0,name='USD.CLP Spot',
-						  style={'height':'50%','width':'18%','fontSize':12}),
+				dcc.Input(id='spot-input',type='number',value=spot0,
+						  style={'float':'left','height':'50%','width':'16%','fontSize':12}),
+
+				html.P('Ready to use on {}'.format(fec1.date()),
+					   style={'fontSize':'12px', 'float':'center','padding-left':'90px','padding-top':'8px',
+							  'margin':1}),
+
 				dash_table.DataTable(
 					id='table1',
 					data= df1.to_dict('rows_table1'),
@@ -266,11 +271,6 @@ layout = html.Div(
 					]
 					# style_table={'width':'170px'},
 					),
-				html.Br(),
-				html.P('Ready to use on {}'.format(fec1.date()),
-					   style={'fontSize':'12px'},
-					   title='Ready to use on this date',
-					   )
 				]
 			),
 
@@ -323,7 +323,7 @@ layout = html.Div(
 									  style={'height':'50%','width':'15%'}),
 							dcc.Input(id='spread-finder-input-gap' ,type='text',value='7-10',
 									  style={'height':'50%','width':'15%'}),
-							html.Button('Submit', id='spreads-finder-button',
+							html.Button('Finder', id='spreads-finder-button',
 										style={'width':'15%',"padding": "0 0 0 0"}),
 							html.Div(id='output-submit-button',
 									 style={'width':'85%',"padding": "0 0 0 0",'margin':'1px','display':'inlineBlock'}),
@@ -335,8 +335,8 @@ layout = html.Div(
 							dash_table.DataTable(
 								id='table-cheap',
 								columns=[
-									{'id':'spread', 'name':'spread'},
-									{'id':'fra', 'name':'fra'},
+									{'id':'days', 'name':'days'},
+									{'id':'i_rate', 'name':'int-rate'},
 								],
 								data=dfNone.to_dict('records'),
 								style_as_list_view= True,
@@ -346,8 +346,8 @@ layout = html.Div(
 							dash_table.DataTable(
 								id='table-rich',
 								columns=[
-									{'id':'spread', 'name':'spread'},
-									{'id':'fra', 'name':'fra'},
+									{'id':'days', 'name':'days'},
+									{'id':'i_rate', 'name':'int-rate'},
 								],
 								data=dfNone.to_dict('records'),
 								style_as_list_view= True,
@@ -432,7 +432,7 @@ def update_graph(rows, xaxis_column_name):
 		yaxis='y2',
 		showlegend=False,
 		marker_color='LightBlue',
-		opacity=0.4,
+		opacity=0.2,
 	)
 
 	trace_fra = go.Scatter(
@@ -445,7 +445,7 @@ def update_graph(rows, xaxis_column_name):
 			shape='spline',
 			color=('#4176A4')
 		),
-		opacity=0.8,
+		opacity=1,
 		text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
 		hoverinfo='x',
 		textposition='top center',
@@ -571,50 +571,16 @@ def run_spread_finder(n_clicks,range_days,gap,rows):
 	dft1 = pd.DataFrame.from_dict(rows)
 	dft1 = dft1.set_index('carry_days')['icam_os']
 	range_days = [int(x) for x in range_days.split('-')]
-	gap        = [int(x) for x in gap.split('-')]
 
-	dfaux = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1,fec=fec1)
-
-	# text output submit button
-	t = 'Top-10 of {} Fx spreads:   within {}d - {}d curve , and {} to {} days gap'.format(dfaux['num_s'],
+	if gap=='':
+		dic_dfs = fc.suelto_finder(range_days=range_days,icamos=dft1, valuta=df1.days[0], fec=fec1)
+		t = "Top-10 NDF:   within {}d - {}d curve".format(range_days[0],range_days[1])
+		return dic_dfs['cheap'].to_dict('rows-table-cheap'), dic_dfs['rich'].to_dict('rows-table-rich'), t
+	else:
+		gap = [int(x) for x in gap.split('-')]
+		dic_dfs = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1,fec=fec1)
+		t = 'Top-10 out of {} Fx spreads:   within {}d - {}d curve , and {} to {} days gap'.format(dic_dfs['num_s'],
 															range_days[0],range_days[1],gap[0],gap[1])
 
 	# return tables cheap & rich
-	return dfaux['cheap'].to_dict('rows-table-cheap'), dfaux['rich'].to_dict('rows-table-rich'),t
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	return dic_dfs['cheap'].to_dict('rows-table-cheap'), dic_dfs['rich'].to_dict('rows-table-rich'), t

@@ -459,7 +459,6 @@ def spreads_finder(range_days, gap, icamos,fec):
 	df = df[df.long > df.short]
 	df = df[(df.long - df.short <= gap[1]) & (df.long - df.short >= gap[0])]
 
-
 	# re index los dias que faltan, e interpola.
 	aux = np.interp(x=np.arange(1,376,1,int), xp=icamos.index.values,fp=icamos.values)
 
@@ -483,7 +482,7 @@ def spreads_finder(range_days, gap, icamos,fec):
 	df = df[~df.date_long.isin( fcc.h_stgo_or_ny.to_list())]
 
 	#calculo spreads
-	df['spread'] = df.apply(lambda x: str(x.short) + 'x' + str(x.long), axis=1)
+	df['days'] = df.apply(lambda x: str(x.short) + 'x' + str(x.long), axis=1)
 
 	# merge plazos con icamos...
 	df = df.merge(icamos, how='left', left_on='short', right_index=True)
@@ -491,16 +490,58 @@ def spreads_finder(range_days, gap, icamos,fec):
 	df = df.rename(columns={df.columns[-2]: 'i1', df.columns[-1]: 'i2'})
 
 	# calcula fra implicita en el spread
-	df['fra'] = fra1w(w2=df.long, w1=df.short, i2=df.i2, i1=df.i1)
-	df['fra'] = df.fra.round(2)
+	df['i_rate'] = fra1w(w2=df.long, w1=df.short, i2=df.i2, i1=df.i1)
+	df['i_rate'] = df.i_rate.round(2)
 
 	# rankea los spread
-	df.sort_values(by=['fra'], inplace=True)
+	df.sort_values(by=['i_rate'], inplace=True)
 
 	# slice los spread más baratos
-	cheap = df[['spread', 'fra']][:10]
+	cheap = df[['days', 'i_rate']][:10]
 
 	# slice los spread más caros
-	rich = df[['spread', 'fra']][-10:].sort_values(by=['fra'], ascending=False)
+	rich = df[['days', 'i_rate']][-10:].sort_values(by=['i_rate'], ascending=False)
 
 	return {'cheap': cheap, 'rich': rich, 'num_s':len(df)}
+
+
+def suelto_finder(range_days,icamos,valuta,fec):
+	"""	función para segmentar la curva a los spreads potenciales a analizar.
+	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.
+	:param:
+		fec1: pd.Timestamp: la fecha de uso GMI (para filtrar feriados)
+		range_days: iterable i.e (7,45), segmento de la curva a analizar: pub days min,max,
+		gap: iterable (2,10) restringe la estensión min,max de los spreads a analizar
+		icamos: df con index = dias publish 1-370 y 'icamos' = la tasa fra asociada a ese dia
+	:return: dataframe cols: "dia corto, dias largo, fra implicita en el spread" 	"""
+
+	l = np.arange(range_days[0],range_days[1]+1,1,int)
+	df = pd.DataFrame(l,columns=['days'])
+	df['carry_days'] = df.days - valuta
+
+	df['i_rate'] = np.interp(x=df.carry_days, xp=icamos.index.values,fp=icamos.values).round(2)
+
+	# crea fechas para correr filtros dias inhabiles
+	df['date'] = df.apply(lambda x: fec+pd.DateOffset(days=int(x.days)),axis=1)
+
+	# filtro fines de semana
+	df['date_s'] = df.date.apply(lambda x: x.dayofweek)
+	df = df[(df.date_s< 5)] # sab,dom son 5,6 cueck...
+
+	# filtro feriados
+	df = df[~df.date.isin(fcc.h_stgo_or_ny.to_list())]
+
+	#calculo nombre producto TODO: aqui voyyyyy !!!!!
+	df['days'] = df.apply(lambda x: str(x.days)+'d', axis=1)
+
+	# rankea los spread
+	df.sort_values(by=['i_rate'], inplace=True)
+
+	# slice los spread más baratos
+	cheap = df[['days', 'i_rate']][:10]
+
+	# slice los spread más caros
+	rich = df[['days', 'i_rate']][-10:]
+
+	return {'cheap': cheap, 'rich': rich}
+

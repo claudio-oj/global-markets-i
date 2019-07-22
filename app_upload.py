@@ -19,7 +19,9 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 layout = html.Div([
     html.Br(),
     dcc.Markdown('''
-Los archivos deben tener el nombre, **feriados_base_datos.xlsx** y **bbg_hist_dnlder_excel.xlsx**. 
+Files:  
+- `bbg_hist_dnlder_excel.xlsx`  
+- `feriados_base_datos.xlsx`  
     '''),
     dcc.Upload(
         id='upload-data',

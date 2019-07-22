@@ -10,6 +10,7 @@ from scipy import interpolate
 from numbers import Number
 from itertools import permutations
 import funcs_calendario_co as fcc
+from datetime import timedelta
 
 
 def weird_division(n, d):
@@ -346,8 +347,9 @@ def tables_init(fec0,fec1):
 	df['tenor'] = tenors
 
 
-	""" SPOT INICIO """
-	df.odelta[0] = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
+	""" SPOT INICIO """ # TODO: aqui cambié el spot
+	# df.odelta[0] = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
+	spot = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 
 
 	""" PUNTOS FORWARD fec0 y fec1 """
@@ -365,11 +367,11 @@ def tables_init(fec0,fec1):
 	pik_ptos = pd.read_pickle("./batch/p_ptos.pkl")
 
 	# calculo ptos hoy breakeven, par iniciar la mañana con los plazos nuevos y la curva corecta
-	_ = pik_ptos[fec0][['pubdays','ptos']].dropna()
+	_ = pik_ptos[fec0][['carry_days','ptos']].dropna()
 	tenor_pts = _.index
-	df['ptosy'][df.tenor.isin(tenor_pts)] = np.interp(x=df[df.tenor.isin(tenor_pts)].days,
-													  xp=_.pubdays,fp=_.ptos.map(float)).round(2)
-	df.loc[1,'ptosy'] = round(np.interp(x=df.loc[1,'days'],xp=_.pubdays,fp=_.ptos.map(float)) ,2)
+	df['ptosy'][df.tenor.isin(tenor_pts)] = np.interp(x=df[df.tenor.isin(tenor_pts)].carry_days,
+													  xp=_.carry_days,fp=_.ptos.map(float)).round(2)
+	df.loc[1,'ptosy'] = round(np.interp(x=df.loc[1,'days'],xp=_.carry_days,fp=_.ptos.map(float)) ,2)
 
 	df['ptos'] = df.ptosy.copy()
 
@@ -395,7 +397,7 @@ def tables_init(fec0,fec1):
 
 
 	""" CALCULO icam_osz , icam_os : primero tasa zero cupon --> después la paso a convención! """
-	df['icam_osz'] = df.apply(lambda x: cam_os_simp(dias=x.carry_days,spot=df.odelta[0],ptos=x.ptos,iusd=x.ilibz),axis=1)
+	df['icam_osz'] = df.apply(lambda x: cam_os_simp(dias=x.carry_days,spot=spot,ptos=x.ptos,iusd=x.ilibz),axis=1)
 	df['icam_os'][:13] = df['icam_osz'][:13]
 	df['icam_os'][13:] = df[13:].apply(lambda x: z_a_comp(x.carry_days,x.icam_osz),axis=1)
 
@@ -411,7 +413,8 @@ def tables_init(fec0,fec1):
 	df.drop(labels=['basisy_other'],axis=1,inplace=True)
 
 	return df
-
+# fec0, fec1 = pd.Timestamp(2019,7,18) , pd.Timestamp(2019,7,19)
+# tables_init(fec0,fec1)
 
 
 def update_calc_fx(rows):
@@ -441,10 +444,11 @@ def update_calc_fx(rows):
 
 
 
-def spreads_finder(range_days, gap, icamos):
+def spreads_finder(range_days, gap, icamos,fec):
 	"""	función para segmentar la curva a los spreads potenciales a analizar.
 	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.
 	:param:
+		fec1: pd.Timestamp: la fecha de uso GMI (para filtrar feriados)
 		range_days: iterable i.e (7,45), segmento de la curva a analizar: pub days min,max,
 		gap: iterable (2,10) restringe la estensión min,max de los spreads a analizar
 		icamos: df con index = dias publish 1-370 y 'icamos' = la tasa fra asociada a ese dia
@@ -456,18 +460,29 @@ def spreads_finder(range_days, gap, icamos):
 	df = df[(df.long - df.short <= gap[1]) & (df.long - df.short >= gap[0])]
 
 	# re index los dias que faltan, e interpola.
-	new_index = np.arange(1,376,1,int)
-	aux = np.interp(x=new_index, xp=icamos.index.values,fp=icamos.values)
+	aux = np.interp(x=np.arange(1,376,1,int), xp=icamos.index.values,fp=icamos.values)
 
-	icamos = icamos.reindex(new_index, fill_value=np.nan)
+	icamos = icamos.reindex(np.arange(1,376,1,int), fill_value=np.nan)
 	icamos = pd.Series(aux,index=icamos.index,name='icamos')
-	# icamos.interpolate(inplace=True)
 
-
-	# slice de solo las fra's que voy a necesitar
+	# slice de solo las fra's que voy a necesitar, segun la consulta
 	icamos = icamos[icamos.index.isin(range(range_days[0], range_days[1] + 1))]
 
-	df['spread'] = df.apply(lambda x: str(x.short) + 'x' + str(x.long), axis=1)
+	# crea fechas para correr filtros dias inhabiles
+	df['date_short'] = df.apply(lambda x: fec+pd.DateOffset(days=int(x.short)),axis=1)
+	df['date_long']  = df.apply(lambda x: fec+pd.DateOffset(days=int(x.long)), axis=1)
+
+	# filtro fines de semana
+	df['date_s'] = df.date_short.apply(lambda x: x.dayofweek)
+	df['date_l'] = df.date_long.apply(lambda x: x.dayofweek)
+	df = df[(df.date_s< 5) & (df.date_l < 5)] # sab,dom son 5,6 cueck...
+
+	# filtro feriados
+	df = df[~df.date_short.isin(fcc.h_stgo_or_ny.to_list())]
+	df = df[~df.date_long.isin( fcc.h_stgo_or_ny.to_list())]
+
+	#calculo spreads
+	df['days'] = df.apply(lambda x: str(x.short) + 'x' + str(x.long), axis=1)
 
 	# merge plazos con icamos...
 	df = df.merge(icamos, how='left', left_on='short', right_index=True)
@@ -475,16 +490,58 @@ def spreads_finder(range_days, gap, icamos):
 	df = df.rename(columns={df.columns[-2]: 'i1', df.columns[-1]: 'i2'})
 
 	# calcula fra implicita en el spread
-	df['fra'] = fra1w(w2=df.long, w1=df.short, i2=df.i2, i1=df.i1)
-	df['fra'] = df.fra.round(2)
+	df['i_rate'] = fra1w(w2=df.long, w1=df.short, i2=df.i2, i1=df.i1)
+	df['i_rate'] = df.i_rate.round(2)
 
 	# rankea los spread
-	df.sort_values(by=['fra'], inplace=True)
+	df.sort_values(by=['i_rate'], inplace=True)
 
 	# slice los spread más baratos
-	cheap = df[['spread', 'fra']][:10]
+	cheap = df[['days', 'i_rate']][:10]
 
 	# slice los spread más caros
-	rich = df[['spread', 'fra']][-10:].sort_values(by=['fra'], ascending=False)
+	rich = df[['days', 'i_rate']][-10:].sort_values(by=['i_rate'], ascending=False)
+
+	return {'cheap': cheap, 'rich': rich, 'num_s':len(df)}
+
+
+def suelto_finder(range_days,icamos,valuta,fec):
+	"""	función para segmentar la curva a los spreads potenciales a analizar.
+	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.
+	:param:
+		fec1: pd.Timestamp: la fecha de uso GMI (para filtrar feriados)
+		range_days: iterable i.e (7,45), segmento de la curva a analizar: pub days min,max,
+		gap: iterable (2,10) restringe la estensión min,max de los spreads a analizar
+		icamos: df con index = dias publish 1-370 y 'icamos' = la tasa fra asociada a ese dia
+	:return: dataframe cols: "dia corto, dias largo, fra implicita en el spread" 	"""
+
+	l = np.arange(range_days[0],range_days[1]+1,1,int)
+	df = pd.DataFrame(l,columns=['days'])
+	df['carry_days'] = df.days - valuta
+
+	df['i_rate'] = np.interp(x=df.carry_days, xp=icamos.index.values,fp=icamos.values).round(2)
+
+	# crea fechas para correr filtros dias inhabiles
+	df['date'] = df.apply(lambda x: fec+pd.DateOffset(days=int(x.days)),axis=1)
+
+	# filtro fines de semana
+	df['date_s'] = df.date.apply(lambda x: x.dayofweek)
+	df = df[(df.date_s< 5)] # sab,dom son 5,6 cueck...
+
+	# filtro feriados
+	df = df[~df.date.isin(fcc.h_stgo_or_ny.to_list())]
+
+	#calculo nombre producto TODO: aqui voyyyyy !!!!!
+	df['days'] = df.apply(lambda x: str(x.days)+'d', axis=1)
+
+	# rankea los spread
+	df.sort_values(by=['i_rate'], inplace=True)
+
+	# slice los spread más baratos
+	cheap = df[['days', 'i_rate']][:10]
+
+	# slice los spread más caros
+	rich = df[['days', 'i_rate']][-10:]
 
 	return {'cheap': cheap, 'rich': rich}
+

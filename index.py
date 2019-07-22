@@ -7,7 +7,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
-from header import header_logo, header_link, tabs_gmi
+from header import tabs_gmi
 
 from app import app, server
 import app_home, app_fx, app_upload
@@ -21,39 +21,43 @@ app.layout = html.Div(
 		html.Img(src='static/ba_logo.gif',
 			 className='one column',
 			 style={
-				'height': '5%',
-                'width': '5%',
-				# 'float': 'right',
-				# 'position': 'relative',
-				# 'margin-top': 20,
-				# 'margin-right': 20
-				# 'padding-top':2,
+				'height': '3%',
+                'width': '3%',
 			 },
 				 ),
 		html.H6("Global-Markets Insights",
 				className='five columns',
 				style={'color':'#FFF',
-					   'fontSize':'17px',
+					   'fontSize':15,
 					   'fontWeight':700,
 					   "text-decoration": "none",
-					   # 'padding-left':2,
-					   'padding-top':'28px',
+					   'margin':0,
+					   'padding-left':10,
+					   'padding-top':'15px',
 					   'float': 'left',
 					   },
 				),
-		html.Div(header_link,
+		html.Div(
+			html.A(
+				'www.BinaryAnalytics.cl',
+				href='http://www.binaryanalytics.cl',
+				target="_blank",
+				style={'color': '#FFF',"text-decoration": "none"},
+				),
 				 className='six columns',
-				 style={"text-decoration": "none" ,'textAlign' :'right',
-						'color': '#4176A4' ,'fontWeight': 'bold',
-						'padding-top':35,
-						'fontSize':15},
+				 style={'textAlign' :'right',
+						'fontWeight': 'bold',
+						'padding-top':15,
+						'fontSize':13},
 				 ),
 		],
 		className='row',
 		style={'backgroundColor':'#4176A4','borderRadius':'8px',
 			   'marginBottom':4,
+			   'height':'15%',
 			   }
 	),
+
 
 	html.Div(
 		# className='custom-tabs',

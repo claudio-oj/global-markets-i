@@ -31,7 +31,7 @@ def next_cal_day(d0, offset):
 
 	d1 = d0 + pd.DateOffset(offset)
 
-	if d1 in h_stgo:
+	if d1 in h_stgo.to_list():
 		d2 = d1 + pd.tseries.offsets.CustomBusinessDay(1, holidays=h_stgo)
 		return d2
 
@@ -133,10 +133,7 @@ def crea_cal_tenors(tod):
 	df2['fix']     = df2['pub'].apply(lambda x: next_cal_day(x,-1))
 	df2['val']     = df2['pub'].apply(lambda x: next_cal_day(x, 1))
 
-
-
 	""" tenors sugeridos en base mensual, se calculan a partir de la fecha settle"""
-
 	df3 = pd.DataFrame(index=['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '10m',
 		'11m', '12m', '13m', '14m', '15m', '16m', '17m', '18m', '2y', '2.5y', '3y', '3.5y',
 		'4y', '4.5y', '5y', '5.5y', '6y', '6.5y', '7y', '7.5y', '8y', '8.5y', '9y', '9.5y',
@@ -160,7 +157,7 @@ def crea_cal_tenors(tod):
 
 	return df
 
-y = crea_cal_tenors(pd.Timestamp(2019,7,8))
+# y = crea_cal_tenors(pd.Timestamp(2019,7,22))
 
 
 def crea_cal_IRS_us(d):

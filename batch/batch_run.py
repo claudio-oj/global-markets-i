@@ -46,7 +46,7 @@ dfb.sort_index(inplace=True)
 # fecha historia:`fec0` ,  fecha uso GMI `fec1`, son inputs manuales del Middle Office
 fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
 
-# dfb = dfb[-10:] # esta linea es solo para DEBUG, para que corra + rapido
+# dfb = dfb[-1:] # esta linea es solo para DEBUG, para que corra + rapido
 
 
 

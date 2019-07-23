@@ -15,13 +15,19 @@ app = dash.Dash(__name__)
 
 credentials = [
     ['admin','108'],
+	['test1','test1'],
     ['gjara', 'chile2019'],
 	['fferrada', 'ptosfernando2020'],
 	['jzamora', 'basispapurri2029'],
 	['cgomez','binary'],
 	['fberly','fabi'],
+	['adiaz','happyhour'],
 	['dlizana','golf1'],
 	['crosas','pizza'],
+	['jtrombert','elvalordelapolitica'],
+	['mastaburuaga','masta'],
+	['cgonzalez','chiquita'],
+	['srauff','guauff'],
 ]
 
 auth = dash_auth.BasicAuth(app,credentials)

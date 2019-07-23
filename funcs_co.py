@@ -444,7 +444,7 @@ def update_calc_fx(rows):
 
 
 
-def spreads_finder(range_days, gap, icamos,fec):
+def spreads_finder(range_days, gap, icamos,fec,spot):
 	"""	función para segmentar la curva a los spreads potenciales a analizar.
 	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.
 	:param:
@@ -496,16 +496,19 @@ def spreads_finder(range_days, gap, icamos,fec):
 	# rankea los spread
 	df.sort_values(by=['i_rate'], inplace=True)
 
+	df['c_mo'] = ( df.i_rate - df.i_rate.mean() )
+	df['c_mo'] = (spot * df.c_mo/100/12).round(2)
+
 	# slice los spread más baratos
-	cheap = df[['days', 'i_rate']][:10]
+	cheap = df[['days', 'i_rate','c_mo']][:10]
 
 	# slice los spread más caros
-	rich = df[['days', 'i_rate']][-10:].sort_values(by=['i_rate'], ascending=False)
+	rich = df[['days', 'i_rate','c_mo']][-10:].sort_values(by=['i_rate'], ascending=False)
 
 	return {'cheap': cheap, 'rich': rich, 'num_s':len(df)}
 
 
-def suelto_finder(range_days,icamos,valuta,fec):
+def suelto_finder(range_days,icamos,valuta,fec,spot):
 	"""	función para segmentar la curva a los spreads potenciales a analizar.
 	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.
 	:param:
@@ -536,6 +539,9 @@ def suelto_finder(range_days,icamos,valuta,fec):
 
 	# rankea los spread
 	df.sort_values(by=['i_rate'], inplace=True)
+
+	df['c_mo'] = (df.i_rate - df.i_rate.mean())
+	df['c_mo'] = (spot * df.c_mo / 100 / 12).round(2)
 
 	# slice los spread más baratos
 	cheap = df[['days', 'i_rate']][:10]

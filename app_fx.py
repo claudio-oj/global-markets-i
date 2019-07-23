@@ -31,7 +31,7 @@ spot0 = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 fra_historic = pd.read_csv("./batch/fra_history.csv")
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
 indicator = pd.read_csv("indicator.csv")
-dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['days','i_rate'])
+dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['days','i_rate','cents/mo'])
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
@@ -337,10 +337,11 @@ layout = html.Div(
 								columns=[
 									{'id':'days', 'name':'days'},
 									{'id':'i_rate', 'name':'int-rate'},
+									{'id':'c_mo', 'name':'cents/mo'},
 								],
 								data=dfNone.to_dict('records'),
 								style_as_list_view= True,
-								style_cell={'minWidth': '90px', 'width': '120px', 'maxWidth': '120px'},
+								style_cell={'minWidth': '60px', 'width': '90px', 'maxWidth': '100px'},
 								style_table={'width':'50%','float':'left','textAlign':'left'},
 							),
 							dash_table.DataTable(
@@ -348,10 +349,11 @@ layout = html.Div(
 								columns=[
 									{'id':'days', 'name':'days'},
 									{'id':'i_rate', 'name':'int-rate'},
+									{'id':'c_mo', 'name':'cents/mo'},
 								],
 								data=dfNone.to_dict('records'),
 								style_as_list_view= True,
-								style_cell={'minWidth': '90px', 'width': '100px', 'maxWidth': '100px'},
+								style_cell={'minWidth': '60px', 'width': '90px', 'maxWidth': '100px'},
 								style_table={'width':'50%','float':'right', 'padding-right': '50%',},
 							),
 						],
@@ -565,20 +567,20 @@ def update_grafico3(rows0):
 	[Output('table-cheap','data'),Output('table-rich','data'),Output('output-submit-button','children')],
 	[Input('spreads-finder-button','n_clicks')],
 	[State('spread-finder-input-days','value'),State('spread-finder-input-gap','value'),
-	 State('table1','data')],
+	 State('table1','data'),State('spot-input','value')],
 )
-def run_spread_finder(n_clicks,range_days,gap,rows):
+def run_spread_finder(n_clicks,range_days,gap,rows,spot):
 	dft1 = pd.DataFrame.from_dict(rows)
 	dft1 = dft1.set_index('carry_days')['icam_os']
 	range_days = [int(x) for x in range_days.split('-')]
 
 	if gap=='':
-		dic_dfs = fc.suelto_finder(range_days=range_days,icamos=dft1, valuta=df1.days[0], fec=fec1)
+		dic_dfs = fc.suelto_finder(range_days=range_days,icamos=dft1, valuta=df1.days[0], fec=fec1,spot=spot)
 		t = "Top-10 NDF:   within {}d - {}d curve".format(range_days[0],range_days[1])
 		return dic_dfs['cheap'].to_dict('rows-table-cheap'), dic_dfs['rich'].to_dict('rows-table-rich'), t
 	else:
 		gap = [int(x) for x in gap.split('-')]
-		dic_dfs = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1,fec=fec1)
+		dic_dfs = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1,fec=fec1,spot=spot)
 		t = 'Top-10 out of {} Fx spreads:   within {}d - {}d curve , and {} to {} days gap'.format(dic_dfs['num_s'],
 															range_days[0],range_days[1],gap[0],gap[1])
 

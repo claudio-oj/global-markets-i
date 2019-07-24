@@ -72,7 +72,7 @@ app.layout = html.Div(
 	html.Div(
         className="footer",
         children=[
-            html.Div('Global-Markets Insights, Chile - v1 beta edition. Binary Analytics ® copyright 2019')
+            html.Div('Global-Markets Insights, Chile - v1 beta edition. ® copyright 2019')
         ]
     )],
 	style={

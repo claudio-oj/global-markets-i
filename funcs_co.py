@@ -496,14 +496,14 @@ def spreads_finder(range_days, gap, icamos,fec,spot):
 	# rankea los spread
 	df.sort_values(by=['i_rate'], inplace=True)
 
-	df['c_mo'] = ( df.i_rate - df.i_rate.mean() )
-	df['c_mo'] = (spot * df.c_mo/100/12).round(2)
+	df['c'] = ( df.i_rate - df.i_rate.mean() )
+	df['c'] = (spot * df.c*(df.long-df.short)/36000).round(2)
 
 	# slice los spread más baratos
-	cheap = df[['days', 'i_rate','c_mo']][:10]
+	cheap = df[['days', 'i_rate','c']][:10]
 
 	# slice los spread más caros
-	rich = df[['days', 'i_rate','c_mo']][-10:].sort_values(by=['i_rate'], ascending=False)
+	rich = df[['days', 'i_rate','c']][-10:].sort_values(by=['i_rate'], ascending=False)
 
 	return {'cheap': cheap, 'rich': rich, 'num_s':len(df)}
 
@@ -540,14 +540,15 @@ def suelto_finder(range_days,icamos,valuta,fec,spot):
 	# rankea los spread
 	df.sort_values(by=['i_rate'], inplace=True)
 
-	df['c_mo'] = (df.i_rate - df.i_rate.mean())
-	df['c_mo'] = (spot * df.c_mo / 100 / 12).round(2)
+	df['c'] = (df.i_rate - df.i_rate.mean())
+	# df['c'] = (spot * df.c / 100 / 12).round(2)
+	df['c'] = (spot * df.c * df.carry_days / 36000).round(2)
 
 	# slice los spread más baratos
-	cheap = df[['days', 'i_rate']][:10]
+	cheap = df[['days', 'i_rate','c']][:10]
 
 	# slice los spread más caros
-	rich = df[['days', 'i_rate']][-10:]
+	rich  = df[['days', 'i_rate','c']][-10:]
 
 	return {'cheap': cheap, 'rich': rich}
 

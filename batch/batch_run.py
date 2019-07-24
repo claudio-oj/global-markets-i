@@ -46,7 +46,7 @@ dfb.sort_index(inplace=True)
 # fecha historia:`fec0` ,  fecha uso GMI `fec1`, son inputs manuales del Middle Office
 fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
 
-# dfb = dfb[-1:] # esta linea es solo para DEBUG, para que corra + rapido
+# dfb = dfb[-10:] # esta linea es solo para DEBUG, para que corra + rapido
 
 
 
@@ -87,7 +87,7 @@ pd.to_pickle(d_basis_tcs,"./batch/p_basis_tcs.pkl")
 tenors_cl = ['o/n','3m','6m','9m','12m','18m']+[str(x)+'y' for x in range(2,11)]+['12y','15y','20y','30y']
 meses_cl  = [0,3,6,9,12,18]+[12*int(x) for x in range(2,11)]+[12*12,15*12,20*12,30*12]
 
-icam_dict={}
+d_icam={}
 for d in dfb.index:
 
 	df_cl = pd.DataFrame(index=tenors_cl, columns=['meses','val','carry_dias','icam','icam_z'])
@@ -112,10 +112,10 @@ for d in dfb.index:
 	# transformo tasas act 180/360 ---> a tasas zero act/360
 	df_cl.icam_z.loc['2y':] = df_cl.loc['2y':].apply(lambda x: fc.comp_a_z(x.carry_dias,x.icam, periodicity=180), axis=1)
 
-	icam_dict[d] = df_cl
+	d_icam[d] = df_cl
 
 # p_ilib es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
-pd.to_pickle(icam_dict,"./batch/p_icam.pkl")
+pd.to_pickle(d_icam,"./batch/p_icam.pkl")
 
 
 """ 2.3. PRODUCTO PUNTOS FORWARD """
@@ -191,7 +191,7 @@ pd.to_pickle(dff,"./batch/hist_total_fra.pkl")
 
 
 
-""" a partir de `de hist_total_fra` --> creo un slice con los tenors válidos para hoy: `fra_history.csv`,
+""" PASO 5 . a partir de `de hist_total_fra` --> creo un slice con los tenors válidos para hoy: `fra_history.csv`,
  PARA EL GRAFICO DE ARRIBA A LA DERECHA DE GABRIEL """
 
 # los dias de los tenors de hoy
@@ -215,6 +215,30 @@ fras_hoy.columns = ['date'] + l
 fras_hoy.to_csv('./batch/fra_history.csv')
 
 
+
+""" PASO 6. CREA LA HISTORIA DEL OS-LCL SPREAD --> en csv # tomar en cuenta que icamos es tasa zero """
+os_lcl_s = pd.DataFrame(index=dfb.index,columns=l)
+
+for d in dfb.index:
+	dfsp = d_icamos[d][['pubdays', 'icam_os']].merge(d_icam[d][['icam_z']], how='left', left_index=True,
+													 right_index=True)
+	dfsp['icam_z'].loc['TOD'] = d_icam[d]['icam_z'].loc['o/n']
+
+	aux = dfsp.set_index('pubdays')['icam_z'].astype(float).interpolate(method='index')
+	dfsp['icam_z'] = aux.values
+
+	dfsp['spread'] = (dfsp.icam_os - dfsp.icam_z).round(2)
+	aux2 = dfsp['spread'].loc[l]
+
+	os_lcl_s.loc[d] = aux2.values
+
+os_lcl_s['date'] = os_lcl_s.index
+os_lcl_s = os_lcl_s[ ['date']+l ]
+
+os_lcl_s.to_csv('./batch/spread_g2_history.csv')
+
+
+
 """ Calcula la inicializacion de la tabla1, la guarda en un pickle para importarse mañana mas liviana en la sesión del cliente """
 pd.to_pickle(fc.tables_init(fec0,fec1), "./batch/table1_init.pkl")
 
@@ -225,8 +249,8 @@ print('Me demoré ',clock1-clock0,' segundos, en correr el batch')
 
 
 """ LIMPIA MEMORIA VARIABLES QUE NO SE USAN EN LA SESION DEL CLIENTE Y SOLO SIRVEN EN EL BATCH """
-del _,X,cols,d_basis_tcs,d_icamos,df_b,df_cl,df_p,df_us,dfb,dff,dfio,fras_hoy,icam_dict,ilib_dict,ptos_dict,clock1,clock0
+# del _,X,cols,d_basis_tcs,d_icamos,df_b,df_cl,df_p,df_us,dfb,dff,dfio,fras_hoy,d_icam,ilib_dict,ptos_dict,clock1,clock0
 
-import gc
-gc.collect()
+# import gc
+# gc.collect()
 

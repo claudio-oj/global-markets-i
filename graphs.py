@@ -56,11 +56,6 @@ def crea_fra_scatter_graph(dfrfracam_os):
 	return fig
 
 
-# x = {'0': None, '1': None, '2': None, '3': None, '4': 2.74, '5': 2.7, '6': 2.85, '7': 2.9, '8': 2.93, '9': 2.67, '10': 2.78, '11': 2.7, '12': 2.65, '13': 2.92, '14': None, '15': None, '16': None, '17': None,
-# 	 '18': None, '19': None, '20': None, '21': None}
-
-# plotly.offline.plot( crea_fra_scatter_graph(x), filename = 'styled-scatter.html')
-
 
 def crea_fra_hist_line(last_val):
 	""" funcion q crea grafico linea historia fra
@@ -135,7 +130,8 @@ def crea_grafico3(spread_d,series):
 		# name='lines+markers',
 		line=dict(
 			shape='spline',
-			color=('#73BA9B')
+			color=('#73BA9B'),
+			width=1.5,
 		),
 		opacity=1,
 		# text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),

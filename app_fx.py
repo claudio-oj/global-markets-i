@@ -28,10 +28,11 @@ from graphs import crea_fra_scatter_graph,crea_grafico3
 fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
 
 spot0 = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
-fra_historic = pd.read_csv("./batch/fra_history.csv")
+fra_historic = pd.read_csv("./batch/fra_history.csv",index_col=0)
+spread_hist = pd.read_csv("./batch/spread_g2_history.csv",index_col=0)
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
 indicator = pd.read_csv("indicator.csv")
-dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['days','i_rate','cents/mo'])
+dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['days','i_rate','ΔPx'])
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
@@ -185,6 +186,7 @@ layout = html.Div(
 						],
 					style_as_list_view= True,
 					n_fixed_rows=1,
+					style_header={'textAlign':'right'},
 					# fixed_rows={ 'headers': True, 'data': 0 },
 					style_table={
 						# 'margin':'5px',
@@ -261,6 +263,7 @@ layout = html.Div(
 						{'id':'6', 'name':' '},
 					],
 					editable=True,
+					style_header={'textAlign':'right'},
 					style_as_list_view= True,
 					style_data_conditional=[
 						{
@@ -336,25 +339,27 @@ layout = html.Div(
 								id='table-cheap',
 								columns=[
 									{'id':'days', 'name':'days'},
-									{'id':'i_rate', 'name':'int-rate'},
-									{'id':'c_mo', 'name':'cents/mo'},
+									{'id':'i_rate', 'name':'int'},
+									{'id':'c', 'name':'ΔPx'},
 								],
 								data=dfNone.to_dict('records'),
 								style_as_list_view= True,
 								style_cell={'minWidth': '60px', 'width': '90px', 'maxWidth': '100px'},
 								style_table={'width':'50%','float':'left','textAlign':'left'},
+								style_header={'textAlign':'right'},
 							),
 							dash_table.DataTable(
 								id='table-rich',
 								columns=[
 									{'id':'days', 'name':'days'},
-									{'id':'i_rate', 'name':'int-rate'},
-									{'id':'c_mo', 'name':'cents/mo'},
+									{'id':'i_rate', 'name':'int'},
+									{'id':'c', 'name':'ΔPx'},
 								],
 								data=dfNone.to_dict('records'),
 								style_as_list_view= True,
 								style_cell={'minWidth': '60px', 'width': '90px', 'maxWidth': '100px'},
 								style_table={'width':'50%','float':'right', 'padding-right': '50%',},
+								style_header={'textAlign':'right'},
 							),
 						],
 						style={"display": "inlineBlock"},
@@ -487,46 +492,67 @@ def update_graph(rows, xaxis_column_name):
 	return fig
 
 
-def create_time_series(dff):
-
+def create_time_series(dff1,dff2):
+	n= str(dff1.columns[-1])
 	return {
-		"data": [go.Scatter(x=dff.iloc[:, 0], y=dff.iloc[:, 1],
+		"data": [go.Scatter(x=dff1.iloc[:, 0],
+							y=dff1.iloc[:, 1],
 							mode="lines",
 							name='FRA history',
 							line=dict(
 								shape='spline',
-								color=('#73BA9B')  #92B6B1 otro verde ...
+								color=('#4176A4')  #92B6B1 otro verde ...
 							),
 							opacity=1,
 							textfont=dict(size=10),
-							)],
+							showlegend=False,
+							),
+				 go.Scatter(x=dff2.iloc[:, 0],
+							y=dff2.iloc[:, 1],
+							yaxis='y2',
+							mode="lines",
+							name='os-lcl spread',
+							line=dict(
+								shape='spline',
+								color=('LightBlue')  # 92B6B1 otro verde ...
+							),
+							opacity=0.5,
+							textfont=dict(size=10),
+							showlegend=False,
+							),
+				 ],
 		"layout": go.Layout(
-			title="IRS CAM FRA-os, tenor:"+str(dff.columns[-1]) ,
+			title="IRS CAM FRA-os "+n+" (LHS) v/s os-lcl spread "+n+" (RHS)" ,
 			titlefont=dict(size=11),
+			height=300,
+			margin=dict(l=45, b=25, r=50, t=35),
 			xaxis=dict(
+				zeroline=False,
 				showgrid=False,
-		#    automargin=True,
-		#    rangeselector=dict(buttons=list([
-		#        dict(count=1, label='1m', step='month', stepmode='backward'),
-		#        dict(count=6, label='6m', step='month', stepmode='backward'),
-		#        dict(step='all'),
-				),
-		#    rangeslider=dict(visible=True),
-		#    type='date',
-		#    titlefont=dict(size=10)
-		#	),
+				automargin=True,
+				# fixedrange=True,
+			),
 			yaxis=dict(
 				# automargin=True,
 				range= [0, 4.3],
 				zeroline=False,
-				showgrid=True,
+				showgrid=False,
 				titlefont=dict(size=9),
 				hoverformat = '.2f'
 			),
-			height=300,
-			margin=dict(l=45, b=25, r=50, t=35),
+			yaxis2=dict(
+				zeroline=False,
+				overlaying='y',
+				anchor='x',
+				side='right',
+				showgrid=True,
+				titlefont=dict(size=9),
+				# hoverformat='.2f'
+			),
 		),
 	}
+
+
 
 @app.callback(
 	Output("grafico2", "figure"),
@@ -534,27 +560,41 @@ def create_time_series(dff):
 	 Input("grafico1", "hoverData")],
 )
 def update_y_timeseries(rows, hoverData):
-	dfr = pd.DataFrame.from_dict(rows).copy()
-	auxiliar = dfr.loc[2:13,['tenor','days','fracam_os']]
-	auxiliar.insert(3, "indicator", "A")
+	dfr = pd.DataFrame.from_dict(rows)
 	col_name = hoverData["points"][0]["customdata"]
-	row_value = auxiliar.loc[auxiliar["tenor"] == col_name].iloc[:, 2]
 
-	dff = fra_historic[["date", col_name]]
-	dff.loc[dff.index[-1]+1] = [fec1,float(row_value)]
+	try:
+		fra_value = hoverData['points'][0]['y']
+		spread_value = hoverData['points'][1]['y']
+	except:
+		fra_value = dfr.loc[4,'fracam_os']
+		spread_value = round(dfr.loc[4,'icam_os'] - dfr.loc[4,'icam'],2)
 
-	return create_time_series( dff.iloc[0:390] )
+	""" Time Series de la FRA seleccionada """
+	dff1 = fra_historic[["date", col_name]]
+	dff1.loc[fec1] = [fec1,fra_value]
+
+	""" Time Series del os-lcl spread seleccionado """
+	dff2 = spread_hist[["date", col_name]]
+	dff2.loc[fec1] = [fec1,spread_value]
+
+	return create_time_series( dff1.iloc[0:390], dff2.iloc[0:390] )
 
 
 
 @app.callback(
 	Output('grafico3','figure'),
-	# [Input('table2','data'),Input('data-grafico3','data')]
 	[Input('table2','data')]
 )
 def update_grafico3(rows0):
 	dft2 = pd.DataFrame.from_dict(rows0)
 	w1,w2 = dft2['pub_days'][0], dft2['pub_days'][1]
+
+	# sanity check
+	if w1>370:
+		w1=370
+	if w2>370:
+		w2=370
 
 	slice = fra_hist_total[[w1, w2]]
 	slice['fra'] = slice.apply(lambda x: round(fc.fra1w(w2=w2, w1=w1, i2=x[w2], i1=x[w1]), 2), axis=1)
@@ -578,6 +618,7 @@ def run_spread_finder(n_clicks,range_days,gap,rows,spot):
 		dic_dfs = fc.suelto_finder(range_days=range_days,icamos=dft1, valuta=df1.days[0], fec=fec1,spot=spot)
 		t = "Top-10 NDF:   within {}d - {}d curve".format(range_days[0],range_days[1])
 		return dic_dfs['cheap'].to_dict('rows-table-cheap'), dic_dfs['rich'].to_dict('rows-table-rich'), t
+
 	else:
 		gap = [int(x) for x in gap.split('-')]
 		dic_dfs = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1,fec=fec1,spot=spot)

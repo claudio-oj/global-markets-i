@@ -32,7 +32,7 @@ fra_historic = pd.read_csv("./batch/fra_history.csv",index_col=0)
 spread_hist = pd.read_csv("./batch/spread_g2_history.csv",index_col=0)
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
 indicator = pd.read_csv("indicator.csv")
-dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['days','i_rate','ΔPx'])
+dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['days','int','Px','ΔPx'])
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
@@ -339,12 +339,13 @@ layout = html.Div(
 								id='table-cheap',
 								columns=[
 									{'id':'days', 'name':'days'},
-									{'id':'i_rate', 'name':'int'},
+									{'id':'int', 'name':'int'},
+									{'id':'p', 'name':'Px'},
 									{'id':'c', 'name':'ΔPx'},
 								],
 								data=dfNone.to_dict('records'),
 								style_as_list_view= True,
-								style_cell={'minWidth': '60px', 'width': '90px', 'maxWidth': '100px'},
+								style_cell={'minWidth': '50px', 'width': '80px', 'maxWidth': '85px'},
 								style_table={'width':'50%','float':'left','textAlign':'left'},
 								style_header={'textAlign':'right'},
 							),
@@ -352,12 +353,13 @@ layout = html.Div(
 								id='table-rich',
 								columns=[
 									{'id':'days', 'name':'days'},
-									{'id':'i_rate', 'name':'int'},
+									{'id':'int', 'name':'int'},
+									{'id':'p', 'name':'Px'},
 									{'id':'c', 'name':'ΔPx'},
 								],
 								data=dfNone.to_dict('records'),
 								style_as_list_view= True,
-								style_cell={'minWidth': '60px', 'width': '90px', 'maxWidth': '100px'},
+								style_cell={'minWidth': '50px', 'width': '80px', 'maxWidth': '85px'},
 								style_table={'width':'50%','float':'right', 'padding-right': '50%',},
 								style_header={'textAlign':'right'},
 							),
@@ -392,10 +394,10 @@ def update_tables_cback(timestamp1,timestamp2,spot_submit,rows1,rows2,spot):
 	# SANITY CHECKS: pisa las col según data original. para bloquear typos ...
 	dft1.tenor = df1.tenor
 	dft1.ptosy = df1.ptosy
-	if dft2.loc[0,'pub_days'] > 370:
-		dft2.loc[0, 'pub_days'] = 370
-	if dft2.loc[1,'pub_days'] > 370:
-		dft2.loc[1, 'pub_days'] = 370
+	if dft2.loc[0,'pub_days'] not in np.arange(1,371,1,int) :
+		dft2.loc[0, 'pub_days'] = 7
+	if dft2.loc[1,'pub_days'] not in np.arange(1,371,1,int):
+		dft2.loc[1, 'pub_days'] = 30
 	if dft2.loc[0,'pub_days'] >= dft2.loc[1,'pub_days']:
 		dft2.loc[1, 'pub_days'] = dft2.loc[0,'pub_days'] + 1
 
@@ -461,7 +463,7 @@ def update_graph(rows, xaxis_column_name):
 	)
 
 	layout = dict(
-		title='IRS CAM os FRA (LHS) v/s os-lcl spread (RHS) ',
+		title='IRS CAM os FRA (line - LHS) v/s os-lcl spread (bars - RHS) ',
 		titlefont=dict(size=11),
 		xaxis=dict(
 			zeroline=False,
@@ -498,7 +500,7 @@ def create_time_series(dff1,dff2):
 		"data": [go.Scatter(x=dff1.iloc[:, 0],
 							y=dff1.iloc[:, 1],
 							mode="lines",
-							name='FRA history',
+							name='fra',
 							line=dict(
 								shape='spline',
 								color=('#4176A4')  #92B6B1 otro verde ...
@@ -611,17 +613,18 @@ def update_grafico3(rows0):
 )
 def run_spread_finder(n_clicks,range_days,gap,rows,spot):
 	dft1 = pd.DataFrame.from_dict(rows)
-	dft1 = dft1.set_index('carry_days')['icam_os']
+	icamos = dft1.set_index('carry_days')['icam_os']
+	ptos = dft1.set_index('carry_days')['ptos']
 	range_days = [int(x) for x in range_days.split('-')]
 
 	if gap=='':
-		dic_dfs = fc.suelto_finder(range_days=range_days,icamos=dft1, valuta=df1.days[0], fec=fec1,spot=spot)
+		dic_dfs = fc.suelto_finder(range_days=range_days,icamos=icamos, valuta=df1.days[0], fec=fec1,spot=spot,ptos=ptos)
 		t = "Top-10 NDF:   within {}d - {}d curve".format(range_days[0],range_days[1])
 		return dic_dfs['cheap'].to_dict('rows-table-cheap'), dic_dfs['rich'].to_dict('rows-table-rich'), t
 
 	else:
 		gap = [int(x) for x in gap.split('-')]
-		dic_dfs = fc.spreads_finder(range_days=range_days,gap=gap,icamos=dft1,fec=fec1,spot=spot)
+		dic_dfs = fc.spreads_finder(range_days=range_days,gap=gap,icamos=icamos, valuta=df1.days[0],fec=fec1,spot=spot,ptos=ptos)
 		t = 'Top-10 out of {} Fx spreads:   within {}d - {}d curve , and {} to {} days gap'.format(dic_dfs['num_s'],
 															range_days[0],range_days[1],gap[0],gap[1])
 

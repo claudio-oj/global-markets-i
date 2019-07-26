@@ -444,7 +444,7 @@ def update_calc_fx(rows):
 
 
 
-def spreads_finder(range_days, gap, icamos,fec,spot):
+def spreads_finder(range_days, gap, icamos, valuta, fec,spot,ptos):
 	"""	función para segmentar la curva a los spreads potenciales a analizar.
 	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.
 	:param:
@@ -490,25 +490,29 @@ def spreads_finder(range_days, gap, icamos,fec,spot):
 	df = df.rename(columns={df.columns[-2]: 'i1', df.columns[-1]: 'i2'})
 
 	# calcula fra implicita en el spread
-	df['i_rate'] = fra1w(w2=df.long, w1=df.short, i2=df.i2, i1=df.i1)
-	df['i_rate'] = df.i_rate.round(2)
+	df['int'] = fra1w(w2=df.long, w1=df.short, i2=df.i2, i1=df.i1)
+	df['int'] = df.int.round(2)
 
 	# rankea los spread
-	df.sort_values(by=['i_rate'], inplace=True)
+	df.sort_values(by=['int'], inplace=True)
 
-	df['c'] = ( df.i_rate - df.i_rate.mean() )
+	df['ps'] = np.interp(x=(df.short-valuta), xp=ptos.index.values,fp=ptos.values).round(2)
+	df['pl'] = np.interp(x=(df.long-valuta), xp=ptos.index.values,fp=ptos.values).round(2)
+	df['p']  = (df.pl - df.ps).round(2)
+
+	df['c'] = ( df.int - df.int.mean() )
 	df['c'] = (spot * df.c*(df.long-df.short)/36000).round(2)
 
 	# slice los spread más baratos
-	cheap = df[['days', 'i_rate','c']][:10]
+	cheap = df[['days', 'int','p','c']][:10]
 
 	# slice los spread más caros
-	rich = df[['days', 'i_rate','c']][-10:].sort_values(by=['i_rate'], ascending=False)
+	rich = df[['days', 'int','p','c']][-10:].sort_values(by=['int'], ascending=False)
 
 	return {'cheap': cheap, 'rich': rich, 'num_s':len(df)}
 
 
-def suelto_finder(range_days,icamos,valuta,fec,spot):
+def suelto_finder(range_days,icamos,valuta,fec,spot,ptos):
 	"""	función para segmentar la curva a los spreads potenciales a analizar.
 	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.
 	:param:
@@ -522,7 +526,7 @@ def suelto_finder(range_days,icamos,valuta,fec,spot):
 	df = pd.DataFrame(l,columns=['days'])
 	df['carry_days'] = df.days - valuta
 
-	df['i_rate'] = np.interp(x=df.carry_days, xp=icamos.index.values,fp=icamos.values).round(2)
+	df['int'] = np.interp(x=df.carry_days, xp=icamos.index.values,fp=icamos.values).round(2)
 
 	# crea fechas para correr filtros dias inhabiles
 	df['date'] = df.apply(lambda x: fec+pd.DateOffset(days=int(x.days)),axis=1)
@@ -534,21 +538,23 @@ def suelto_finder(range_days,icamos,valuta,fec,spot):
 	# filtro feriados
 	df = df[~df.date.isin(fcc.h_stgo_or_ny.to_list())]
 
+	df['p'] = np.interp(x=df.carry_days, xp=ptos.index.values,fp=ptos.values).round(2)
+
 	#calculo nombre producto TODO: aqui voyyyyy !!!!!
 	df['days'] = df.apply(lambda x: str(x.days)+'d', axis=1)
 
 	# rankea los spread
-	df.sort_values(by=['i_rate'], inplace=True)
+	df.sort_values(by=['int'], inplace=True)
 
-	df['c'] = (df.i_rate - df.i_rate.mean())
+	df['c'] = (df.int - df.int.mean())
 	# df['c'] = (spot * df.c / 100 / 12).round(2)
 	df['c'] = (spot * df.c * df.carry_days / 36000).round(2)
 
 	# slice los spread más baratos
-	cheap = df[['days', 'i_rate','c']][:10]
+	cheap = df[['days', 'int','p','c']][:10]
 
 	# slice los spread más caros
-	rich  = df[['days', 'i_rate','c']][-10:]
+	rich  = df[['days', 'int','p','c']][-10:]
 
 	return {'cheap': cheap, 'rich': rich}
 

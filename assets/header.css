@@ -7,19 +7,19 @@
 .app-header-band {
   #height: 65px;
   width: 49%;
-  color: #4176a4;
+  color: #240E8B;
   display: inline-block;
   text-align: justify;
 }
 
 .titulo-GMI-estilo {
-  color: #4176a4;
+  color: #240E8B;
   font-weight: 700;
   font-size: 35px;
 }
 
 .header-Binary-logo-titulo {
-  #color: #4176a4;
+  #color: #240E8B;
   #font-weight: 700;
   #font-size: 33px;
   #width: 75;
@@ -27,7 +27,7 @@
 }
 
 .app-header {
-  color: #4176a4;
+  color: #240E8B;
   #height: 60px;
   #line-height: 60px;
   #border-bottom: thin lightgrey solid;
@@ -61,7 +61,7 @@
   background-color: white;
   padding: 12px 12px;
   border-bottom: 2px white;
-  font-color: #4176a4;
+  font-color: #240E8B;
 }
 
 .custom-tab {
@@ -86,8 +86,19 @@
   box-shadow: 1px 1px 0px white;
   border-left: 1px solid lightgrey !important;
   border-right: 1px solid lightgrey !important;
-  border-top: 3px solid #4176a4 !important;
+  border-top: 3px solid #240E8B !important;
   background-color: white;
+}
+
+.links-sup {
+  color: #FFF;
+  margin: 15px;
+  text-decoration: none;
+}
+
+.links-sup:hover
+{
+ color:#FFF;
 }
 
 .modebar {
@@ -99,7 +110,7 @@
   bottom: 0;
   width: 98.5%;
   height: 22px;
-  background-color: #4176a4;
+  background-color: #240E8B;
   color: white;
   text-align: center;
   vertical-align: center;

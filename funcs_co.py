@@ -285,9 +285,9 @@ def fra1w_v(df):
 	df['i_1'] = df.i.shift(1)
 
 	# 1yr tiene 52 semanas
-	y = 5200*(( ((1+df.i/5200)**df.w) / ((1+df.i_1/5200)**df.w_1) )**(1/(df.w-df.w_1)) - 1 )
-	y.loc[0:1] = df.i.loc[0:1].copy()
-	return y
+	df['fra'] = 5200*(( ((1+df.i/5200)**df.w) / ((1+df.i_1/5200)**df.w_1) )**(1/(df.w-df.w_1)) - 1 )
+	df['fra'].loc[0:2] = df.i.loc[0:2].copy()
+	return df.fra
 
 
 
@@ -337,7 +337,7 @@ def tables_init(fec0,fec1):
 	tenors = ['TOD', 'TOM', '1w', '2w'] + [str(x) + 'm' for x in range(1, 6 + 1)]+ ['9m',
 				'12m', '18m'] + [str(x) + 'y' for x in range(2, 10 + 1)]
 
-	cols1 = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos',
+	cols1 = ['ind', 'tenor', 'daysy', 'days', 'carry_days', 'ptosy', 'ptos', 'ptoso','ptoso_p',
 	       'odelta', 'ddelta', 'carry', 'icam','icamz', 'ilib','ilibz', 'tcs', 'icam_osz','icam_os',
 	       'fracam_os','basisy', 'basis', 'i_ptos', 'i_basis']
 
@@ -347,7 +347,7 @@ def tables_init(fec0,fec1):
 	df['tenor'] = tenors
 
 
-	""" SPOT INICIO """ # TODO: aqui cambié el spot
+	""" SPOT INICIO """
 	# df.odelta[0] = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 	spot = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 
@@ -375,8 +375,14 @@ def tables_init(fec0,fec1):
 
 	df['ptos'] = df.ptosy.copy()
 
-	df[1:].odelta = df[1:].ptos - df[1:].ptosy
+	# Inicia ptos forward off shore con un shock aleatorio respecto a los ptos locales
+	df['ptoso'] = df.ptos * ( 1+ (np.random.random_sample(len(df)) - 0.5) / 5)
+	df['ptoso'] = df.ptoso.map(round_2d)
 
+	df['ptoso_p'][5:] = df.ptoso[5:] - df.ptos.loc[4]
+	df['ptoso_p'] = df.ptoso_p.map(round_2d)
+
+	df[1:].odelta = df[1:].ptos - df[1:].ptosy
 
 	""" ICAM """
 	pik_cam = pd.read_pickle("./batch/p_icam.pkl")
@@ -414,7 +420,7 @@ def tables_init(fec0,fec1):
 
 	return df
 # fec0, fec1 = pd.Timestamp(2019,7,18) , pd.Timestamp(2019,7,19)
-# tables_init(fec0,fec1)
+# a = tables_init(fec0,fec1)
 
 
 def update_calc_fx(rows):
@@ -504,10 +510,10 @@ def spreads_finder(range_days, gap, icamos, valuta, fec,spot,ptos):
 	df['c'] = (spot * df.c*(df.long-df.short)/36000).round(2)
 
 	# slice los spread más baratos
-	cheap = df[['days', 'int','p','c']][:10]
+	cheap = df[['days', 'int','p','c']][:5]
 
 	# slice los spread más caros
-	rich = df[['days', 'int','p','c']][-10:].sort_values(by=['int'], ascending=False)
+	rich = df[['days', 'int','p','c']][-5:].sort_values(by=['int'], ascending=False)
 
 	return {'cheap': cheap, 'rich': rich, 'num_s':len(df)}
 
@@ -551,10 +557,10 @@ def suelto_finder(range_days,icamos,valuta,fec,spot,ptos):
 	df['c'] = (spot * df.c * df.carry_days / 36000).round(2)
 
 	# slice los spread más baratos
-	cheap = df[['days', 'int','p','c']][:10]
+	cheap = df[['days', 'int','p','c']][:5]
 
 	# slice los spread más caros
-	rich  = df[['days', 'int','p','c']][-10:]
+	rich  = df[['days', 'int','p','c']][-5:]
 
 	return {'cheap': cheap, 'rich': rich}
 

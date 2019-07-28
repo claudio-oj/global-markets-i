@@ -22,7 +22,7 @@ from app import app
 
 import funcs_co as fc
 import funcs_calendario_co as fcc
-from graphs import crea_fra_scatter_graph,crea_grafico3
+import graphs as graphs
 
 # importa fechas batch fec0, y fecha de uso fec1 = fec0 + 1
 fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
@@ -32,7 +32,7 @@ fra_historic = pd.read_csv("./batch/fra_history.csv",index_col=0)
 spread_hist = pd.read_csv("./batch/spread_g2_history.csv",index_col=0)
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
 indicator = pd.read_csv("indicator.csv")
-dfNone = pd.DataFrame(data=None,index=np.arange(1,11,1,int),columns=['days','int','Px','ΔPx'])
+dfNone = pd.DataFrame(data=' ',index=np.arange(1,6,1,int),columns=['days','int','Px','ΔPx'])
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
@@ -50,8 +50,6 @@ def table1_update(df,spot):
 		for c in ['ptos','ptosy','odelta']:
 			df[c] = df[c].map(fc.float_or_zero)
 
-		# spot = df.odelta[0] # TODO: aqui cambié el spot
-
 		df[1:].odelta = df[1:].ptos - df[1:].ptosy
 		df.odelta = df.odelta.round(2)
 
@@ -64,6 +62,8 @@ def table1_update(df,spot):
 		for c in ['icam','ilib']:
 			i_interp = df.set_index('tenor').drop(labels=['TOM','1w','2w','1m','2m','4m','5m'])[c].values
 			df[c] = np.round(np.interp(x=df.carry_days,xp=days_interp,fp=i_interp),2)
+
+		df.ptoso[5:] = df.ptoso_p[5:] + df.ptos[4]
 
 		df.ilibz = df.apply(lambda x: fc.comp_a_z(x.carry_days, x.ilib, periodicity=90), axis=1)
 		df.icam_osz = df.apply(lambda x: fc.cam_os_simp(x.carry_days, spot, x.ptos, x.ilibz), axis=1)
@@ -149,16 +149,52 @@ df2,slice_fra = table2_update(df1,df2)
 
 
 layout = html.Div(
+	className='row',
+	style={'height': '50%', 'width': '100%', 'max-height': '600px'},
 	children=[
 		html.Div(
 			className='four columns',
 			children=[
-				dcc.Input(id='spot-input',type='number',value=spot0,
-						  style={'float':'left','height':'50%','width':'16%','fontSize':12}),
+				html.Div(
+					className='row',
+					style={'fontSize': '12px','float':'center'},
+					children=[
+						html.Div([
+							dcc.Input(id='spot-input', type='number', value=spot0,
+									  style={'height': '75%',
+											 'width': '75%',
+											 }),
+						],
+						className='three columns',
+						),
 
-				html.P('Ready to use on {}'.format(fec1.date()),
-					   style={'fontSize':'12px', 'float':'center','padding-left':'90px','padding-top':'8px',
-							  'margin':1}),
+						html.Div([
+							html.P('Ready to use on {}'.format(fec1.date()),
+								   style={'padding-top': '10px',
+										  # 'padding-left': '90px',
+										  # 'margin': 1,
+									},
+							),
+						],
+						className='five columns',
+						),
+
+						html.Div([
+							dcc.RadioItems(
+								options=[
+									{'label': 'local', 'value': 'lcl'},
+									{'label': 'off-shore', 'value': 'os'},
+								],
+								value='lcl',
+								labelStyle={'display': 'inline-block'},
+							),
+						],
+						className='four columns',
+						style={'padding-top': '10px',},
+						),
+					],
+				),
+
 
 				dash_table.DataTable(
 					id='table1',
@@ -168,16 +204,19 @@ layout = html.Div(
 						{'id':'tenor',     'name':'t',    'editable':True, 'hidden': False,'width': '40px'},
 						{'id':'daysy',     'name':'daysy',    'editable':True, 'hidden': True, 'type': 'numeric'},
 						{'id':'days',      'name':'days',     'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'ptosy',     'name':'ptsy',    'editable':True, 'type': 'numeric'},
-						{'id':'ptos',      'name':'pts',     'editable':True,  'type': 'numeric'},
+						{'id':'ptosy',     'name':'ptsy',    'editable':True, 'hidden': True, 'type': 'numeric'},
+						{'id':'ptos',      'name':'ptslcl',     'editable':True,  'type': 'numeric'},
+
 						{'id':'odelta',    'name':'+-',   'editable':True, 'hidden': False, 'type': 'numeric'},
+						{'id':'ptoso_p',   'name':'ptsos',     'editable':True,  'type': 'numeric'},
+
 						{'id':'ddelta',    'name':'ddelta',   'editable':True, 'hidden': True, 'type': 'numeric'},
 						{'id':'carry',     'name':'carry',    'editable':True, 'hidden': True, 'type': 'numeric'},
 						{'id':'icam',      'name':'icam',     'editable':True, 'hidden': False, 'type': 'numeric'},
-						{'id':'ilib',      'name':'ilib',     'editable':True, 'hidden': False, 'type': 'numeric'},
+						{'id':'ilib',      'name':'irslibor',     'editable':True, 'hidden': False, 'type': 'numeric'},
 						{'id':'tcs',       'name':'tcs',      'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'icam_os',   'name':'icamos',  'editable':True, 'hidden': False, 'type': 'numeric'},
-						{'id':'fracam_os', 'name':'fra',   'editable':True, 'hidden': False, 'type': 'numeric'},
+						{'id':'icam_os',   'name':'icamos',  'editable':True, 'hidden': True, 'type': 'numeric'},
+						{'id':'fracam_os', 'name':'fra',   'editable':True, 'hidden': True, 'type': 'numeric'},
 						{'id':'basisy',    'name':'bsisy',   'editable':True, 'hidden': True, 'type': 'numeric'},
 						{'id':'basis',     'name':'bsis',    'editable':True, 'type': 'numeric'},
 						{'id':'i_ptos',    'name':'ipts',   'editable':True, 'type': 'numeric'},
@@ -198,7 +237,8 @@ layout = html.Div(
 						# {'if': {'column_id':'tenor'}, 'width': '30px'},
 						# {'if': {'column_id':'days'}, 'width': '32px'},
 						# {'if': {'column_id':'ptosy'}, 'width': '39px', 'color': 'rgb(204, 205, 206)'},
-						{'if': {'column_id':'ptos'}, 'fontWeight': 600, 'color': '#4176A4'},
+						{'if': {'column_id':'ptos'}, 'fontWeight': 600, 'color': '#3C4CAD'},
+						{'if': {'column_id':'ptoso_p'}, 'fontWeight': 600, 'color': '#F04393'},
 						# {'if': {'column_id':'odelta'}, 'width': '42px'},
 						# {'if': {'column_id':'ddelta'}, 'width': '48px'},
 						# {'if': {'column_id':'carry'}, 'width': '48px'},
@@ -206,10 +246,10 @@ layout = html.Div(
 						# {'if': {'column_id':'ilib'}, 'width': '45px'},
 						# {'if': {'column_id':'icam_os'}, 'width': '45px'},
 						# {'if': {'column_id':'fracam_os'}, 'width': '45px'},
-						{'if': {'column_id':'basis'}, 'fontWeight': 600, 'color': '#81C3D7'},
-						{'if': {'column_id':'i_ptos'}, 'fontWeight': 600,'color':'#4176A4','backgroundColor':'rgb(251,251,251)'}, #20A4F3
-						{'if': {'column_id':'i_basis'}, 'fontWeight': 600,'color':'#81C3D7','backgroundColor':'rgb(251,251,251)'},
-						{'if': {'column_id':'blank'}, 'backgroundColor':'rgb(251,251,251)'},
+						{'if': {'column_id':'basis'}, 'fontWeight': 600, 'color': '#59C3C3'},
+						{'if': {'column_id':'i_ptos'}, 'fontWeight': 600,'color':'#3C4CAD','backgroundColor':'rgb(250,250,250)'}, #20A4F3
+						{'if': {'column_id':'i_basis'}, 'fontWeight': 600,'color':'#59C3C3','backgroundColor':'rgb(250,250,250)'},
+						{'if': {'column_id':'blank'}, 'backgroundColor':'rgb(250,250,250)'},
 						],
 					editable=True,
 					style_data_conditional=[
@@ -232,7 +272,7 @@ layout = html.Div(
 								'column_id':'odelta',
 								'filter':'{odelta} < 0',
 							},
-							'color':'red',
+							'color':'#F04393', #rojo
 						},
 						{
 							'if':{
@@ -269,7 +309,7 @@ layout = html.Div(
 						{
 							'if':{'row_index': 2},
 							'fontWeight': 600,
-							'color':'#4176A4',
+							'color':'#3C4CAD',
 						},
 					]
 					# style_table={'width':'170px'},
@@ -281,45 +321,25 @@ layout = html.Div(
 			className='four columns',
 			children=[
 				html.Div(
-					[
-						dcc.Graph(
-							id="grafico1",
-							hoverData={"points": [{"customdata": "1m"}]},
-						)
-					],
-					# style={"width": "32%", "display": "inline-block", "padding": "0 20"},
-				),
-				html.Div(
 					dcc.Graph(
-						id='grafico3',
-						figure= crea_grafico3([7,30],slice_fra),
+						id='ubicacion1',
+						# figure= graphs.crea_graf_fra_lcl_os_spread(df1.loc[2:13,['tenor','icamz','icam_osz','icam_os','fracam_os']])
 						),
 					),
+				html.Div(
+					[
+						dcc.Graph(
+							id="ubicacion2",
+						)
+					],
+				),
 				],
 			),
-			html.Div(
-				[
-					html.Div(
-						[
-							html.Div(
-								[
-									dcc.Dropdown(
-										id="data-escondida",
-										options=[
-											{"label": i, "value": i}
-											for i in indicator["indicator"].unique()
-										],
-										value="A",
-									)
-								],
-								style={"display": "none"},
-							)
-						]
-					),
 
-					html.Div(
-						[dcc.Graph(id="grafico2")],
-					),
+			html.Div(
+				className='four columns',
+				children=[
+					html.Div([dcc.Graph(id="ubicacion3")]),
 					html.Div(
 						[
 							dcc.Input(id='spread-finder-input-days',type='text',value='7-65',
@@ -331,7 +351,7 @@ layout = html.Div(
 							html.Div(id='output-submit-button',
 									 style={'width':'85%',"padding": "0 0 0 0",'margin':'1px','display':'inlineBlock'}),
 						],
-						style={'fontSize':12,'display':'inlineBlock'}
+						style={'fontSize':12,'display':'inlineBlock','padding-top':'25px'}
 					),
 					html.Div(
 						[
@@ -367,14 +387,9 @@ layout = html.Div(
 						style={"display": "inlineBlock"},
 					),
 				],
-			className='four columns',
 			),
 	],
-	className='row',
-	style={'height': '50%','width':'100%','max-height':'600px'},
-)
-
-
+),
 
 """
 ##################################################################################
@@ -401,7 +416,6 @@ def update_tables_cback(timestamp1,timestamp2,spot_submit,rows1,rows2,spot):
 	if dft2.loc[0,'pub_days'] >= dft2.loc[1,'pub_days']:
 		dft2.loc[1, 'pub_days'] = dft2.loc[0,'pub_days'] + 1
 
-
 	# ordena las columnas según orden original (el dict las "ordena" alfabeticamente)
 	dft1 = dft1[df1.columns.copy()]
 	dft2 = dft2[df2.columns.copy()]
@@ -415,202 +429,55 @@ def update_tables_cback(timestamp1,timestamp2,spot_submit,rows1,rows2,spot):
 
 
 @app.callback(
-	Output("grafico1", "figure"),
-	[Input('table1', 'data'),
-	 Input("data-escondida", "value")],
-)
-def update_graph(rows, xaxis_column_name):
-
-	l = ['1w','2w','1m', '2m', '3m', '4m', '5m', '6m', '9m', '12m', '18m', '2y']
-
-	dfr = pd.DataFrame.from_dict(rows).copy()
-	# auxiliar = dfr.iloc[4:14, [18, 4, 7]] # * Crea archivo tenor.csv
-	auxiliar = dfr.loc[2:13,['tenor','days','fracam_os']]
-	auxiliar.insert(3, "indicator", "A")
-	# auxiliar.to_csv("tenors.csv", index=False)
-
-	df = auxiliar.loc[auxiliar["indicator"] == xaxis_column_name]
-
-	_ = dfr.set_index('tenor')['1w':'2y']
-	dif = _.icam_os - _.icam
-
-	trace_bar = go.Bar(
-		name='os-spread',
-		x=l,
-		y=dif,
-		yaxis='y2',
-		showlegend=False,
-		marker_color='LightBlue',
-		opacity=0.2,
-	)
-
-	trace_fra = go.Scatter(
-		name='fra',
-		x=l,
-		y=df["fracam_os"],
-		customdata=auxiliar["tenor"],
-		mode='lines+markers+text',
-		line=dict(
-			shape='spline',
-			color=('#4176A4')
-		),
-		opacity=1,
-		text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
-		hoverinfo='x',
-		textposition='top center',
-		textfont=dict(size=10),
-		showlegend=False,
-	)
-
-	layout = dict(
-		title='IRS CAM os FRA (line - LHS) v/s os-lcl spread (bars - RHS) ',
-		titlefont=dict(size=11),
-		xaxis=dict(
-			zeroline=False,
-			showgrid=False,
-			automargin=True,
-			fixedrange=True,
-		),
-		yaxis=dict(
-			zeroline=False,
-			showgrid=False,
-			automargin=True,
-			titlefont=dict(size=10),
-			# size=8,
-		),
-		yaxis2=dict(
-			# range=[-0.5,0.5],
-			overlaying='y',
-			anchor='x',
-			side='right',
-			showgrid=True,
-		),
-		height=300,
-		margin=dict(l=45, b=20, r=50, t=35),
-	)
-
-	fig = dict(data=[trace_bar,trace_fra], layout=layout)
-
-	return fig
-
-
-def create_time_series(dff1,dff2):
-	n= str(dff1.columns[-1])
-	return {
-		"data": [go.Scatter(x=dff1.iloc[:, 0],
-							y=dff1.iloc[:, 1],
-							mode="lines",
-							name='fra',
-							line=dict(
-								shape='spline',
-								color=('#4176A4')  #92B6B1 otro verde ...
-							),
-							opacity=1,
-							textfont=dict(size=10),
-							showlegend=False,
-							),
-				 go.Scatter(x=dff2.iloc[:, 0],
-							y=dff2.iloc[:, 1],
-							yaxis='y2',
-							mode="lines",
-							name='os-lcl spread',
-							line=dict(
-								shape='spline',
-								color=('LightBlue')  # 92B6B1 otro verde ...
-							),
-							opacity=0.5,
-							textfont=dict(size=10),
-							showlegend=False,
-							),
-				 ],
-		"layout": go.Layout(
-			title="IRS CAM FRA-os "+n+" (LHS) v/s os-lcl spread "+n+" (RHS)" ,
-			titlefont=dict(size=11),
-			height=300,
-			margin=dict(l=45, b=25, r=50, t=35),
-			xaxis=dict(
-				zeroline=False,
-				showgrid=False,
-				automargin=True,
-				# fixedrange=True,
-			),
-			yaxis=dict(
-				# automargin=True,
-				range= [0, 4.3],
-				zeroline=False,
-				showgrid=False,
-				titlefont=dict(size=9),
-				hoverformat = '.2f'
-			),
-			yaxis2=dict(
-				zeroline=False,
-				overlaying='y',
-				anchor='x',
-				side='right',
-				showgrid=True,
-				titlefont=dict(size=9),
-				# hoverformat='.2f'
-			),
-		),
-	}
+	[Output('ubicacion1','figure')],
+	[Input('table1','data')])
+def update_ubicacion2(rows):
+	df = pd.DataFrame.from_dict(rows)
+	df = df.loc[2:13,['tenor','icamz','icam_osz','icam_os','fracam_os']]
+	return [graphs.crea_graf_fra_lcl_os_spread(df)] # fig
 
 
 
 @app.callback(
-	Output("grafico2", "figure"),
-	[Input("table1", "data"),
-	 Input("grafico1", "hoverData")],
-)
-def update_y_timeseries(rows, hoverData):
-	dfr = pd.DataFrame.from_dict(rows)
-	col_name = hoverData["points"][0]["customdata"]
+	Output('hover-data','children'),
+	[Input('ubicacion1','hoverData')])
+def display_hover_data(hoverData):
+	return json.dumps(hoverData)
 
+
+
+@app.callback(
+	Output("ubicacion2", "figure"),
+	[Input('table1', 'data')])
+def update_graph1(rows):
+	df = pd.DataFrame.from_dict(rows)
+	df = df.loc[5:13,['ptos','ptoso']]
+	return graphs.crea_graf_ptos_lcl(df)
+
+
+
+@app.callback(
+	[Output('ubicacion3','figure')],
+	[Input('table1','data'),Input('ubicacion1','hoverData')])
+def update_ubicacion4(rows,hover,fec1=fec1):
 	try:
-		fra_value = hoverData['points'][0]['y']
-		spread_value = hoverData['points'][1]['y']
+		tenor = hover['points'][0]['x']
 	except:
-		fra_value = dfr.loc[4,'fracam_os']
-		spread_value = round(dfr.loc[4,'icam_os'] - dfr.loc[4,'icam'],2)
+		tenor='12m'
 
-	""" Time Series de la FRA seleccionada """
-	dff1 = fra_historic[["date", col_name]]
-	dff1.loc[fec1] = [fec1,fra_value]
+	df = pd.DataFrame.from_dict(rows)
+	last_fra = float(df[df.tenor==tenor]['fracam_os'])
 
-	""" Time Series del os-lcl spread seleccionado """
-	dff2 = spread_hist[["date", col_name]]
-	dff2.loc[fec1] = [fec1,spread_value]
-
-	return create_time_series( dff1.iloc[0:390], dff2.iloc[0:390] )
+	return [graphs.crea_fra_hist_line(tenor, last_fra, fec1)]
 
 
 
-@app.callback(
-	Output('grafico3','figure'),
-	[Input('table2','data')]
-)
-def update_grafico3(rows0):
-	dft2 = pd.DataFrame.from_dict(rows0)
-	w1,w2 = dft2['pub_days'][0], dft2['pub_days'][1]
-
-	# sanity check
-	if w1>370:
-		w1=370
-	if w2>370:
-		w2=370
-
-	slice = fra_hist_total[[w1, w2]]
-	slice['fra'] = slice.apply(lambda x: round(fc.fra1w(w2=w2, w1=w1, i2=x[w2], i1=x[w1]), 2), axis=1)
-	slice.loc[fec1] = [None, None, dft2.loc[2, '4']]
-
-	return crea_grafico3( [w1,w2] , slice.fra ) # fig
-
-
+# Ubicación 4
 @app.callback(
 	[Output('table-cheap','data'),Output('table-rich','data'),Output('output-submit-button','children')],
 	[Input('spreads-finder-button','n_clicks')],
 	[State('spread-finder-input-days','value'),State('spread-finder-input-gap','value'),
-	 State('table1','data'),State('spot-input','value')],
-)
+	 State('table1','data'),State('spot-input','value')])
 def run_spread_finder(n_clicks,range_days,gap,rows,spot):
 	dft1 = pd.DataFrame.from_dict(rows)
 	icamos = dft1.set_index('carry_days')['icam_os']
@@ -630,3 +497,7 @@ def run_spread_finder(n_clicks,range_days,gap,rows,spot):
 
 	# return tables cheap & rich
 	return dic_dfs['cheap'].to_dict('rows-table-cheap'), dic_dfs['rich'].to_dict('rows-table-rich'), t
+
+
+
+

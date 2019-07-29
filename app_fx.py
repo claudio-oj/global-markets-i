@@ -129,9 +129,9 @@ def table2_update(dft1,dft2):
 	dft2.loc[1, '4':'6'] = ['fra', 'rank_tod', 'rank_his']
 
 	# calcula rank percentil "transversal" de la fra del spread
-	_ = fc.rank_perc(x=dft2.loc[2, '4'],
+	rt = fc.rank_perc(x=dft2.loc[2, '4'],
 					 array=np.interp(x=np.arange(1, 371, 1, int), xp=dft1.days.values, fp=dft1.fracam_os.values))
-	dft2.loc[2, '5'] = str(_) + '/100'
+	dft2.loc[2, '5'] = str(rt) + '/100'
 
 	# calcula rank percentil "historico" de la fra del spread
 	w2 = dft2.iloc[1, 1]
@@ -140,11 +140,19 @@ def table2_update(dft1,dft2):
 	slice_['fra'] = slice_.apply(lambda x: round(fc.fra1w(w2=w2, w1=w1, i2=x[w2], i1=x[w1]), 2), axis=1)
 	slice_.loc[fec1] = [None, None, dft2.loc[2, '4']]
 
-	aux = fc.rank_perc(x=dft2.loc[2, '4'], array=slice_.fra)
-	dft2.loc[2, '6'] = str(aux) + '/100'
+	rh = fc.rank_perc(x=dft2.loc[2, '4'], array=slice_.fra)
+	dft2.loc[2, '6'] = str(rh) + '/100'
 
-	return dft2, slice_.fra
-df2,slice_fra = table2_update(df1,df2)
+	if rt<25 and rh<25:
+		t = "This spread is cheap, compared to today's curve {}/100 ranking. And to it's own history {}/100 ranking".format(rt,rh)
+	elif rt>75 and rh>75:
+		t = "This spread is rich, compared to today's curve {}/100 ranking and to it's own history {}/100 ranking".format(rt,rh)
+	else:
+		t=''
+
+	return dft2, slice_.fra, t
+
+df2,slice_fra, t = table2_update(df1,df2)
 
 
 
@@ -163,6 +171,7 @@ layout = html.Div(
 							dcc.Input(id='spot-input', type='number', value=spot0,
 									  style={'height': '75%',
 											 'width': '75%',
+											 'padding-top':'10px',
 											 }),
 						],
 						className='three columns',
@@ -314,6 +323,10 @@ layout = html.Div(
 					]
 					# style_table={'width':'170px'},
 					),
+				html.Div(
+					id='output-table2-text',
+					style={'display':'inlineBlock', 'fontSize':'12px'},
+				)
 				]
 			),
 
@@ -342,13 +355,13 @@ layout = html.Div(
 					html.Div([dcc.Graph(id="ubicacion3")]),
 					html.Div(
 						[
-							dcc.Input(id='spread-finder-input-days',type='text',value='7-65',
+							dcc.Input(id='spread-finder-input-days',type='text',value='7-45',
 									  style={'height':'50%','width':'15%'}),
-							dcc.Input(id='spread-finder-input-gap' ,type='text',value='7-10',
+							dcc.Input(id='spread-finder-input-gap' ,type='text',value='2-15',
 									  style={'height':'50%','width':'15%'}),
 							html.Button('Finder', id='spreads-finder-button',
 										style={'width':'15%',"padding": "0 0 0 0"}),
-							html.Div(id='output-submit-button',
+							html.Div(id='output-finder-button',
 									 style={'width':'85%',"padding": "0 0 0 0",'margin':'1px','display':'inlineBlock'}),
 						],
 						style={'fontSize':12,'display':'inlineBlock','padding-top':'25px'}
@@ -398,7 +411,7 @@ layout = html.Div(
 
 
 @app.callback(
-	[Output('table1','data'), Output('table2','data')],
+	[Output('table1','data'), Output('table2','data'),Output('output-table2-text','children')],
 	[Input('table1','data_timestamp'), Input('table2','data_timestamp'),Input('spot-input','n_blur')],
 	[State('table1','data'), State('table2','data'),State('spot-input','value')])
 def update_tables_cback(timestamp1,timestamp2,spot_submit,rows1,rows2,spot):
@@ -421,10 +434,10 @@ def update_tables_cback(timestamp1,timestamp2,spot_submit,rows1,rows2,spot):
 	dft2 = dft2[df2.columns.copy()]
 
 	dft1 = table1_update(dft1,spot=spot)
-	dft2, slice_fra = table2_update(dft1,dft2)
+	dft2, slice_fra, t = table2_update(dft1,dft2)
 
 	# return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_fra.to_json('data_graf3')
-	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2')
+	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), t
 
 
 
@@ -474,7 +487,7 @@ def update_ubicacion4(rows,hover,fec1=fec1):
 
 # Ubicación 4
 @app.callback(
-	[Output('table-cheap','data'),Output('table-rich','data'),Output('output-submit-button','children')],
+	[Output('table-cheap','data'),Output('table-rich','data'),Output('output-finder-button','children')],
 	[Input('spreads-finder-button','n_clicks')],
 	[State('spread-finder-input-days','value'),State('spread-finder-input-gap','value'),
 	 State('table1','data'),State('spot-input','value')])

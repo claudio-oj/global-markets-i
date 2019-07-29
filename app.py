@@ -19,6 +19,7 @@ credentials = [
     ['gjara', 'chile2019'],
 	['fferrada', 'ptosfernando2020'],
 	['jzamora', 'basispapurri2029'],
+	['mandrades','xt.e498B'],
 	['cgomez','binary'],
 	['fberly','fabi'],
 	['adiaz','happyhour'],

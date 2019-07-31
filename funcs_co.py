@@ -518,6 +518,7 @@ def spreads_finder(range_days, gap, icamos, valuta, fec,spot,ptos):
 	return {'cheap': cheap, 'rich': rich, 'num_s':len(df)}
 
 
+
 def suelto_finder(range_days,icamos,valuta,fec,spot,ptos):
 	"""	función para segmentar la curva a los spreads potenciales a analizar.
 	Busca las tuplas de plazos compatibles de acuerdo a las restricciones explicitadas.

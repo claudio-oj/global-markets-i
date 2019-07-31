@@ -169,9 +169,10 @@ layout = html.Div(
 					children=[
 						html.Div([
 							dcc.Input(id='spot-input', type='number', value=spot0,
-									  style={'height': '75%',
+									  style={'height': '50%',
 											 'width': '75%',
-											 'padding-top':'10px',
+											 'padding-top':'6px',
+											 'marginTop':4,
 											 }),
 						],
 						className='three columns',
@@ -181,7 +182,7 @@ layout = html.Div(
 							html.P('Ready to use on {}'.format(fec1.date()),
 								   style={'padding-top': '10px',
 										  # 'padding-left': '90px',
-										  # 'margin': 1,
+										  'marginBottom': 5,
 									},
 							),
 						],
@@ -464,24 +465,27 @@ def display_hover_data(hoverData):
 	[Input('table1', 'data')])
 def update_graph1(rows):
 	df = pd.DataFrame.from_dict(rows)
-	df = df.loc[5:13,['ptos','ptoso']]
-	return graphs.crea_graf_ptos_lcl(df)
+	df = df.set_index('tenor')[['ptos','ptoso','ptoso_p']]
+	df['ptos_lcl_1x'] = df.ptos - df.ptos['1m']
+	return graphs.graf_arbit_lcl_os(df)
 
 
 
 @app.callback(
 	[Output('ubicacion3','figure')],
 	[Input('table1','data'),Input('ubicacion1','hoverData')])
-def update_ubicacion4(rows,hover,fec1=fec1):
+def update_ubicacion3(rows,hover,fec1=fec1):
 	try:
 		tenor = hover['points'][0]['x']
 	except:
 		tenor='12m'
 
 	df = pd.DataFrame.from_dict(rows)
-	last_fra = float(df[df.tenor==tenor]['fracam_os'])
+	last_fra = float(df[df.tenor==tenor]['fracam_os'].round(2))
+	last_spr = float( (df[df.tenor==tenor]['icam_osz'] - df[df.tenor==tenor]['icamz']).round(2) )
 
-	return [graphs.crea_fra_hist_line(tenor, last_fra, fec1)]
+	return [graphs.crea_time_series(tenor, last_fra, last_spr, fec1)]
+	# return [graphs.prueba()]
 
 
 

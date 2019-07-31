@@ -21,13 +21,6 @@ app.layout = html.Div(
 	dcc.Location(id='url',refresh=False),
 
 	html.Div([
-		# html.Img(src='static/ba_logo.gif',
-		# 	 className='one column',
-		# 	 style={
-		# 		'height': '3%',
-		# 		'width': '3%',
-		# 	 },
-		# 		 ),
 		html.H6("Global-Markets Insights",
 				className='three columns',
 				style={'color':'#FFF',
@@ -105,9 +98,12 @@ app.layout = html.Div(
 
 		],
 		className='row',
-		style={'backgroundColor':'#240E8B','borderRadius':'8px',
-			   'marginBottom':4,
-			   'height':'15%',
+		style={
+			# 'backgroundColor':'#240E8B', #azul mas fuerte
+			'backgroundColor':'#3C4CAD',  # azul - morado
+			'borderRadius':'8px',
+			'marginBottom':3,
+			'height':'15%',
 			   }
 	),
 

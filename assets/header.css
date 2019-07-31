@@ -32,7 +32,7 @@
   #line-height: 60px;
   #border-bottom: thin lightgrey solid;
   font-size: 33px;
-  #padding-top: 8px;
+  #padding-top: 4px;
   padding-left: 40px;
   font-weight: 700;
 }
@@ -110,7 +110,8 @@
   bottom: 0;
   width: 98.5%;
   height: 22px;
-  background-color: #240E8B;
+  #background-color: #240E8B;
+  background-color: #3C4CAD;
   color: white;
   text-align: center;
   vertical-align: center;

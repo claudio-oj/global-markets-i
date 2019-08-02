@@ -33,7 +33,7 @@ def crea_graf_fra_lcl_os_spread(df):
 		name='icam-os',
 		x=df.tenor,
 		y=df["icam_os"],
-		mode='lines+markers',
+		mode='lines',
 		line=dict(
 			shape='spline',
 			color='#92B4F4',
@@ -284,7 +284,6 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 
 	yrange = 100 * (df[['ptoso_p','ptos_lcl_1x']].abs()).max().max() #rango del eje Y
 	scale = yrange / (147.5+10) # scale = 1.53 cvos / pixel aprox
-	print(scale)
 
 	df['ubic_graf'] = np.where(df.dif>=0, (-30-df.dif*100)/scale, (30-df.dif*100)/scale)
 
@@ -354,6 +353,90 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 	for ind,row in df.loc['2m':'2y'].iterrows():
 		l_a.append(annot_tito(ind, row['ptoso_p'], str(row['ptoso_p']), 0, '#ffffff', '#F04393') )  #F04393
 		l_a.append(annot_tito(ind, row['ptos_lcl_1x'], str(row['ptos']), -row['ubic_graf'],'#3C4CAD','#ffffff') ) #3C4CAD
+
+	layout.update(annotations=l_a)
+
+	return go.Figure(data=[tr_lcl,tr_ofs,tr_spr], layout=layout)
+
+
+
+def graf_arb_lcl(df): # https://plot.ly/python/v3/subplots/
+
+	l = ['2m', '3m', '4m', '5m', '6m', '9m', '12m', '18m', '2y']
+	df['dif'] = df.ptos - df.ptoso
+	dif = df.loc['2m':'2y'].ptos - df.loc['2m':'2y'].ptoso
+
+	yrange = 100 * (df[['ptos','ptoso']].abs()).max().max() #rango del eje Y
+	scale = yrange / (147.5+10) # scale = 1.53 cvos / pixel aprox
+
+	df['ubic_graf'] = np.where(df.dif>=0, (-30-df.dif*100)/scale, (30-df.dif*100)/scale)
+
+	tr_spr = go.Bar(
+		name='arbitrage',
+		x=l,
+		y=dif,
+		marker_color='#3C4CAD',
+		text=[str(x) for x in dif.round(2)],
+		textposition='auto',
+		textangle=0,
+		textfont=dict(
+			size=10,
+		),
+		opacity=0.6,
+		hoverinfo='x+y+name',
+	)
+
+	tr_lcl = go.Scatter(
+		name='pts off-shore',
+		mode='markers',
+		visible='legendonly',
+		x=l,
+		y=df.loc['2m':'2y'].ptos,
+		yaxis='y2',
+	)
+
+	tr_ofs = go.Scatter(
+		name='pts lcl (1x)',
+		mode='markers',
+		visible='legendonly',
+		x=l,
+		y=df.loc['2m':'2y'].ptoso,
+		yaxis='y2',
+	)
+
+
+	layout = go.Layout(
+		title='Arbitrage os-lcl: Local convention',
+		titlefont=dict(size=12),
+		yaxis=dict(
+			domain=[0,0.5],
+			range=[min(-0.1,dif.min()), max(0.1, dif.max())],
+		),
+		yaxis2=dict(
+			domain=[0.5, 1],
+			visible=False,
+			fixedrange=True,
+			zeroline=False,
+		),
+		showlegend=False,
+		# legend=dict(
+		# 	orientation='h',
+		# 	x=0.6,
+		# 	y=1.05,
+		# 	xanchor='center',
+		# 	font=dict(
+		# 		size=10,
+		# 	),
+		# 	bgcolor='rgba(0,0,0,0)',
+		# ),
+		height=350,
+		margin=dict(l=45, b=20, r=50, t=35),
+	)
+
+	l_a= []
+	for ind,row in df.loc['2m':'2y'].iterrows():
+		l_a.append(annot_tito(ind, row['ptos'], str(row['ptos']), 0, '#ffffff', '#3C4CAD') )  #F04393
+		l_a.append(annot_tito(ind, row['ptoso'], str(row['ptoso_p']), -row['ubic_graf'],'#3C4CAD','#ffffff') ) #3C4CAD
 
 	layout.update(annotations=l_a)
 

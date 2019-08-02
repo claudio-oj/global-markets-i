@@ -191,6 +191,7 @@ layout = html.Div(
 
 						html.Div([
 							dcc.RadioItems(
+								id='radio-item',
 								options=[
 									{'label': 'local', 'value': 'lcl'},
 									{'label': 'off-shore', 'value': 'os'},
@@ -462,12 +463,17 @@ def display_hover_data(hoverData):
 
 @app.callback(
 	Output("ubicacion2", "figure"),
-	[Input('table1', 'data')])
-def update_graph1(rows):
+	[Input('table1', 'data'), Input('radio-item','value')])
+def update_graph1(rows,radioitem):
+	radioitem
 	df = pd.DataFrame.from_dict(rows)
 	df = df.set_index('tenor')[['ptos','ptoso','ptoso_p']]
 	df['ptos_lcl_1x'] = df.ptos - df.ptos['1m']
-	return graphs.graf_arb_os(df.applymap(fc.round_2d))
+
+	if radioitem=='lcl':
+		return graphs.graf_arb_lcl(df.applymap(fc.round_2d))
+	else:
+		return graphs.graf_arb_os(df.applymap(fc.round_2d))
 
 
 

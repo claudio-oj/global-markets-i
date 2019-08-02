@@ -42,7 +42,7 @@ df1 = pd.read_pickle("./batch/table1_init.pkl")
 """ SECCION INICIALIZA TABLA CALCULADORA FX """ # lo hago al inicio para no duplicar el proceso en la func del callback
 df2 = pd.DataFrame(index=[0, 1, 2],columns=['name', 'pub_days','dates','ptos','4','5','6'])
 df2.loc[0, 'name':'pub_days'] = ['short-leg', 7]
-df2.loc[1, 'name':'pub_days'] = ['long-leg', 30]
+df2.loc[1, 'name':'pub_days'] = ['long-leg', 28]
 
 
 def table1_update(df,spot):
@@ -467,7 +467,7 @@ def update_graph1(rows):
 	df = pd.DataFrame.from_dict(rows)
 	df = df.set_index('tenor')[['ptos','ptoso','ptoso_p']]
 	df['ptos_lcl_1x'] = df.ptos - df.ptos['1m']
-	return graphs.graf_arbit_lcl_os(df)
+	return graphs.graf_arb_os(df.applymap(fc.round_2d))
 
 
 
@@ -503,13 +503,13 @@ def run_spread_finder(n_clicks,range_days,gap,rows,spot):
 
 	if gap=='':
 		dic_dfs = fc.suelto_finder(range_days=range_days,icamos=icamos, valuta=df1.days[0], fec=fec1,spot=spot,ptos=ptos)
-		t = "Top-10 NDF:   within {}d - {}d curve".format(range_days[0],range_days[1])
+		t = "Top-10 NDF:   within {}d - {}d curve. Cheap on the left, rich on the right".format(range_days[0],range_days[1])
 		return dic_dfs['cheap'].to_dict('rows-table-cheap'), dic_dfs['rich'].to_dict('rows-table-rich'), t
 
 	else:
 		gap = [int(x) for x in gap.split('-')]
 		dic_dfs = fc.spreads_finder(range_days=range_days,gap=gap,icamos=icamos, valuta=df1.days[0],fec=fec1,spot=spot,ptos=ptos)
-		t = 'Top-10 out of {} Fx spreads:   within {}d - {}d curve , and {} to {} days gap'.format(dic_dfs['num_s'],
+		t = 'Top-10 out of {} Fx spreads:   within {}d - {}d curve , and {} to {} days gap. Cheap on the left, rich on the right'.format(dic_dfs['num_s'],
 															range_days[0],range_days[1],gap[0],gap[1])
 
 	# return tables cheap & rich

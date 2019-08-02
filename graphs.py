@@ -19,11 +19,11 @@ def crea_graf_fra_lcl_os_spread(df):
 		mode='lines+markers+text',
 		line=dict(
 			shape='spline',
-			color=('#3C4CAD')
+			color='#3C4CAD',
 		),
 		opacity=0.8,
 		text=np.array([str(round(x, 2)) for x in df["fracam_os"]]),
-		# hoverinfo='x',
+		hoverinfo='x+y+name',
 		textposition='top center',
 		textfont=dict(size=11),
 		showlegend=True,
@@ -36,12 +36,12 @@ def crea_graf_fra_lcl_os_spread(df):
 		mode='lines+markers',
 		line=dict(
 			shape='spline',
-			color=('#3C4CAD'),
+			color='#92B4F4',
 			dash='dash',
 		),
-		opacity=0.8,
-		textposition='top center',
-		textfont=dict(size=10),
+		opacity=0.4,
+		# textposition='top center',
+		# textfont=dict(size=10),
 		showlegend=True,
 	)
 
@@ -51,7 +51,7 @@ def crea_graf_fra_lcl_os_spread(df):
 		y=df.icam_osz - df.icamz,
 		yaxis='y2',
 		showlegend=True,
-		marker_color='#F04393',
+		marker_color='#62BEC1',
 		opacity=0.2,
 	)
 
@@ -86,7 +86,7 @@ def crea_graf_fra_lcl_os_spread(df):
 			),
 			bgcolor='rgba(0,0,0,0)',
 		),
-		height=350,
+		height=325,
 		margin=dict(l=45, b=20, r=50, t=55),
 	)
 
@@ -139,7 +139,7 @@ def crea_time_series(tenor,last_fra,last_spr,fec1):
 		name='os-lcl spread',
 		line=dict(
 			shape='spline',
-			color=('#F04393'),
+			color='#62BEC1',
 			width=1,
 		),
 		opacity=0.8,
@@ -153,8 +153,8 @@ def crea_time_series(tenor,last_fra,last_spr,fec1):
 		name='mean spread',
 		line=dict(
 			shape='spline',
-			color=('#F04393'),
-			width=1,
+			color='#62BEC1',
+			width=3,
 		),
 		opacity=0.8,
 		hoverinfo='skip',
@@ -230,7 +230,7 @@ def crea_time_series(tenor,last_fra,last_spr,fec1):
 			bordercolor="#c7c7c7",
 			borderwidth=2,
 			borderpad=2,
-			bgcolor="#F04393",
+			bgcolor="#62BEC1",
 			opacity=0.9,
 			font=dict(
 				size=11,
@@ -246,234 +246,67 @@ def crea_time_series(tenor,last_fra,last_spr,fec1):
 
 
 
-# def crea_grafico3(spread_d,series):
-# 	""" crea graf3 .... no confundir con update_graf3"""
-# 	trace = go.Scatter(
-# 		x=series.index,
-# 		y=series,
-# 		# customdata=auxiliar["tenor"],
-# 		mode='lines',
-# 		# name='lines+markers',
-# 		line=dict(
-# 			shape='spline',
-# 			color=('#73BA9B'),
-# 			width=1.5,
-# 		),
-# 		opacity=1,
-# 		# text=np.array([str(round(x, 2)) for x in auxiliar["fracam_os"]]),
-# 		textposition='top center',
-# 		textfont=dict(size=10),
-# 	)
-#
-# 	layout = dict(
-# 		title='FRA-os implicit in spread: ' + str(int(spread_d[0])) + 'x' + str(int(spread_d[1])),
-# 		titlefont=dict(size=11),
-# 		xaxis=dict(
-# 			zeroline=False,
-# 			showgrid=False,
-# 			automargin=True
-# 		),
-# 		yaxis=dict(
-# 			zeroline=False,
-# 			showgrid=True,
-# 			automargin=True,
-# 			titlefont=dict(size=10, ),
-# 			# size=8,
-# 		),
-# 		height=300,
-# 		margin=dict(l=45, b=20, r=50, t=35),
-# 	)
-#
-# 	fig = dict(data=[trace], layout=layout)
-#
-# 	return fig
-
-
-
-
-def crea_graf_ptos_lcl(df):
-	""" crea grafico de ptos forward, con X axis convención local"""
-	l = ['2m', '3m', '4m', '5m', '6m', '9m', '12m', '18m', '2y']
-	dif = df.ptoso - df.ptos
-
-	# tr_ptos_lcl = go.Scatter(
-	# 	name='ptos-lcl',
-	# 	x=l,
-	# 	y=df['ptos'],
-	# 	mode='markers',
-	# 	line=dict(
-	# 		shape='spline',
-	# 		color=('#240E8B'),
-	# 		width=1.5,
-	# 	),
-	# 	opacity=0.5,
-	# 	# hoverinfo='x',
-	# 	textposition='top center',
-	# 	textfont=dict(size=10),
-	# 	showlegend=False,
-	# )
-
-	# tr_ptos_os = go.Scatter(
-	# 	name='ptos-os',
-	# 	x=l,
-	# 	y=df['ptoso'],
-	# 	mode='markers',
-	# 	line=dict(
-	# 		shape='spline',
-	# 		color=('#81C3D7'),
-	# 		width=1.5,
-	# 	),
-	# 	opacity=0.5,
-	# 	# hoverinfo='x',
-	# 	textposition='top center',
-	# 	textfont=dict(size=10),
-	# 	showlegend=False,
-	# )
-
-	tr_bars = go.Scatter(
-		name='ptos os-lcl',
-		mode='markers',
-		x=l,
-		y=dif,
-		yaxis='y2',
-		text=np.array([str(round(x, 2)) for x in dif]),
-		# textposition='outside',
-		textfont=dict(
-			size=11,
-		),
-		hoverinfo='x',
-		showlegend=False,
-		marker_color='#59C3C3',
-		opacity=0.6,
-	)
-
-	layout = dict(
-		title='ptos (LHS)  v/s  os-lcl spread (RHS)',
-		titlefont=dict(size=11),
-		xaxis=dict(
-			zeroline=False,
-			showgrid=False,
-			automargin=True,
-			fixedrange=True,
-		),
-		yaxis=dict(
-			zeroline=False,
-			showgrid=False,
-			automargin=True,
-			titlefont=dict(size=10),
-			# size=8,
-		),
-		yaxis2=dict(
-			overlaying='y',
-			anchor='x',
-			side='right',
-			showgrid=True,
-		),
-		height=350,
-		margin=dict(l=45, b=20, r=50, t=55),
-		# legend=dict(
-		# 	orientation='h',
-		# 	x=0.5,
-		# 	y=1,
-		# ),
-	)
-
-	fig = dict(data=[
-		# tr_ptos_lcl, tr_ptos_os,
-		tr_bars], layout=layout)
-	return fig
-
-
-
-def prueba():
-	tr1 = go.Scatter(
-		x=[0, 1, 2, 3, 4, 5, 6, 7, 8],
-		y=[0, 1, 3, 2, 4, 3, 4, 6, 5],
-	)
-
-	tr2 = go.Scatter(
-		x=[0, 1, 2, 3, 4, 5, 6, 7, 8],
-		y=[0, 4, 5, 1, 2, 2, 3, 4, 2],
-	)
-
-	layout = dict(
-		showlegend=False,
-	)
-
-	layout.update(
-		annotations=[dict(
-			x=2,
-			y=5,
-			xref="x",
-			yref="y",
-			text="max=5",
-			showarrow=True,
-			font=dict(
-				family="Courier New, monospace",
-				size=16,
-				color="#ffffff"
-			),
-			align="center",
-			arrowhead=2,
-			arrowsize=1,
-			arrowwidth=2,
-			arrowcolor="#636363",
-			ax=-60,
-			ay=30,
-			bordercolor="#c7c7c7",
-			borderwidth=2,
-			borderpad=4,
-			bgcolor="#ff7f0e",
-			opacity=0.8
-		)]
-	)
-
-	return dict(data=[tr1,tr2], layout=layout)
-
-
-def annot_tito_1(x,y,t):
+def annot_tito(x,y,t,ay,fc,bgc):
+	""" función crea "anotacion" para el grafico de arbitraje"""
 	annotation = dict(
 		x=x,
 		y=y,
 		xref="x",
-		yref="y",
+		yref="y2",
 		text=t,
 		showarrow=True,
 		font=dict(
 			family="Courier New, monospace",
-			size=16,
-			color="#ffffff"
+			size=13,
+			color=fc,
 		),
 		align="center",
-		arrowhead=2,
+		arrowhead=1,
 		arrowsize=1,
-		arrowwidth=2,
-		arrowcolor="#636363",
+		arrowwidth=1,
+		arrowcolor="rgba(0,0,0,0)",
 		ax=0,
-		ay=5,
+		ay=ay,
 		bordercolor="#c7c7c7",
-		borderwidth=2,
-		borderpad=4,
-		bgcolor="#ff7f0e",
-		opacity=0.8
+		borderwidth=1,
+		borderpad=1,
+		bgcolor=bgc,
+		opacity=0.8,
 	)
 	return annotation
 
 
-def graf_arbit_lcl_os(df):
-	# https://plot.ly/python/v3/subplots/
+def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
+
 	l = ['2m', '3m', '4m', '5m', '6m', '9m', '12m', '18m', '2y']
+	df['dif'] = df.ptoso_p - df.ptos_lcl_1x
+	dif = df.loc['2m':'2y'].ptoso_p - df.loc['2m':'2y'].ptos_lcl_1x
+
+	yrange = 100 * (df[['ptoso_p','ptos_lcl_1x']].abs()).max().max() #rango del eje Y
+	scale = yrange / (147.5+10) # scale = 1.53 cvos / pixel aprox
+	print(scale)
+
+	df['ubic_graf'] = np.where(df.dif>=0, (-30-df.dif*100)/scale, (30-df.dif*100)/scale)
 
 	tr_spr = go.Bar(
 		name='arbitrage',
 		x=l,
-		y=df.loc['2m':'2y'].ptoso_p - df.loc['2m':'2y'].ptos_lcl_1x,
-		marker_color='#59C3C3',
-		opacity=0.8,
+		y=dif,
+		marker_color='#F04393',
+		text=[str(x) for x in dif.round(2)],
+		textposition='auto',
+		textangle=0,
+		textfont=dict(
+			size=10,
+		),
+		opacity=0.6,
+		hoverinfo='x+y+name',
 	)
 
 	tr_lcl = go.Scatter(
 		name='pts off-shore',
+		mode='markers',
+		visible='legendonly',
 		x=l,
 		y=df.loc['2m':'2y'].ptoso_p,
 		yaxis='y2',
@@ -481,39 +314,47 @@ def graf_arbit_lcl_os(df):
 
 	tr_ofs = go.Scatter(
 		name='pts lcl (1x)',
+		mode='markers',
+		visible='legendonly',
 		x=l,
 		y=df.loc['2m':'2y'].ptos_lcl_1x,
 		yaxis='y2',
 	)
 
+
 	layout = go.Layout(
 		title='Arbitrage os-lcl: 1x convention',
 		titlefont=dict(size=12),
 		yaxis=dict(
-			domain=[0,0.33],
+			domain=[0,0.5],
+			range=[min(-0.1,dif.min()), max(0.1, dif.max())],
 		),
 		yaxis2=dict(
-			domain=[0.33, 1],
+			domain=[0.5, 1],
+			visible=False,
+			fixedrange=True,
+			zeroline=False,
 		),
-		showlegend=True,
-		legend=dict(
-			orientation='h',
-			x=0.6,
-			y=1.05,
-			xanchor='center',
-			font=dict(
-				size=10,
-			),
-			bgcolor='rgba(0,0,0,0)',
-		),
+		showlegend=False,
+		# legend=dict(
+		# 	orientation='h',
+		# 	x=0.6,
+		# 	y=1.05,
+		# 	xanchor='center',
+		# 	font=dict(
+		# 		size=10,
+		# 	),
+		# 	bgcolor='rgba(0,0,0,0)',
+		# ),
 		height=350,
 		margin=dict(l=45, b=20, r=50, t=35),
 	)
 
-	layout.update(
-		annotations=[annot_tito_1(x=df.loc['2m':'2y'].index,y=df.loc['2m':'2y'].ptoso_p,t=x1) for x1 in df.loc['2m':'2y'].ptoso_p]
-	)
+	l_a= []
+	for ind,row in df.loc['2m':'2y'].iterrows():
+		l_a.append(annot_tito(ind, row['ptoso_p'], str(row['ptoso_p']), 0, '#ffffff', '#F04393') )  #F04393
+		l_a.append(annot_tito(ind, row['ptos_lcl_1x'], str(row['ptos']), -row['ubic_graf'],'#3C4CAD','#ffffff') ) #3C4CAD
 
-
+	layout.update(annotations=l_a)
 
 	return go.Figure(data=[tr_lcl,tr_ofs,tr_spr], layout=layout)

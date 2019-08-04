@@ -37,7 +37,7 @@ def crea_graf_fra_lcl_os_spread(df):
 		line=dict(
 			shape='spline',
 			color='#92B4F4',
-			dash='dash',
+			dash='dot',
 		),
 		opacity=0.4,
 		# textposition='top center',
@@ -46,7 +46,7 @@ def crea_graf_fra_lcl_os_spread(df):
 	)
 
 	tr_bar = go.Bar(
-		name='os-spread',
+		name='os-lcl spread',
 		x=df.tenor,
 		y=df.icam_osz - df.icamz,
 		yaxis='y2',
@@ -71,6 +71,7 @@ def crea_graf_fra_lcl_os_spread(df):
 			titlefont=dict(size=10),
 		),
 		yaxis2=dict(
+			zerolinecolor='lightGrey',
 			overlaying='y',
 			anchor='x',
 			side='right',
@@ -79,7 +80,7 @@ def crea_graf_fra_lcl_os_spread(df):
 		legend=dict(
 			orientation='h',
 			x=0.6,
-			y=1.08,
+			y=1.09,
 			xanchor='center',
 			font=dict(
 				size=10,
@@ -115,7 +116,7 @@ def crea_time_series(tenor,last_fra,last_spr,fec1):
 
 	s_series = aux2[tenor]
 	s_series.loc[fec1] = last_spr
-	mean = [s_series.mean() for x in s_series]
+	mean = [round(s_series.mean(),2) for x in s_series]
 
 
 	tr_fra = go.Scatter(
@@ -157,7 +158,7 @@ def crea_time_series(tenor,last_fra,last_spr,fec1):
 			width=3,
 		),
 		opacity=0.8,
-		hoverinfo='skip',
+		# hoverinfo='skip',
 	)
 
 	layout = dict(
@@ -282,8 +283,10 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 	df['dif'] = df.ptoso_p - df.ptos_lcl_1x
 	dif = df.loc['2m':'2y'].ptoso_p - df.loc['2m':'2y'].ptos_lcl_1x
 
-	yrange = 100 * (df[['ptoso_p','ptos_lcl_1x']].abs()).max().max() #rango del eje Y
-	scale = yrange / (147.5+10) # scale = 1.53 cvos / pixel aprox
+	# yrange = 100 * (df[['ptoso_p','ptos_lcl_1x']].abs()).max().max() #rango del eje Y
+	yrange = 100 * (0.10+ df[['ptoso_p', 'ptos_lcl_1x']].max().max() - df[['ptoso_p', 'ptos_lcl_1x']].min().min())
+
+	scale = yrange / (147.5+60) # scale = 1.53 cvos / pixel aprox
 
 	df['ubic_graf'] = np.where(df.dif>=0, (-30-df.dif*100)/scale, (30-df.dif*100)/scale)
 
@@ -352,7 +355,7 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 	l_a= []
 	for ind,row in df.loc['2m':'2y'].iterrows():
 		l_a.append(annot_tito(ind, row['ptoso_p'], str(row['ptoso_p']), 0, '#ffffff', '#F04393') )  #F04393
-		l_a.append(annot_tito(ind, row['ptos_lcl_1x'], str(row['ptos']), -row['ubic_graf'],'#3C4CAD','#ffffff') ) #3C4CAD
+		l_a.append(annot_tito(ind, row['ptos_lcl_1x'], str(row['ptos']), -row['ubic_graf'],'#808080','#ffffff') ) #3C4CAD
 
 	layout.update(annotations=l_a)
 
@@ -366,8 +369,10 @@ def graf_arb_lcl(df): # https://plot.ly/python/v3/subplots/
 	df['dif'] = df.ptos - df.ptoso
 	dif = df.loc['2m':'2y'].ptos - df.loc['2m':'2y'].ptoso
 
-	yrange = 100 * (df[['ptos','ptoso']].abs()).max().max() #rango del eje Y
-	scale = yrange / (147.5+10) # scale = 1.53 cvos / pixel aprox
+	# yrange = 100 * (df[['ptos','ptoso']].abs()).max().max() #rango del eje Y
+	yrange= 100 * (0.10 + df[['ptos','ptoso']].max().max() - df[['ptos','ptoso']].min().min())
+
+	scale = yrange / (147.5+60) # scale = 1.53 cvos / pixel aprox
 
 	df['ubic_graf'] = np.where(df.dif>=0, (-30-df.dif*100)/scale, (30-df.dif*100)/scale)
 
@@ -414,6 +419,9 @@ def graf_arb_lcl(df): # https://plot.ly/python/v3/subplots/
 		),
 		yaxis2=dict(
 			domain=[0.5, 1],
+			# range=[df.ptos.min(),df.ptos.max()],
+
+
 			visible=False,
 			fixedrange=True,
 			zeroline=False,
@@ -436,7 +444,7 @@ def graf_arb_lcl(df): # https://plot.ly/python/v3/subplots/
 	l_a= []
 	for ind,row in df.loc['2m':'2y'].iterrows():
 		l_a.append(annot_tito(ind, row['ptos'], str(row['ptos']), 0, '#ffffff', '#3C4CAD') )  #F04393
-		l_a.append(annot_tito(ind, row['ptoso'], str(row['ptoso_p']), -row['ubic_graf'],'#3C4CAD','#ffffff') ) #3C4CAD
+		l_a.append(annot_tito(ind, row['ptoso'], str(row['ptoso_p']), -row['ubic_graf'],'#808080','#ffffff') ) #3C4CAD
 
 	layout.update(annotations=l_a)
 

@@ -7,7 +7,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
-from header import tabs_gmi
+# from header import tabs_gmi
 
 from app import app, server
 import app_home, app_fx, app_upload
@@ -127,9 +127,9 @@ app.layout = html.Div(
 @app.callback(Output('page-content', 'children'),
 			  [Input('url', 'pathname')])
 def display_page(pathname):
-	if pathname == '/home':
+	if pathname == '/home' or pathname=='/':
 		return app_home.layout
-	elif pathname == '/fx' or pathname=='/':
+	elif pathname == '/fx':
 		return app_fx.layout
 	elif pathname == '/basis':
 		return '¡ app basis en desarollo !'
@@ -140,10 +140,10 @@ def display_page(pathname):
 	elif pathname == '/inflation':
 		return '¡ app Inflation en desarollo !'
 	elif pathname == '/middleoffice':
-		return app_upload.layout
+		return '¡ app Middle-Office en desarollo !'
 	else :
 		return '404: url equivocado. correcto, por ej: global-markets-i.herokuapp.com/fx'
 
 
 if __name__ == '__main__':
-	app.run_server(debug=True)
+	app.run_server(debug=False)

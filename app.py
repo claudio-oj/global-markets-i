@@ -16,10 +16,11 @@ app = dash.Dash(__name__)
 credentials = [
     ['admin','108'],
 	['fvizcaino','3981'],
-	# ['test1','test1'],
+	['test2','test2'],
     ['gjara', 'chile2019'],
 	['fferrada', 'ptosfernando2020'],
 	['jzamora', 'basispapurri2029'],
+	['mandrades','xt.e498B'],
 	['cgomez','binary'],
 	['fberly','fabi'],
 	['adiaz','happyhour'],

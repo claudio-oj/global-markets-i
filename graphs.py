@@ -283,10 +283,12 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 	df['dif'] = df.ptoso_p - df.ptos_lcl_1x
 	dif = df.loc['2m':'2y'].ptoso_p - df.loc['2m':'2y'].ptos_lcl_1x
 
-	# yrange = 100 * (df[['ptoso_p','ptos_lcl_1x']].abs()).max().max() #rango del eje Y
+	""" esta seccion es la + dificil de la app. Que no se superpongan las etiquetas. Cree una escala centavos/pixel manual
+	con el objetivo de reescalar la ubicación de las anotaciones (tarjetas) par que no se superpongan """
 	yrange = 100 * (0.10+ df[['ptoso_p', 'ptos_lcl_1x']].max().max() - df[['ptoso_p', 'ptos_lcl_1x']].min().min())
 
-	scale = yrange / (147.5+60) # scale = 1.53 cvos / pixel aprox
+	suple = 6.5 # es un numero inventado que permite reescalar el ratio centavos/pixels
+	scale = yrange / (147.5 + yrange/suple)
 
 	df['ubic_graf'] = np.where(df.dif>=0, (-30-df.dif*100)/scale, (30-df.dif*100)/scale)
 
@@ -338,16 +340,6 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 			zeroline=False,
 		),
 		showlegend=False,
-		# legend=dict(
-		# 	orientation='h',
-		# 	x=0.6,
-		# 	y=1.05,
-		# 	xanchor='center',
-		# 	font=dict(
-		# 		size=10,
-		# 	),
-		# 	bgcolor='rgba(0,0,0,0)',
-		# ),
 		height=350,
 		margin=dict(l=45, b=20, r=50, t=35),
 	)
@@ -369,11 +361,14 @@ def graf_arb_lcl(df): # https://plot.ly/python/v3/subplots/
 	df['dif'] = df.ptos - df.ptoso
 	dif = df.loc['2m':'2y'].ptos - df.loc['2m':'2y'].ptoso
 
-	# yrange = 100 * (df[['ptos','ptoso']].abs()).max().max() #rango del eje Y
+	""" esta seccion es la + dificil de la app. Que no se superpongan las etiquetas. Cree una escala centavos/pixel manual
+	con el objetivo de reescalar la ubicación de las anotaciones (tarjetas) par que no se superpongan """
 	yrange= 100 * (0.10 + df[['ptos','ptoso']].max().max() - df[['ptos','ptoso']].min().min())
 
-	scale = yrange / (147.5+60) # scale = 1.53 cvos / pixel aprox
+	suple = 6.5 # es un numero inventado que permite reescalar el ratio centavos/pixels
+	scale = yrange / (147.5 + yrange/suple)
 
+	# define la ubicación de las anotaciones (etiquetas) en el grafico
 	df['ubic_graf'] = np.where(df.dif>=0, (-30-df.dif*100)/scale, (30-df.dif*100)/scale)
 
 	tr_spr = go.Bar(
@@ -419,24 +414,11 @@ def graf_arb_lcl(df): # https://plot.ly/python/v3/subplots/
 		),
 		yaxis2=dict(
 			domain=[0.5, 1],
-			# range=[df.ptos.min(),df.ptos.max()],
-
-
 			visible=False,
 			fixedrange=True,
 			zeroline=False,
 		),
 		showlegend=False,
-		# legend=dict(
-		# 	orientation='h',
-		# 	x=0.6,
-		# 	y=1.05,
-		# 	xanchor='center',
-		# 	font=dict(
-		# 		size=10,
-		# 	),
-		# 	bgcolor='rgba(0,0,0,0)',
-		# ),
 		height=350,
 		margin=dict(l=45, b=20, r=50, t=35),
 	)

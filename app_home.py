@@ -15,7 +15,7 @@ layout = html.Div(
 			style={'textAlign': 'center'},
 		),
 		html.H2("Global-Markets Insights", style={'textAlign':'center'}),
-		html.P("Interbank markets financial data processing in the back-end ... for friendly assessment in the front-end... ",
+		html.P("Interbank markets financial data processing in the back-end ... for friendly assessment in the front-end. ",
 			   style={
 				   'textAlign':'center',
 				   'font-style': 'italic',
@@ -30,7 +30,7 @@ layout = html.Div(
 		html.Div(
 			style={'display':'flex','justify-content':'center','fontSize':13}, # http://howtocenterincss.com/
 			children=[dcc.Markdown('''
-Host| [BinaryAnaytics.cl](http://www.BinaryAnaytics.cl) | |
+Host| [BinaryAnalytics.cl](http://www.BinaryAnaytics.cl) | |
 :-------- | :---------: | :---------:
 Website | [global-markets-i.herokuapp.com](https://global-markets-i.herokuapp.com/) | |
 Latest Release| v2 beta Chile | 05-Aug-2019 |

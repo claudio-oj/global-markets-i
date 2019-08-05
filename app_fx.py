@@ -33,6 +33,7 @@ spread_hist = pd.read_csv("./batch/spread_g2_history.csv",index_col=0)
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
 indicator = pd.read_csv("indicator.csv")
 dfNone = pd.DataFrame(data=' ',index=np.arange(1,6,1,int),columns=['days','int','Px','ΔPx'])
+calendario_fx = pd.read_csv("./batch/calendario_app_fx.csv")
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
@@ -157,254 +158,276 @@ df2,slice_fra, t = table2_update(df1,df2)
 
 
 layout = html.Div(
-	className='row',
-	style={'height': '50%', 'width': '100%', 'max-height': '600px'},
+	# style={'display':'block'},
 	children=[
 		html.Div(
-			className='four columns',
-			children=[
-				html.Div(
-					className='row',
-					style={'fontSize': '12px','float':'center'},
-					children=[
-						html.Div([
-							dcc.Input(id='spot-input', type='number', value=spot0,
-									  style={'height': '50%',
-											 'width': '75%',
-											 'padding-top':'6px',
-											 'marginTop':4,
-											 }),
-						],
-						className='three columns',
-						),
+		className='row',
+		style={'height': '50%', 'width': '100%', 'max-height': '600px'},
+		children=[
+			html.Div(
+				className='four columns',
+				children=[
+					html.Div(
+						className='row',
+						style={'fontSize': '12px','float':'center'},
+						children=[
+							html.Div([
+								dcc.Input(id='spot-input', type='number', value=spot0,
+										  style={'height': '50%',
+												 'width': '75%',
+												 'padding-top':'6px',
+												 'marginTop':4,
+												 }),
+							],
+							className='three columns',
+							),
 
-						html.Div([
-							html.P('Ready to use on {}'.format(fec1.date()),
-								   style={'padding-top': '10px',
-										  # 'padding-left': '90px',
-										  'marginBottom': 5,
-									},
+							html.Div([
+								html.P('Ready to use on {}'.format(fec1.date()),
+									   style={'padding-top': '10px',
+											  'marginBottom': 5,
+										},
+								),
+							],
+							className='five columns',
+							),
+
+							html.Div([
+								dcc.RadioItems(
+									id='radio-item',
+									options=[
+										{'label': 'local', 'value': 'lcl'},
+										{'label': 'off-shore', 'value': 'os'},
+									],
+									value='lcl',
+									labelStyle={'display': 'inline-block'},
+								),
+							],
+							className='four columns',
+							style={'padding-top': '10px',},
 							),
 						],
-						className='five columns',
-						),
-
-						html.Div([
-							dcc.RadioItems(
-								id='radio-item',
-								options=[
-									{'label': 'local', 'value': 'lcl'},
-									{'label': 'off-shore', 'value': 'os'},
-								],
-								value='lcl',
-								labelStyle={'display': 'inline-block'},
-							),
-						],
-						className='four columns',
-						style={'padding-top': '10px',},
-						),
-					],
-				),
+					),
 
 
-				dash_table.DataTable(
-					id='table1',
-					data= df1.to_dict('rows_table1'),
-					columns= [
-						{'id':'ind',       'name':'ind',      'editable':True, 'hidden':True, 'type': 'numeric'},
-						{'id':'tenor',     'name':'t',    'editable':True, 'hidden': False,'width': '40px'},
-						{'id':'daysy',     'name':'daysy',    'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'days',      'name':'days',     'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'ptosy',     'name':'ptsy',    'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'ptos',      'name':'ptslcl',     'editable':True,  'type': 'numeric'},
+					dash_table.DataTable(
+						id='table1',
+						data= df1.to_dict('rows_table1'),
+						columns= [
+							{'id':'ind',       'name':'ind',      'editable':True, 'hidden':True, 'type': 'numeric'},
+							{'id':'tenor',     'name':'t',    'editable':True, 'hidden': False,'width': '40px'},
+							{'id':'daysy',     'name':'daysy',    'editable':True, 'hidden': True, 'type': 'numeric'},
+							{'id':'days',      'name':'days',     'editable':True, 'hidden': True, 'type': 'numeric'},
+							{'id':'ptosy',     'name':'ptsy',    'editable':True, 'hidden': True, 'type': 'numeric'},
+							{'id':'ptos',      'name':'ptslcl',     'editable':True,  'type': 'numeric'},
 
-						{'id':'odelta',    'name':'+-',   'editable':True, 'hidden': False, 'type': 'numeric'},
-						{'id':'ptoso_p',   'name':'ptsos',     'editable':True,  'type': 'numeric'},
+							{'id':'odelta',    'name':'+-',   'editable':True, 'hidden': False, 'type': 'numeric'},
+							{'id':'ptoso_p',   'name':'ptsos',     'editable':True,  'type': 'numeric'},
 
-						{'id':'ddelta',    'name':'ddelta',   'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'carry',     'name':'carry',    'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'icam',      'name':'icam',     'editable':True, 'hidden': False, 'type': 'numeric'},
-						{'id':'ilib',      'name':'irslibor',     'editable':True, 'hidden': False, 'type': 'numeric'},
-						{'id':'tcs',       'name':'tcs',      'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'icam_os',   'name':'icamos',  'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'fracam_os', 'name':'fra',   'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'basisy',    'name':'bsisy',   'editable':True, 'hidden': True, 'type': 'numeric'},
-						{'id':'basis',     'name':'bsis',    'editable':True, 'type': 'numeric'},
-						{'id':'i_ptos',    'name':'ipts',   'editable':True, 'type': 'numeric'},
-						{'id':'i_basis',   'name':'ibsis',  'editable':True, 'type': 'numeric'},
-						{'id':'blank',   'name':'',  'editable':True},
-						],
-					style_as_list_view= True,
-					n_fixed_rows=1,
-					style_header={'textAlign':'right'},
-					# fixed_rows={ 'headers': True, 'data': 0 },
-					style_table={
-						# 'margin':'5px',
-						'height': '460px',
-						'width':'100%',
-						'overflowY': 'auto',
-						},
-					style_cell_conditional=[
-						# {'if': {'column_id':'tenor'}, 'width': '30px'},
-						# {'if': {'column_id':'days'}, 'width': '32px'},
-						# {'if': {'column_id':'ptosy'}, 'width': '39px', 'color': 'rgb(204, 205, 206)'},
-						{'if': {'column_id':'ptos'}, 'fontWeight': 600, 'color': '#3C4CAD'},
-						{'if': {'column_id':'ptoso_p'}, 'fontWeight': 600, 'color': '#F04393'},
-						# {'if': {'column_id':'odelta'}, 'width': '42px'},
-						# {'if': {'column_id':'ddelta'}, 'width': '48px'},
-						# {'if': {'column_id':'carry'}, 'width': '48px'},
-						# {'if': {'column_id':'icam'}, 'width': '45px'},
-						# {'if': {'column_id':'ilib'}, 'width': '45px'},
-						# {'if': {'column_id':'icam_os'}, 'width': '45px'},
-						# {'if': {'column_id':'fracam_os'}, 'width': '45px'},
-						{'if': {'column_id':'basis'}, 'fontWeight': 600, 'color': '#59C3C3'},
-						{'if': {'column_id':'i_ptos'}, 'fontWeight': 600,'color':'#3C4CAD','backgroundColor':'rgb(250,250,250)'}, #20A4F3
-						{'if': {'column_id':'i_basis'}, 'fontWeight': 600,'color':'#59C3C3','backgroundColor':'rgb(250,250,250)'},
-						{'if': {'column_id':'blank'}, 'backgroundColor':'rgb(250,250,250)'},
-						],
-					editable=True,
-					style_data_conditional=[
-						{
-							'if':{
-								'column_id':'odelta',
-								'filter':'{odelta} = 0',
+							{'id':'ddelta',    'name':'ddelta',   'editable':True, 'hidden': True, 'type': 'numeric'},
+							{'id':'carry',     'name':'carry',    'editable':True, 'hidden': True, 'type': 'numeric'},
+							{'id':'icam',      'name':'icam',     'editable':True, 'hidden': False, 'type': 'numeric'},
+							{'id':'ilib',      'name':'irslibor',     'editable':True, 'hidden': False, 'type': 'numeric'},
+							{'id':'tcs',       'name':'tcs',      'editable':True, 'hidden': True, 'type': 'numeric'},
+							{'id':'icam_os',   'name':'icamos',  'editable':True, 'hidden': True, 'type': 'numeric'},
+							{'id':'fracam_os', 'name':'fra',   'editable':True, 'hidden': True, 'type': 'numeric'},
+							{'id':'basisy',    'name':'bsisy',   'editable':True, 'hidden': True, 'type': 'numeric'},
+							{'id':'basis',     'name':'bsis',    'editable':True, 'type': 'numeric'},
+							{'id':'i_ptos',    'name':'ipts',   'editable':True, 'type': 'numeric'},
+							{'id':'i_basis',   'name':'ibsis',  'editable':True, 'type': 'numeric'},
+							{'id':'blank',   'name':'',  'editable':True},
+							],
+						style_as_list_view= True,
+						n_fixed_rows=1,
+						style_header={'textAlign':'right'},
+						# fixed_rows={ 'headers': True, 'data': 0 },
+						style_table={
+							# 'margin':'5px',
+							'height': '460px',
+							'width':'100%',
+							'overflowY': 'auto',
 							},
-							'color':'white',
-						},
-						{
-							'if':{
-								'column_id':'odelta',
-								'filter':'{odelta} > 0',
-							},
-							'color':'mediumseagreen',
-						},
-						{
-							'if':{
-								'column_id':'odelta',
-								'filter':'{odelta} < 0',
-							},
-							'color':'#F04393', #rojo
-						},
-						{
-							'if':{
-								'column_id':'icam',
-								'filter':'{show} eq 0',
+						style_cell_conditional=[
+							# {'if': {'column_id':'tenor'}, 'width': '30px'},
+							# {'if': {'column_id':'days'}, 'width': '32px'},
+							# {'if': {'column_id':'ptosy'}, 'width': '39px', 'color': 'rgb(204, 205, 206)'},
+							{'if': {'column_id':'ptos'}, 'fontWeight': 600, 'color': '#3C4CAD'},
+							{'if': {'column_id':'ptoso_p'}, 'fontWeight': 600, 'color': '#F04393'},
+							# {'if': {'column_id':'odelta'}, 'width': '42px'},
+							# {'if': {'column_id':'ddelta'}, 'width': '48px'},
+							# {'if': {'column_id':'carry'}, 'width': '48px'},
+							# {'if': {'column_id':'icam'}, 'width': '45px'},
+							# {'if': {'column_id':'ilib'}, 'width': '45px'},
+							# {'if': {'column_id':'icam_os'}, 'width': '45px'},
+							# {'if': {'column_id':'fracam_os'}, 'width': '45px'},
+							{'if': {'column_id':'basis'}, 'fontWeight': 600, 'color': '#59C3C3'},
+							{'if': {'column_id':'i_ptos'}, 'fontWeight': 600,'color':'#3C4CAD','backgroundColor':'rgb(250,250,250)'}, #20A4F3
+							{'if': {'column_id':'i_basis'}, 'fontWeight': 600,'color':'#59C3C3','backgroundColor':'rgb(250,250,250)'},
+							{'if': {'column_id':'blank'}, 'backgroundColor':'rgb(250,250,250)'},
+							],
+						editable=True,
+						style_data_conditional=[
+							{
+								'if':{
+									'column_id':'odelta',
+									'filter':'{odelta} = 0',
 								},
-							'color': 'lightgray ',
-						},
-						{
-							'if': {
-								'column_id': 'ilib',
-								'filter': '{show} eq 0',
+								'color':'white',
 							},
-							'color': 'lightgray ',
-						},
-					]
-					),
-				dash_table.DataTable(
-					id='table2',
-					data=df2.to_dict('rows_table2'),
-					columns=[
-						{'id':'name', 'name':'name'},
-						{'id':'pub_days', 'name':'pub-days', 'editable':True, 'type': 'numeric'},
-						{'id':'dates', 'name':'dates'},
-						{'id':'ptos', 'name':'pts'},
-						{'id':'4', 'name':' '},
-						{'id':'5', 'name':' '},
-						{'id':'6', 'name':' '},
-					],
-					editable=True,
-					style_header={'textAlign':'right'},
-					style_as_list_view= True,
-					style_data_conditional=[
-						{
-							'if':{'row_index': 2},
-							'fontWeight': 600,
-							'color':'#3C4CAD',
-						},
-					]
-					# style_table={'width':'170px'},
-					),
-				html.Div(
-					id='output-table2-text',
-					style={'display':'inlineBlock', 'fontSize':'12px'},
-				)
-				]
-			),
-
-		html.Div(
-			className='four columns',
-			children=[
-				html.Div(
-					dcc.Graph(
-						id='ubicacion1',
-						# figure= graphs.crea_graf_fra_lcl_os_spread(df1.loc[2:13,['tenor','icamz','icam_osz','icam_os','fracam_os']])
+							{
+								'if':{
+									'column_id':'odelta',
+									'filter':'{odelta} > 0',
+								},
+								'color':'mediumseagreen',
+							},
+							{
+								'if':{
+									'column_id':'odelta',
+									'filter':'{odelta} < 0',
+								},
+								'color':'#F04393', #rojo
+							},
+							{
+								'if':{
+									'column_id':'icam',
+									'filter':'{show} eq 0',
+									},
+								'color': 'lightgray ',
+							},
+							{
+								'if': {
+									'column_id': 'ilib',
+									'filter': '{show} eq 0',
+								},
+								'color': 'lightgray ',
+							},
+						]
 						),
-					),
-				html.Div(
-					[
-						dcc.Graph(
-							id="ubicacion2",
-						)
-					],
+					dash_table.DataTable(
+						id='table2',
+						data=df2.to_dict('rows_table2'),
+						columns=[
+							{'id':'name', 'name':'name'},
+							{'id':'pub_days', 'name':'pub-days', 'editable':True, 'type': 'numeric'},
+							{'id':'dates', 'name':'dates'},
+							{'id':'ptos', 'name':'pts'},
+							{'id':'4', 'name':' '},
+							{'id':'5', 'name':' '},
+							{'id':'6', 'name':' '},
+						],
+						editable=True,
+						style_header={'textAlign':'right'},
+						style_as_list_view= True,
+						style_data_conditional=[
+							{
+								'if':{'row_index': 2},
+								'fontWeight': 600,
+								'color':'#3C4CAD',
+							},
+						]
+						# style_table={'width':'170px'},
+						),
+					html.Div(
+						id='output-table2-text',
+						style={'display':'inlineBlock', 'fontSize':'12px'},
+					)
+					]
 				),
-				],
-			),
 
 			html.Div(
 				className='four columns',
 				children=[
-					html.Div([dcc.Graph(id="ubicacion3")]),
+					html.Div(
+						dcc.Graph(
+							id='ubicacion1',
+							# figure= graphs.crea_graf_fra_lcl_os_spread(df1.loc[2:13,['tenor','icamz','icam_osz','icam_os','fracam_os']])
+							),
+						),
 					html.Div(
 						[
-							dcc.Input(id='spread-finder-input-days',type='text',value='7-45',
-									  style={'height':'50%','width':'15%'}),
-							dcc.Input(id='spread-finder-input-gap' ,type='text',value='5-15',
-									  style={'height':'50%','width':'15%'}),
-							html.Button('Finder', id='spreads-finder-button',
-										style={'width':'15%',"padding": "0 0 0 0"}),
-							html.Div(id='output-finder-button',
-									 style={'width':'85%',"padding": "0 0 0 0",'margin':'1px','display':'inlineBlock'}),
+							dcc.Graph(
+								id="ubicacion2",
+							)
 						],
-						style={'fontSize':12,'display':'inlineBlock','padding-top':'25px'}
 					),
-					html.Div(
-						[
-							dash_table.DataTable(
-								id='table-cheap',
-								columns=[
-									{'id':'days', 'name':'days'},
-									{'id':'int', 'name':'int'},
-									{'id':'p', 'name':'Px'},
-									{'id':'c', 'name':'ΔPx'},
-								],
-								data=dfNone.to_dict('records'),
-								style_as_list_view= True,
-								style_cell={'minWidth': '50px', 'width': '80px', 'maxWidth': '85px'},
-								style_table={'width':'50%','float':'left','textAlign':'left'},
-								style_header={'textAlign':'right'},
-							),
-							dash_table.DataTable(
-								id='table-rich',
-								columns=[
-									{'id':'days', 'name':'days'},
-									{'id':'int', 'name':'int'},
-									{'id':'p', 'name':'Px'},
-									{'id':'c', 'name':'ΔPx'},
-								],
-								data=dfNone.to_dict('records'),
-								style_as_list_view= True,
-								style_cell={'minWidth': '50px', 'width': '80px', 'maxWidth': '85px'},
-								style_table={'width':'50%','float':'right', 'padding-right': '50%',},
-								style_header={'textAlign':'right'},
-							),
-						],
-						style={"display": "inlineBlock"},
-					),
-				],
+					],
+				),
+
+				html.Div(
+					className='four columns',
+					children=[
+						html.Div([dcc.Graph(id="ubicacion3")]),
+						html.Div(
+							[
+								dcc.Input(id='spread-finder-input-days',type='text',value='7-45',
+										  style={'height':'50%','width':'15%'}),
+								dcc.Input(id='spread-finder-input-gap' ,type='text',value='5-15',
+										  style={'height':'50%','width':'15%'}),
+								html.Button('Finder', id='spreads-finder-button',
+											style={'width':'15%',"padding": "0 0 0 0"}),
+								html.Div(id='output-finder-button',
+										 style={'width':'85%',"padding": "0 0 0 0",'margin':'1px','display':'inlineBlock'}),
+							],
+							style={'fontSize':12,'display':'inlineBlock','padding-top':'25px'}
+						),
+						html.Div(
+							[
+								dash_table.DataTable(
+									id='table-cheap',
+									columns=[
+										{'id':'days', 'name':'days'},
+										{'id':'int', 'name':'int'},
+										{'id':'p', 'name':'Px'},
+										{'id':'c', 'name':'ΔPx'},
+									],
+									data=dfNone.to_dict('records'),
+									style_as_list_view= True,
+									style_cell={'minWidth': '50px', 'width': '80px', 'maxWidth': '85px'},
+									style_table={'width':'50%','float':'left','textAlign':'left'},
+									style_header={'textAlign':'right'},
+								),
+								dash_table.DataTable(
+									id='table-rich',
+									columns=[
+										{'id':'days', 'name':'days'},
+										{'id':'int', 'name':'int'},
+										{'id':'p', 'name':'Px'},
+										{'id':'c', 'name':'ΔPx'},
+									],
+									data=dfNone.to_dict('records'),
+									style_as_list_view= True,
+									style_cell={'minWidth': '50px', 'width': '80px', 'maxWidth': '85px'},
+									style_table={'width':'50%','float':'right', 'padding-right': '50%',},
+									style_header={'textAlign':'right'},
+								),
+							],
+							style={"display": "inlineBlock"},
+						),
+					],
+				),
+		],
+	),
+	# html.Br(),
+	# html.Br(),
+
+	html.Div(
+		className='row',
+		style={'width': '35%', 'margin-top':'50px','float':'left','textAlign':'left'},
+		children=[
+			dash_table.DataTable(
+				id='calendario-fx',
+				data=calendario_fx.to_dict('records'),
+				columns=[{"name": i, "id": i} for i in ['tenor','pubdays','fix','pub','val']],
+				style_header={'textAlign':'center'},
 			),
-	],
-),
+		]
+	)
+
+	]
+)
+
+
 
 """
 ##################################################################################

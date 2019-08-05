@@ -39,7 +39,6 @@ def next_cal_day(d0, offset):
 		return d1
 
 
-
 def next_lab_settle(d0, offset, cal_spot=False, cal_cl=False, cal_ny=False):
 	""" calcula el dia laboral siguiente, segun calendarios de feriados
 	PARAMETERS:
@@ -157,7 +156,7 @@ def crea_cal_tenors(tod):
 
 	return df
 
-# y = crea_cal_tenors(pd.Timestamp(2019,7,22))
+y = crea_cal_tenors(pd.Timestamp(2019,7,22))
 
 
 def crea_cal_IRS_us(d):

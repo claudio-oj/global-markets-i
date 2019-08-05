@@ -243,14 +243,33 @@ os_lcl_s.to_csv('./batch/spread_g2_history.csv')
 pd.to_pickle(fc.tables_init(fec0,fec1), "./batch/table1_init.pkl")
 
 
+""" Creo la tabla calendario que va a ir en la parte inferior de la app_fx """
+dfaux = fcc.crea_cal_tenors(fec1)
+dfaux['tenor'] = dfaux.index.copy()
+cols = dfaux.columns.tolist()
+cols = cols[-1:] + cols[:-1]
+dfaux = dfaux[cols]
+for col in ['fix','pub','val']:
+	dfaux[col] = dfaux[col].apply(lambda x: x.date())
+
+( dfaux.loc[:,'tenor':'val'] ).to_csv("./batch/calendario_app_fx.csv")
+
+
 # mide el tiempo
 clock1 = time.clock()
 print('Me demoré ',clock1-clock0,' segundos, en correr el batch')
 
 
 """ LIMPIA MEMORIA VARIABLES QUE NO SE USAN EN LA SESION DEL CLIENTE Y SOLO SIRVEN EN EL BATCH """
-# del _,X,cols,d_basis_tcs,d_icamos,df_b,df_cl,df_p,df_us,dfb,dff,dfio,fras_hoy,d_icam,ilib_dict,ptos_dict,clock1,clock0
+borrar = ['clock0', 'pd', 'np', 'pickle', 'fc', 'fcc', 'header', 'dfb', 'fec0', 'fec1', 'ilib_dict', 'd', 'df_us', 'd_basis_tcs',\
+'df_b', 'tenors_cl', 'meses_cl', 'd_icam', 'df_cl', 'ptos_dict', 'df_p', 'd_icamos', 'dfio', 'X', 'cols', 'dff', 'l', '_',\
+'fras_hoy', 'os_lcl_s', 'dfsp', 'aux', 'aux2', 'dfaux', 'gc', 'clock1', 'name', 'x']
 
-# import gc
-# gc.collect()
+for i in borrar:
+	del i
+
+import gc
+gc.collect()
+
+
 

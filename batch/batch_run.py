@@ -150,7 +150,7 @@ for d in dfb.index:
 	X = dfio[['pubdays','ptos']].dropna()
 	dfio.ptos = np.interp(x=dfio.pubdays.values, xp=X.pubdays.values, fp=X.ptos.map(float).values)
 
-	# calcula camara off-shore
+	# calcula camara off-shore (basis os embedded)
 	dfio['icam_os'] = dfio.apply(lambda x: fc.cam_lcl_a_os(dias=x.carry_days,spot=dfb.loc[d].spot,
 														   ptos=x.ptos,iusd=x.ilib_z),axis=1)
 	dfio['icam_os1'] = dfio.icam_os.shift(1) # col utilitaria calculo fra
@@ -236,6 +236,36 @@ os_lcl_s['date'] = os_lcl_s.index
 os_lcl_s = os_lcl_s[ ['date']+l ]
 
 os_lcl_s.to_csv('./batch/spread_g2_history.csv')
+
+
+
+# """ Paso 6.1 crea historia spreads os-lcl con percentiles necesito spot,ptos,icamz,carrydays, os-lcl spread percentil 10,50,90 """
+# olsp={}
+# columns= ['spot','ptos','icamz','icam_osz','carrydays','s_10','s_50','s_90']
+#
+# for t in l: # para cada tenor de 1w hasta 2y
+# 	olsp[t] = pd.DataFrame(index=dfb.index, columns=columns)
+# 	olsp[t]['spot'] = dfb.spot
+# 	olsp[t]['s_10'] = os_lcl_s[t].quantile(0.1)
+# 	olsp[t]['s_50'] = os_lcl_s[t].quantile(0.5)
+# 	olsp[t]['s_90'] = os_lcl_s[t].quantile(0.9)
+#
+# for d1 in dfb.index[1:]:
+# 	loc = dfb.index.get_loc(d1)
+# 	d0 = dfb.index[loc-1] # d0 es el "dia de ayer"
+#
+# 	# va a buscar los 'ptos','icamz','carry_days' de cada dia
+# 	aux = fc.tables_init(d0,d1)
+# 	aux = aux.set_index('tenor')['1w':'2y'][['ptos','icamz','icam_osz','carry_days']]
+#
+# 	# copia la fila del dia "d", de aux, en olsp de cada tenor de 1w - 2y
+# 	for t in l:
+# 		olsp[t].loc[d1,['ptos','icamz','icam_osz','carrydays']] = aux.loc[t].values
+#
+# for t in l: # copio la 2d fila en la 1a fila... ya que por inconsistencia de indices no pude calcular la 1era fila originalmente
+# 	olsp[t].iloc[0] = olsp[t].iloc[1].values
+#
+# pd.to_pickle(olsp, "./batch/spreads_percentiles.pkl")
 
 
 

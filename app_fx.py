@@ -31,7 +31,7 @@ spot0 = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 fra_historic = pd.read_csv("./batch/fra_history.csv",index_col=0)
 spread_hist = pd.read_csv("./batch/spread_g2_history.csv",index_col=0)
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
-indicator = pd.read_csv("indicator.csv")
+# indicator = pd.read_csv("indicator.csv")
 dfNone = pd.DataFrame(data=' ',index=np.arange(1,6,1,int),columns=['days','int','Px','ΔPx'])
 calendario_fx = pd.read_csv("./batch/calendario_app_fx.csv")
 

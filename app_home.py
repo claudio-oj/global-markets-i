@@ -43,60 +43,6 @@ Requirements | Google Chrome desktop > 13' | |
 
 		html.Br(),
 		html.Br(),
-# 		dcc.Markdown('''
-#
-# ##### FX
-#
-# > Variable | Definición
-# > :--------: | ---------
-# > `t` | tenor
-# > `ptslcl`  | puntos forward locales
-# > `ptsos`| puntos forward off shore
-# > `icam` | Interest Rate Swap Camara local
-# > `irslibor` | Interest Rate Swap USD libor 3 months
-# > `bsis` | Cross Currency Swap USD.CLP basis
-# > `iptos` | puntos forward locales **implicitos** en `icam` + `irslibor` + `bsis`
-# > `ibsis` | basis **implicitos** en `icam` + `irslibor` + `ptslcl`
-# > `icam-os`| tasa de interés camara sintetica u off-shore. Tasa calculada en base a `ptos` + `irslibor`
-# > `fra`| tasa de interés forward en base a la curva `icam-os`
-# > `os-lcl spread`| Spread: `icam-os` - `icam`. Es el *precio relativo* de los puntos forward
-# > `mean spread`| promedio historico (1 año) de `os-lcl spread`
-# > `rank_tod` | ranking percentil tasa fra implicita en el spread cotizado, respecto a la curva **de hoy**
-# > `rank_his` | ranking percentil tasa fra implicita en el spread cotizado, respecto a su propia historia, **serie de tiempo (1 año)**
-# '''),
-#
-# 		html.Br(),
-# 		dcc.Markdown('''
-# ##### Basis
-# >en desarrollo...
-# '''
-# 		),
-# 		html.Br(),
-# 		dcc.Markdown('''
-# ##### IR cam
-# >en desarrollo...
-# '''
-# 		),
-# 		html.Br(),
-# 		dcc.Markdown('''
-# ##### Sovereign Bonds
-# >en desarrollo...
-# '''
-# 		),
-# 		html.Br(),
-# 		dcc.Markdown('''
-# ##### Inflation
-# >en desarrollo...
-# '''
-# 		),
-# 		html.Br(),
-# 		dcc.Markdown('''
-# ##### Middle-Office
-# >en desarrollo...
-# '''
-# 		),
-# 		html.Br(),
-# 		html.Br(),
 	],
 )
 

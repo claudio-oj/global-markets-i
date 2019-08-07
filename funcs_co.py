@@ -565,3 +565,14 @@ def suelto_finder(range_days,icamos,valuta,fec,spot,ptos):
 
 	return {'cheap': cheap, 'rich': rich}
 
+
+
+def ptos_teoricos(spot,carry_days,ilibz,spread_ted,icamz,spread_tab):
+	""" calcula los ptos teoricos de acuerdo al diferencial tab - libor """
+	return spot*(1+(icamz+spread_tab)*carry_days/36000)/(1+(ilibz+spread_ted)*carry_days/36000) - spot
+
+
+
+
+
+

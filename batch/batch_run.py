@@ -36,15 +36,17 @@ header = ['spot','ff', 'ilib3m','ilib6m'] + ['ilib'+str(x) for x in range(1,11)]
 	['tcs6m'] + ['tcs'+str(x) for x in range(1,11)] + ['tcs12','tcs15','tcs20','tcs30'] +\
 	['icam1d','icam3m','icam6m','icam9m','icam1','icam18m'] + ['icam'+str(x) for x in range(2,11)] + ['icam12','icam15','icam20','icam30']+\
 	['ptos1w','ptos2w'] + ['ptos'+str(x) for x in range(1,7)] + ['ptos9m','ptos12m','ptos18m','ptos2y'] +\
-	['basis'+str(x) for x in range(1,11)] + ['basis12','basis15','basis20']
+	['basis'+str(x) for x in range(1,11)] + ['basis12','basis15','basis20'] +\
+	['tab30','tab90','tab180','tab360'] +\
+	['ice_libor_on','ice_libor_3m','ice_libor_6m','ice_libor_12m']
 
-dfb = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None,
+dfb = pd.read_excel('./batch/bbg_hist_dnlder_excel_v2.xlsx', sheet_name='valores', header=None,
 					names=header, skiprows=6, index_col=0, parse_dates=[0])
 
 dfb.sort_index(inplace=True)
 
 # fecha historia:`fec0` ,  fecha uso GMI `fec1`, son inputs manuales del Middle Office
-fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
+fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel_v2.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
 
 # dfb = dfb[-10:] # esta linea es solo para DEBUG, para que corra + rapido
 
@@ -65,6 +67,7 @@ for d in dfb.index:
 
 # p_ilib es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
 pd.to_pickle(ilib_dict,"./batch/p_ilib.pkl")
+
 
 
 """ 2.1.2 PRODUCTO IR USDCLP BASIS + TCS """
@@ -89,7 +92,6 @@ meses_cl  = [0,3,6,9,12,18]+[12*int(x) for x in range(2,11)]+[12*12,15*12,20*12,
 
 d_icam={}
 for d in dfb.index:
-
 	df_cl = pd.DataFrame(index=tenors_cl, columns=['meses','val','carry_dias','icam','icam_z'])
 
 	# numero de meses para cada tenor
@@ -118,6 +120,7 @@ for d in dfb.index:
 pd.to_pickle(d_icam,"./batch/p_icam.pkl")
 
 
+
 """ 2.3. PRODUCTO PUNTOS FORWARD """
 ptos_dict={}
 for d in dfb.index:
@@ -129,6 +132,7 @@ for d in dfb.index:
 
 # p_ptos es el nombre del pickle donde guardamos el diccionario --> Timestamps son las keys
 pd.to_pickle(ptos_dict,"./batch/p_ptos.pkl")
+
 
 
 """ 2.4. USDCLP SPOT """
@@ -238,6 +242,60 @@ os_lcl_s = os_lcl_s[ ['date']+l ]
 os_lcl_s.to_csv('./batch/spread_g2_history.csv')
 
 
+""" crea matriz ilibz """
+matrix_ilibz = pd.DataFrame(index=dfb.index,columns=[x for x in range(1,735+1)])
+for d in dfb.index:
+	matrix_ilibz.loc[d] = np.interp(x=matrix_ilibz.columns,xp=ilib_dict[d].carry_dias,fp=ilib_dict[d].ilib_z)
+
+""" crea matriz icamz """
+matrix_icamz = pd.DataFrame(index=dfb.index,columns=[x for x in range(1,735+1)])
+for d in dfb.index:
+	matrix_icamz.loc[d] = np.interp(x=matrix_icamz.columns,xp=d_icam[d].carry_dias,fp=d_icam[d].icam_z.astype('float'))
+
+""" Crea matriz spread_ted = ice_libor - irs libor """
+spread_ted = pd.DataFrame(index=dfb.index,columns=[x for x in range(1,735+1)])
+for d in dfb.index:
+	a = np.interp(x=spread_ted.columns,xp=np.array([1,90,180,360]),fp=dfb.loc[d]['ice_libor_on':'ice_libor_12m'])
+	spread_ted.loc[d] = a - matrix_ilibz.loc[d]
+
+""" Crea matriz spread_tab = tab - icamz """
+spread_tab = pd.DataFrame(index=dfb.index,columns=[x for x in range(1,735+1)])
+for d in dfb.index:
+	a = np.interp(x=spread_tab.columns,xp=np.array([1,30,90,180,360]),fp=dfb.loc[d][['icam1d','tab30','tab90','tab180','tab360']])
+	spread_tab.loc[d] = a - matrix_icamz.loc[d]
+
+
+
+""" crea df con todos los atributos necesarios para crear los ptos teoricos """
+teo = {}
+coldict = {'1w':'ptos1w', '2w':'ptos2w', '1m':'ptos1', '2m':'ptos2', '3m':'ptos3', '4m':'ptos4', '5m':'ptos5',
+		   '6m':'ptos6','9m':'ptos9m', '12m':'ptos12m', '18m':'ptos18m', '2y':'ptos2y'}
+for t in l:
+	teo[t] = pd.DataFrame(index=dfb.index, columns=['spot','carry_days','ilibz','spread_ted','icamz','spread_tab','ptosteo'])
+	teo[t]['spot'] = dfb.spot.copy()
+	teo[t]['ptos'] = dfb[coldict[t]]
+
+	for d in dfb.index:
+		teo[t].loc[d, 'carry_days'] = ptos_dict[d].loc[t,'carry_days']
+		teo[t].loc[d, 'ilibz']      = matrix_ilibz.loc[d,teo[t].loc[d].carry_days]
+		teo[t].loc[d, 'spread_ted'] = spread_ted.loc[d,teo[t].loc[d].carry_days]
+		teo[t].loc[d, 'icamz']      = matrix_icamz.loc[d, teo[t].loc[d].carry_days]
+		teo[t].loc[d, 'spread_tab'] = spread_tab.loc[d, teo[t].loc[d].carry_days]
+
+	teo[t]['ptosteo_puros'] = fc.ptos_teoricos(teo[t].spot,teo[t].carry_days,teo[t].ilibz,teo[t].spread_ted,teo[t].icamz,teo[t].spread_tab)
+	teo[t]['spread']    = (36000/teo[t].carry_days) * (teo[t].ptos - teo[t].ptosteo_puros)/teo[t].spot
+	teo[t]['spread_5'] = teo[t].spread.quantile(0.05)
+	teo[t]['spread_50'] = teo[t].spread.quantile(0.5)
+	teo[t]['spread_95'] = teo[t].spread.quantile(0.95)
+
+	teo[t]['ptos_5']   = teo[t].carry_days * teo[t].spread_5 * teo[t].spot / 36000  +  teo[t].ptosteo_puros
+	teo[t]['ptos_50']   = teo[t].carry_days * teo[t].spread_50 * teo[t].spot / 36000  +  teo[t].ptosteo_puros
+	teo[t]['ptos_95']   = teo[t].carry_days * teo[t].spread_95 * teo[t].spot / 36000  +  teo[t].ptosteo_puros
+
+# teo['12m'][['ptos','ptos_5','ptos_50','ptos_95']]
+
+
+
 
 # """ Paso 6.1 crea historia spreads os-lcl con percentiles necesito spot,ptos,icamz,carrydays, os-lcl spread percentil 10,50,90 """
 # olsp={}
@@ -266,6 +324,8 @@ os_lcl_s.to_csv('./batch/spread_g2_history.csv')
 # 	olsp[t].iloc[0] = olsp[t].iloc[1].values
 #
 # pd.to_pickle(olsp, "./batch/spreads_percentiles.pkl")
+
+
 
 
 

@@ -25,7 +25,7 @@ import funcs_calendario_co as fcc
 import graphs as graphs
 
 # importa fechas batch fec0, y fecha de uso fec1 = fec0 + 1
-fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
+fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel_v2.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
 
 spot0 = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
 fra_historic = pd.read_csv("./batch/fra_history.csv",index_col=0)

@@ -17,6 +17,7 @@ credentials = [
     ['admin','108'],
 	['fvizcaino','3981'],
 	['test2','test2'],
+	['jara','binaryanalytics'],
     ['gjara', 'chile2019'],
 	['fferrada', 'ptosfernando2020'],
 	['jzamora', 'basispapurri2029'],

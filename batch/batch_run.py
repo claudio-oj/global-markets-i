@@ -75,11 +75,10 @@ pd.to_pickle(ilib_dict,"./batch/p_ilib.pkl")
 d_basis_tcs = {}
 for d in dfb.index:
 	df_b = fcc.crea_cal_IRS_us(d)
-
-	df_b['basis'], df_b['tcs']   = None, None
-	df_b.loc['12m':'20y','basis']= dfb.loc[d][-13:].apply(lambda x: fc.round_conv_basis(x)).values
-	df_b.loc['o/n':'3m', 'tcs']  = 0
-	df_b.loc['6m':'30y','tcs']   = dfb.loc[d][18:33].values
+	df_b['basis'], df_b['tcs']     = None, None
+	df_b.loc['12m':'20y', 'basis'] = dfb.loc[d,'basis1':'basis20'].apply(lambda x: fc.round_conv_basis(x)).values
+	df_b.loc['o/n':'3m', 'tcs']    = 0
+	df_b.loc['6m':'30y', 'tcs']    = dfb.loc[d,'tcs6m':'tcs30'].values
 	d_basis_tcs[d] = df_b
 
 pd.to_pickle(d_basis_tcs,"./batch/p_basis_tcs.pkl")
@@ -106,7 +105,7 @@ for d in dfb.index:
 	# calcula carry days en base al primer settle date
 	df_cl.carry_dias = (df_cl.val - df_cl.val[0]).apply(lambda x: x.days)
 
-	df_cl.icam = dfb.loc[d][33:52].values
+	df_cl.icam = dfb.loc[d,'icam1d':'icam30'].values
 
 	# el segmento money market ya está en convención tasa zero
 	df_cl.icam_z.loc['o/n':'18m'] = df_cl.icam.loc['o/n':'18m']
@@ -205,9 +204,6 @@ _ = fcc.crea_cal_tenors(fec1).loc[l].pubdays.to_list()
 
 fras_hoy = dff.loc[:,_]
 
-# outliers control
-# fras_hoy[127].plot()
-
 fras_hoy.round(2)
 
 fras_hoy['date'] = fras_hoy.index
@@ -253,17 +249,18 @@ for d in dfb.index:
 	matrix_icamz.loc[d] = np.interp(x=matrix_icamz.columns,xp=d_icam[d].carry_dias,fp=d_icam[d].icam_z.astype('float'))
 
 """ Crea matriz spread_ted = ice_libor - irs libor """
-spread_ted = pd.DataFrame(index=dfb.index,columns=[x for x in range(1,735+1)])
+matrix_icelib = pd.DataFrame(index=dfb.index,columns=[x for x in range(1,735+1)])
+dfb['ice_libor_2y'] = dfb.ilib2 + (dfb.ice_libor_12m - dfb.ilib1) # estimo la libor a 2yrs
+cols = ['ice_libor_on','ice_libor_3m','ice_libor_6m','ice_libor_12m','ice_libor_2y']
 for d in dfb.index:
-	a = np.interp(x=spread_ted.columns,xp=np.array([1,90,180,360]),fp=dfb.loc[d]['ice_libor_on':'ice_libor_12m'])
-	spread_ted.loc[d] = a - matrix_ilibz.loc[d]
+	matrix_icelib.loc[d] = np.interp(x=matrix_icelib.columns,xp=np.array([1,90,180,360,735]),fp=dfb.loc[d][cols])
 
 """ Crea matriz spread_tab = tab - icamz """
-spread_tab = pd.DataFrame(index=dfb.index,columns=[x for x in range(1,735+1)])
+matrix_tab = pd.DataFrame(index=dfb.index,columns=[x for x in range(1,735+1)])
+dfb['tab_2y'] = dfb.icam2 + (dfb.tab360 - dfb.icam1) # estimo la tab a 2yrs
+cols = ['icam1d','tab30','tab90','tab180','tab360','tab_2y']
 for d in dfb.index:
-	a = np.interp(x=spread_tab.columns,xp=np.array([1,30,90,180,360]),fp=dfb.loc[d][['icam1d','tab30','tab90','tab180','tab360']])
-	spread_tab.loc[d] = a - matrix_icamz.loc[d]
-
+	matrix_tab.loc[d] = np.interp(x=matrix_tab.columns,xp=np.array([1,30,90,180,360,735]),fp=dfb.loc[d][cols])
 
 
 """ crea df con todos los atributos necesarios para crear los ptos teoricos """
@@ -271,61 +268,30 @@ teo = {}
 coldict = {'1w':'ptos1w', '2w':'ptos2w', '1m':'ptos1', '2m':'ptos2', '3m':'ptos3', '4m':'ptos4', '5m':'ptos5',
 		   '6m':'ptos6','9m':'ptos9m', '12m':'ptos12m', '18m':'ptos18m', '2y':'ptos2y'}
 for t in l:
-	teo[t] = pd.DataFrame(index=dfb.index, columns=['spot','carry_days','ilibz','spread_ted','icamz','spread_tab','ptosteo'])
+	teo[t] = pd.DataFrame(index=dfb.index, columns=['spot','carry_days','ilibz','ice_libor','icamz','tab','ptosteo'])
 	teo[t]['spot'] = dfb.spot.copy()
 	teo[t]['ptos'] = dfb[coldict[t]]
 
 	for d in dfb.index:
 		teo[t].loc[d, 'carry_days'] = ptos_dict[d].loc[t,'carry_days']
 		teo[t].loc[d, 'ilibz']      = matrix_ilibz.loc[d,teo[t].loc[d].carry_days]
-		teo[t].loc[d, 'spread_ted'] = spread_ted.loc[d,teo[t].loc[d].carry_days]
+		teo[t].loc[d, 'ice_libor']  = matrix_icelib.loc[d,teo[t].loc[d].carry_days]
 		teo[t].loc[d, 'icamz']      = matrix_icamz.loc[d, teo[t].loc[d].carry_days]
-		teo[t].loc[d, 'spread_tab'] = spread_tab.loc[d, teo[t].loc[d].carry_days]
+		teo[t].loc[d, 'tab']        = matrix_tab.loc[d, teo[t].loc[d].carry_days]
 
-	teo[t]['ptosteo_puros'] = fc.ptos_teoricos(teo[t].spot,teo[t].carry_days,teo[t].ilibz,teo[t].spread_ted,teo[t].icamz,teo[t].spread_tab)
-	teo[t]['spread']    = (36000/teo[t].carry_days) * (teo[t].ptos - teo[t].ptosteo_puros)/teo[t].spot
-	teo[t]['spread_5'] = teo[t].spread.quantile(0.05)
-	teo[t]['spread_50'] = teo[t].spread.quantile(0.5)
+	teo[t]['ptosteo']   = fc.ptos_teoricos(teo[t].spot,teo[t].carry_days,teo[t].ice_libor,teo[t].tab)
+	teo[t]['spread']    = (36000/teo[t].carry_days) * (teo[t].ptos - teo[t].ptosteo)/teo[t].spot
+	teo[t]['spread_5']  = teo[t].spread.quantile(0.05)
+	teo[t]['spread_50'] = teo[t].spread.quantile(0.50)
 	teo[t]['spread_95'] = teo[t].spread.quantile(0.95)
 
-	teo[t]['ptos_5']   = teo[t].carry_days * teo[t].spread_5 * teo[t].spot / 36000  +  teo[t].ptosteo_puros
-	teo[t]['ptos_50']   = teo[t].carry_days * teo[t].spread_50 * teo[t].spot / 36000  +  teo[t].ptosteo_puros
-	teo[t]['ptos_95']   = teo[t].carry_days * teo[t].spread_95 * teo[t].spot / 36000  +  teo[t].ptosteo_puros
+	teo[t]['ptos_5']    = teo[t].carry_days * teo[t].spread_5  * teo[t].spot / 36000  +  teo[t].ptosteo #TODO: no sera teopuros!?
+	teo[t]['ptos_50']   = teo[t].carry_days * teo[t].spread_50 * teo[t].spot / 36000  +  teo[t].ptosteo
+	teo[t]['ptos_95']   = teo[t].carry_days * teo[t].spread_95 * teo[t].spot / 36000  +  teo[t].ptosteo
 
-# teo['12m'][['ptos','ptos_5','ptos_50','ptos_95']]
+	teo[t] = teo[t].applymap(fc.round_2d)
 
-
-
-
-# """ Paso 6.1 crea historia spreads os-lcl con percentiles necesito spot,ptos,icamz,carrydays, os-lcl spread percentil 10,50,90 """
-# olsp={}
-# columns= ['spot','ptos','icamz','icam_osz','carrydays','s_10','s_50','s_90']
-#
-# for t in l: # para cada tenor de 1w hasta 2y
-# 	olsp[t] = pd.DataFrame(index=dfb.index, columns=columns)
-# 	olsp[t]['spot'] = dfb.spot
-# 	olsp[t]['s_10'] = os_lcl_s[t].quantile(0.1)
-# 	olsp[t]['s_50'] = os_lcl_s[t].quantile(0.5)
-# 	olsp[t]['s_90'] = os_lcl_s[t].quantile(0.9)
-#
-# for d1 in dfb.index[1:]:
-# 	loc = dfb.index.get_loc(d1)
-# 	d0 = dfb.index[loc-1] # d0 es el "dia de ayer"
-#
-# 	# va a buscar los 'ptos','icamz','carry_days' de cada dia
-# 	aux = fc.tables_init(d0,d1)
-# 	aux = aux.set_index('tenor')['1w':'2y'][['ptos','icamz','icam_osz','carry_days']]
-#
-# 	# copia la fila del dia "d", de aux, en olsp de cada tenor de 1w - 2y
-# 	for t in l:
-# 		olsp[t].loc[d1,['ptos','icamz','icam_osz','carrydays']] = aux.loc[t].values
-#
-# for t in l: # copio la 2d fila en la 1a fila... ya que por inconsistencia de indices no pude calcular la 1era fila originalmente
-# 	olsp[t].iloc[0] = olsp[t].iloc[1].values
-#
-# pd.to_pickle(olsp, "./batch/spreads_percentiles.pkl")
-
-
+pd.to_pickle(teo, "./batch/ptos_teoricos.pkl")
 
 
 

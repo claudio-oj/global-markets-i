@@ -25,15 +25,15 @@ import funcs_calendario_co as fcc
 import graphs as graphs
 
 # importa fechas batch fec0, y fecha de uso fec1 = fec0 + 1
-fec0,fec1 = pd.read_excel('./batch/bbg_hist_dnlder_excel_v2.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
-
-spot0 = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
-fra_historic = pd.read_csv("./batch/fra_history.csv",index_col=0)
-spread_hist = pd.read_csv("./batch/spread_g2_history.csv",index_col=0)
+fec0,fec1      = pd.read_excel('./batch/bbg_hist_dnlder_excel_v2.xlsx', sheet_name='valores', header=None).iloc[0:2,1]
+spot0          = pd.read_pickle("./batch/p_clp_spot.pkl")[-1]
+fra_historic   = pd.read_csv("./batch/fra_history.csv",index_col=0)
+spread_hist    = pd.read_csv("./batch/spread_g2_history.csv",index_col=0)
 fra_hist_total = pd.read_pickle("./batch/hist_total_fra.pkl")
-# indicator = pd.read_csv("indicator.csv")
+calendario_fx  = pd.read_csv("./batch/calendario_app_fx.csv")
+teo            = pd.read_pickle("./batch/ptos_teoricos.pkl")
+
 dfNone = pd.DataFrame(data=' ',index=np.arange(1,6,1,int),columns=['days','int','Px','ΔPx'])
-calendario_fx = pd.read_csv("./batch/calendario_app_fx.csv")
 
 
 """ SECCION INICIALIZA TABLA PRINCIPAL """
@@ -326,7 +326,6 @@ layout = html.Div(
 								'color':'#3C4CAD',
 							},
 						]
-						# style_table={'width':'170px'},
 						),
 					html.Div(
 						id='output-table2-text',
@@ -341,7 +340,6 @@ layout = html.Div(
 					html.Div(
 						dcc.Graph(
 							id='ubicacion1',
-							# figure= graphs.crea_graf_fra_lcl_os_spread(df1.loc[2:13,['tenor','icamz','icam_osz','icam_os','fracam_os']])
 							),
 						),
 					html.Div(
@@ -358,6 +356,17 @@ layout = html.Div(
 					className='four columns',
 					children=[
 						html.Div([dcc.Graph(id="ubicacion3")]),
+						html.Div([
+							html.P(id='ptos-teoricos-texto1',style={'margin-block-end':0}),
+							html.P(id='ptos-teoricos-texto2',style={'margin-block-end':0}),
+							],
+							style={
+								'fontSize': '13px',
+								'padding-top': '5px',
+								'marginBottom': 5,
+
+							},
+						),
 						html.Div(
 							[
 								dcc.Input(id='spread-finder-input-days',type='text',value='7-45',
@@ -369,7 +378,7 @@ layout = html.Div(
 								html.Div(id='output-finder-button',
 										 style={'width':'85%',"padding": "0 0 0 0",'margin':'1px','display':'inlineBlock'}),
 							],
-							style={'fontSize':12,'display':'inlineBlock','padding-top':'25px'}
+							style={'fontSize':12,'display':'inlineBlock','padding-top':'10px'}
 						),
 						html.Div(
 							[
@@ -477,10 +486,10 @@ def update_ubicacion2(rows):
 
 
 @app.callback(
-	Output('hover-data','children'),
-	[Input('ubicacion1','hoverData')])
-def display_hover_data(hoverData):
-	return json.dumps(hoverData)
+	Output('click-data','children'),
+	[Input('ubicacion1','clickData')])
+def display_click_data(clickData):
+	return json.dumps(clickData)
 
 
 
@@ -501,20 +510,41 @@ def update_graph1(rows,radioitem):
 
 
 @app.callback(
-	[Output('ubicacion3','figure')],
-	[Input('table1','data'),Input('ubicacion1','hoverData')])
-def update_ubicacion3(rows,hover,fec1=fec1):
+	[Output('ubicacion3','figure'),Output('ptos-teoricos-texto1','children'),Output('ptos-teoricos-texto2','children')],
+	[Input('table1','data'),Input('ubicacion1','clickData'),Input('spot-input','value')])
+def update_ubicacion3(rows,click,spot,fec1=fec1,teo=teo):
 	try:
-		tenor = hover['points'][0]['x']
+		t = click['points'][0]['x']
 	except:
-		tenor='12m'
+		t='12m'
 
 	df = pd.DataFrame.from_dict(rows)
-	last_fra = float(df[df.tenor==tenor]['fracam_os'].round(2))
-	last_spr = float( (df[df.tenor==tenor]['icam_osz'] - df[df.tenor==tenor]['icamz']).round(2) )
 
-	return [graphs.crea_time_series(tenor, last_fra, last_spr, fec1)]
-	# return [graphs.prueba()]
+	cols = ['carry_days','ilibz','icamz','ptos']
+	teo[t].loc[fec1, cols] = df.set_index('tenor').loc[t,cols]
+
+	teo[t].loc[fec1,'ice_libor'] = teo[t].loc[fec1,'ilibz']+teo[t].loc[fec0,'ice_libor']-teo[t].loc[fec0,'ilibz']
+	teo[t].loc[fec1, 'tab']      = teo[t].loc[fec1, 'icamz'] + teo[t].loc[fec0, 'tab'] - teo[t].loc[fec0, 'icamz']
+	teo[t].loc[fec1, 'ptosteo']  = fc.ptos_teoricos(spot,teo[t].carry_days[-1],teo[t].ice_libor[-1],teo[t].tab[-1])
+	teo[t].loc[fec1, 'spread']   = (36000/teo[t].carry_days[-1]) * (teo[t].ptos[-1] - teo[t].ptosteo[-1])/spot
+
+	teo[t].loc[fec1,'spread_5':'spread_95'] = teo[t].loc[fec0,'spread_5':'spread_95']
+
+	teo[t].loc[fec1, 'ptos_5']  = teo[t].carry_days[-1] * teo[t].spread_5[-1] * spot / 36000 + teo[t].ptosteo[-1]
+	teo[t].loc[fec1, 'ptos_50'] = teo[t].carry_days[-1] * teo[t].spread_50[-1] * spot / 36000 + teo[t].ptosteo[-1]
+	teo[t].loc[fec1, 'ptos_95'] = teo[t].carry_days[-1] * teo[t].spread_95[-1] * spot / 36000 + teo[t].ptosteo[-1]
+
+	perc_ptos = fc.rank_perc(teo[t].spread[-1],teo[t].spread)
+
+	df = teo[t][['ptos','ptos_5','ptos_50','ptos_95']]
+	df.loc[fec1] = df.loc[fec1].map(fc.round_2d)
+
+	""" texto para la bajada del grafico """
+	texto1 = '`Fwd Points {}` at {} are {}, compared to rates differential index.'.format(t,df.ptos[-1],fc.parse_perc_range(perc_ptos))
+	texto2=  '{} is at {}th percentile'.format(df.ptos[-1],perc_ptos)
+
+	return graphs.crea_ptos_teo(t,df,fec1,perc_ptos) , texto1, texto2
+
 
 
 

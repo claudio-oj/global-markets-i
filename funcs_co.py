@@ -384,6 +384,7 @@ def tables_init(fec0,fec1):
 
 	df[1:].odelta = df[1:].ptos - df[1:].ptosy
 
+
 	""" ICAM """
 	pik_cam = pd.read_pickle("./batch/p_icam.pkl")
 	df['icam'] = np.interp(x=df.carry_days,xp=pik_cam[fec0].carry_dias,fp=pik_cam[fec0].icam).round(2)
@@ -567,12 +568,27 @@ def suelto_finder(range_days,icamos,valuta,fec,spot,ptos):
 
 
 
-def ptos_teoricos(spot,carry_days,ilibz,spread_ted,icamz,spread_tab):
+def ptos_teoricos(spot,carry_days,ice_libor,tab):
 	""" calcula los ptos teoricos de acuerdo al diferencial tab - libor """
-	return spot*(1+(icamz+spread_tab)*carry_days/36000)/(1+(ilibz+spread_ted)*carry_days/36000) - spot
+	return spot*(1+(tab)*carry_days/36000)/(1+(ice_libor)*carry_days/36000) - spot
 
 
-
-
+def parse_perc_range(x):
+	if x in range(0,10+1):
+		return 'extremely cheap!!!'
+	elif x in range(10,20+1):
+		return 'definitely cheap!'
+	elif x in range(20,30+1):
+		return 'rather cheap'
+	elif x in range(30, 70+1):
+		return 'neutral'
+	elif x in range(70, 80+1):
+		return 'rather rich'
+	elif x in range(80, 90+1):
+		return 'definitely rich!'
+	elif x in range(90, 100+1):
+		return 'extremely rich!!!'
+	else:
+		'number out of range'
 
 

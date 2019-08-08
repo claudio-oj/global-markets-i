@@ -285,7 +285,7 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 
 	""" esta seccion es la + dificil de la app. Que no se superpongan las etiquetas. Cree una escala centavos/pixel manual
 	con el objetivo de reescalar la ubicación de las anotaciones (tarjetas) par que no se superpongan """
-	yrange = 100 * (0.10+ df[['ptoso_p', 'ptos_lcl_1x']].max().max() - df[['ptoso_p', 'ptos_lcl_1x']].min().min())
+	yrange = 100 * (0.10+ df.loc['TOD':'2y',['ptos','ptoso']].max().max() - df.loc['TOD':'2y',['ptos','ptoso']].min().min())
 
 	suple = 6.5 # es un numero inventado que permite reescalar el ratio centavos/pixels
 	scale = yrange / (147.5 + yrange/suple)
@@ -325,9 +325,8 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 		yaxis='y2',
 	)
 
-
 	layout = go.Layout(
-		title='Arbitrage os-lcl: 1x convention',
+		title='Arbitrage os-lcl <br> 1x convention',
 		titlefont=dict(size=12),
 		yaxis=dict(
 			domain=[0,0.5],
@@ -342,6 +341,28 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 		showlegend=False,
 		height=350,
 		margin=dict(l=45, b=20, r=50, t=35),
+	)
+
+
+	layout.update(
+		annotations=[dict(
+			x=fec1,
+			y=last_fra,
+			align='right',
+			text=str(last_fra),
+			showarrow=False,
+			xref='x',
+			yref='y',
+			bordercolor="#c7c7c7",
+			borderwidth=2,
+			borderpad=2,
+			bgcolor="#240E8B",
+			opacity=0.8,
+			font=dict(
+				size=11,
+				color='#ffffff',
+			),
+		)],
 	)
 
 	l_a= []
@@ -363,7 +384,7 @@ def graf_arb_lcl(df): # https://plot.ly/python/v3/subplots/
 
 	""" esta seccion es la + dificil de la app. Que no se superpongan las etiquetas. Cree una escala centavos/pixel manual
 	con el objetivo de reescalar la ubicación de las anotaciones (tarjetas) par que no se superpongan """
-	yrange= 100 * (0.10 + df[['ptos','ptoso']].max().max() - df[['ptos','ptoso']].min().min())
+	yrange= 100 * (0.10 + df.loc['TOD':'2y',['ptos','ptoso']].max().max() - df.loc['TOD':'2y',['ptos','ptoso']].min().min())
 
 	suple = 6.5 # es un numero inventado que permite reescalar el ratio centavos/pixels
 	scale = yrange / (147.5 + yrange/suple)
@@ -404,7 +425,6 @@ def graf_arb_lcl(df): # https://plot.ly/python/v3/subplots/
 		yaxis='y2',
 	)
 
-
 	layout = go.Layout(
 		title='Arbitrage os-lcl: Local convention',
 		titlefont=dict(size=12),
@@ -431,3 +451,116 @@ def graf_arb_lcl(df): # https://plot.ly/python/v3/subplots/
 	layout.update(annotations=l_a)
 
 	return go.Figure(data=[tr_lcl,tr_ofs,tr_spr], layout=layout)
+
+
+
+
+
+def annot_ptos_teo(fec1,y,t,ax,ay,fc,bgc,o):
+	""" anotación para el gráfico de puntos teoricos """
+	annotation = dict(
+		x=fec1,
+		y=y,
+		xref='x',
+		yref='y',
+		text=t,
+		showarrow=True,
+		font=dict(
+			# family="Courier New, monospace",
+			size=12,
+			color=fc,
+		),
+		align="center",
+		arrowhead=1,
+		arrowsize=1,
+		arrowwidth=1,
+		arrowcolor="rgba(0,0,0,0)",
+		ax=ax,
+		ay=ay,
+		bordercolor="#000000", #c7c7c7
+		borderwidth=1,
+		borderpad=1,
+		bgcolor=bgc,
+		opacity=o,
+	)
+	return annotation
+
+
+def crea_ptos_teo(tenor,df,fec1,perc_ptos):
+
+	tra95 = go.Scatter(
+		x=df.index,
+		y=df.ptos_95,
+		line=dict(
+			color = 'rgba(298,66,102,0.8)',  # 298,66,102 rojo
+		),
+		name='95th',
+		line_width=0.6,
+	)
+
+	tra50 = go.Scatter(
+		x=df.index,
+		y=df.ptos_50,
+		fill='tonexty',
+		fillcolor='rgba(298,66,102,0.3)', #298,66,102 rojo
+		line=dict(
+			color='rgba(192,192,192,0.8)',  # silver
+			width=0.6,
+		),
+		name='50th',
+	)
+
+	tra5 = go.Scatter(
+		x=df.index,
+		y=df.ptos_5,
+		fill='tonexty',
+		fillcolor='rgba(89,195,195,0.3)', #89,195,195 verde
+		line_color='rgba(89,195,195,0.8)', #89,195,195 verde
+		name='5th',
+		line_width=0.6,
+	)
+
+	traptos = go.Scatter(
+		x=df.index,
+		y=df.ptos,
+		name='ptos',
+		line=dict(
+			shape='spline',
+			color='#3C4CAD',
+			width=1.5,
+		),
+	)
+
+	layout = dict(
+		title="Forward Points '"+tenor+"' v/s theoric usd.clp rates spread <br> 5th,50th,95th percentiles",
+		titlefont=dict(size=12),
+		xaxis=dict(
+			automargin=True,
+			showgrid=False,
+			type='date',
+			titlefont=dict(size=8),
+		),
+		yaxis=dict(
+			# zeroline=True,
+			showgrid=True,
+			automargin=True,
+			titlefont=dict(size=8),
+		),
+		showlegend=False,
+		height=400,
+		margin=dict(l=20, b=20, r=40, t=55),
+	)
+
+	l_a    = []
+	texto  = [' ('+str(perc_ptos)+'/100)','','','']
+	l_posx = [-27, 27, 27, 27]
+	l_posy = [0, 10, 0, -10]
+	l_fc   = ['#ffffff','#000000','#000000','#000000']
+	l_bgc  = ['#3C4CAD','rgba(89,195,195,0.8)','rgba(192,192,192,0.8)','rgba(298,66,102,0.8)']
+	l_opac = [0.8,1,1,1]
+	for col,t,posx,posy,fc,bgc,o in zip(df.columns,texto,l_posx,l_posy,l_fc,l_bgc,l_opac):
+		l_a.append(annot_ptos_teo(fec1, df[col][-1], str(df[col][-1])+t, posx, posy, fc, bgc,o) )
+
+	layout.update(annotations=l_a)
+	fig = dict(data=[tra95,tra50,tra5,traptos], layout=layout)
+	return fig

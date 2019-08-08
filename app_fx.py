@@ -540,7 +540,7 @@ def update_ubicacion3(rows,click,spot,fec1=fec1,teo=teo):
 	df.loc[fec1] = df.loc[fec1].map(fc.round_2d)
 
 	""" texto para la bajada del grafico """
-	texto1 = '`Fwd Points {}` at {} are {}, compared to rates differential index.'.format(t,df.ptos[-1],fc.parse_perc_range(perc_ptos))
+	texto1 = '`Fwd Points {}` at {} is {}, compared to rates differential index.'.format(t,df.ptos[-1],fc.parse_perc_range(perc_ptos))
 	texto2=  '{} is at {}th percentile'.format(df.ptos[-1],perc_ptos)
 
 	return graphs.crea_ptos_teo(t,df,fec1,perc_ptos) , texto1, texto2

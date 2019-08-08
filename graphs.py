@@ -343,28 +343,6 @@ def graf_arb_os(df): # https://plot.ly/python/v3/subplots/
 		margin=dict(l=45, b=20, r=50, t=35),
 	)
 
-
-	layout.update(
-		annotations=[dict(
-			x=fec1,
-			y=last_fra,
-			align='right',
-			text=str(last_fra),
-			showarrow=False,
-			xref='x',
-			yref='y',
-			bordercolor="#c7c7c7",
-			borderwidth=2,
-			borderpad=2,
-			bgcolor="#240E8B",
-			opacity=0.8,
-			font=dict(
-				size=11,
-				color='#ffffff',
-			),
-		)],
-	)
-
 	l_a= []
 	for ind,row in df.loc['2m':'2y'].iterrows():
 		l_a.append(annot_tito(ind, row['ptoso_p'], str(row['ptoso_p']), 0, '#ffffff', '#F04393') )  #F04393

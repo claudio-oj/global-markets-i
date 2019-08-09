@@ -144,16 +144,11 @@ def table2_update(dft1,dft2):
 	rh = fc.rank_perc(x=dft2.loc[2, '4'], array=slice_.fra)
 	dft2.loc[2, '6'] = str(rh) + '/100'
 
-	if rt<25 and rh<25:
-		t = "This spread is Cheap, compared to today's curve {}/100 ranking. And to it's own history {}/100 ranking".format(rt,rh)
-	elif rt>75 and rh>75:
-		t = "This spread is Rich, compared to today's curve {}/100 ranking and to it's own history {}/100 ranking".format(rt,rh)
-	else:
-		t=''
+	t1 = "This spread on 'Today's Curve' ranking is at {}/100 --> {}".format(rt,fc.parse_perc_range(rt))
+	t2 = "This spread on '1yr Self History' ranking is at {}/100 --> {}".format(rh,fc.parse_perc_range(rh))
 
-	return dft2, slice_.fra, t
-
-df2,slice_fra, t = table2_update(df1,df2)
+	return dft2, slice_.fra, t1, t2
+df2,slice_fra, t1, t2 = table2_update(df1,df2)
 
 
 
@@ -328,8 +323,12 @@ layout = html.Div(
 						]
 						),
 					html.Div(
-						id='output-table2-text',
+						id='output-table2-text1',
 						style={'display':'inlineBlock', 'fontSize':'12px'},
+					),
+					html.Div(
+						id='output-table2-text2',
+						style={'display': 'inlineBlock', 'fontSize': '12px'},
 					)
 					]
 				),
@@ -417,8 +416,6 @@ layout = html.Div(
 				),
 		],
 	),
-	# html.Br(),
-	# html.Br(),
 
 	html.Div(
 		className='row',
@@ -445,7 +442,7 @@ layout = html.Div(
 
 
 @app.callback(
-	[Output('table1','data'), Output('table2','data'),Output('output-table2-text','children')],
+	[Output('table1','data'), Output('table2','data'),Output('output-table2-text1','children'),Output('output-table2-text2','children')],
 	[Input('table1','data_timestamp'), Input('table2','data_timestamp'),Input('spot-input','n_blur')],
 	[State('table1','data'), State('table2','data'),State('spot-input','value')])
 def update_tables_cback(timestamp1,timestamp2,spot_submit,rows1,rows2,spot):
@@ -468,10 +465,9 @@ def update_tables_cback(timestamp1,timestamp2,spot_submit,rows1,rows2,spot):
 	dft2 = dft2[df2.columns.copy()]
 
 	dft1 = table1_update(dft1,spot=spot)
-	dft2, slice_fra, t = table2_update(dft1,dft2)
+	dft2, slice_fra, t1, t2 = table2_update(dft1,dft2)
 
-	# return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), slice_fra.to_json('data_graf3')
-	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), t
+	return dft1.to_dict('rows_table1'), dft2.to_dict('rows_table2'), t1, t2
 
 
 

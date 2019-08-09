@@ -8,7 +8,7 @@ layout = html.Div(
 	className='nine columns offset-by-one',
 	children=[
 		html.Br(),
-		html.Br(),
+		# html.Br(),
 		html.Div(
 			html.Img(src='https://static.wixstatic.com/media/963559_aa62287269154585a1a8c607ecf64fc4~mv2.gif',
 					 style={'width': '125px'}),
@@ -24,18 +24,17 @@ layout = html.Div(
 		dcc.Markdown('''---'''),
 
 		html.Br(),
-		# html.Br(),
-		# html.Br(),
 
 		html.Div(
 			style={'display':'flex','justify-content':'center','fontSize':13}, # http://howtocenterincss.com/
 			children=[dcc.Markdown('''
 Host| [BinaryAnalytics.cl](http://www.BinaryAnaytics.cl) | |
-:-------- | :---------: | :---------:
+:-------- | :--------- | :---------
 Website | [global-markets-i.herokuapp.com](https://global-markets-i.herokuapp.com/) | |
 Latest Release| v2 beta Chile | 05-Aug-2019 |
+Tech Requirement 1 | Desktop web browser | Chrome or Firefox |
+Tech Requirement 2 | Screen Size | equal or higher than 15' |
 Tutorial | [binaryanalytics.cl/gmi-tutorial](https://www.binaryanalytics.cl/gmi-tutorial) | password: *binaryanalytics*
-Requirements | Google Chrome desktop > 13' | |
 | Contact | [contacto@binaryanalytics.cl](mailto:contacto@binaryanalytics.cl) | |
 '''
 					)],

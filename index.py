@@ -81,12 +81,12 @@ app.layout = html.Div(
 			 ),
 		html.Div(
 			[
-				html.A(
-				'www.BinaryAnalytics.cl',
-				href='http://www.binaryanalytics.cl',
-				target="_blank",
-				style={'color': '#FFF',"text-decoration": "none",'padding-left':10,},
-				),
+				# html.A(
+				# 'www.BinaryAnalytics.cl',
+				# href='http://www.binaryanalytics.cl',
+				# target="_blank",
+				# style={'color': '#FFF',"text-decoration": "none",'padding-left':10,},
+				# ),
 			],
 			className='three columns',
 			style={'textAlign' :'right',

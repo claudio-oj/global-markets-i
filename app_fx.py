@@ -127,7 +127,7 @@ def table2_update(dft1,dft2):
 	dft2.loc[2, 'ptos'] = round(dft2.loc[1, 'ptos'] - dft2.loc[0, 'ptos'], 2)
 
 	# setea nombres en la fila
-	dft2.loc[1, '4':'6'] = ['fra', 'rank_tod', 'rank_his']
+	dft2.loc[1, '4':'6'] = ['icam-os', 'rank_tod', 'rank_his']
 
 	# calcula rank percentil "transversal" de la fra del spread
 	rt = fc.rank_perc(x=dft2.loc[2, '4'],

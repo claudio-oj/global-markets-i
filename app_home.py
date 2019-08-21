@@ -33,7 +33,7 @@ Website | [global-markets-i.herokuapp.com](https://global-markets-i.herokuapp.co
 Latest Release| v2 beta Chile | 05-Aug-2019 |
 Tech Requirement 1 | Desktop web browser | Chrome or Firefox |
 Tech Requirement 2 | Screen Size | equal or higher than 15' |
-Contact | [gmi.usdclp@gmail.com](gmi.usdclp@gmail.com) | |
+Contact | [contacto@global-markets-i.com](contacto@global-markets-i.com) | |
 
 '''
 					)],

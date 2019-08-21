@@ -88,7 +88,7 @@ def settle_rule(d0, m):
 	else:
 		d2 = d1
 
-	# end of month rule TODO: aqui sumé un 1 a m ... veremos...
+	# end of month rule
 	if d2.month != d1.month:
 		d3 = pd.tseries.offsets.CustomBusinessMonthEnd(holidays=h_both).rollback(d1)
 	else:

@@ -375,7 +375,7 @@ def tables_init(fec0,fec1):
 
 	df['ptos'] = df.ptosy.copy()
 
-	# Inicia ptos forward off shore con un shock aleatorio respecto a los ptos locales
+	# Inicia ptos forward off shore con un shock aleatorio respecto a los ptos locales TODO: remover shock aleatorio
 	df['ptoso'] = df.ptos * ( 1+ (np.random.random_sample(len(df)) - 0.5) / 5)
 	df['ptoso'] = df.ptoso.map(round_2d)
 
@@ -496,7 +496,7 @@ def spreads_finder(range_days, gap, icamos, valuta, fec,spot,ptos):
 	df = df.merge(icamos, how='left', left_on='long', right_index=True)
 	df = df.rename(columns={df.columns[-2]: 'i1', df.columns[-1]: 'i2'})
 
-	# calcula fra implicita en el spread
+	# calcula la tasa implicita en el spread
 	df['int'] = fra1w(w2=df.long, w1=df.short, i2=df.i2, i1=df.i1)
 	df['int'] = df.int.round(2)
 
@@ -548,21 +548,20 @@ def suelto_finder(range_days,icamos,valuta,fec,spot,ptos):
 
 	df['p'] = np.interp(x=df.carry_days, xp=ptos.index.values,fp=ptos.values).round(2)
 
-	#calculo nombre producto TODO: aqui voyyyyy !!!!!
+	#calculo nombre producto
 	df['days'] = df.apply(lambda x: str(x.days)+'d', axis=1)
 
 	# rankea los spread
 	df.sort_values(by=['int'], inplace=True)
 
 	df['c'] = (df.int - df.int.mean())
-	# df['c'] = (spot * df.c / 100 / 12).round(2)
 	df['c'] = (spot * df.c * df.carry_days / 36000).round(2)
 
 	# slice los spread más baratos
 	cheap = df[['days', 'int','p','c']][:5]
 
 	# slice los spread más caros
-	rich  = df[['days', 'int','p','c']][-5:]
+	rich  = df[['days', 'int','p','c']][-5:].sort_values(by=['int'], ascending=False)
 
 	return {'cheap': cheap, 'rich': rich}
 

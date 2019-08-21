@@ -18,17 +18,22 @@ credentials = [
 	['fvizcaino','3981'],
 	['test2','test2'],
 	['jara','binaryanalytics'],
+
     ['gjara', 'chile2019'],
 	['fferrada', 'ptosfernando2020'],
 	['jzamora', 'basispapurri2029'],
 	['mandrades','xt.e498B'],
+
 	['cgomez','binary'],
 	['fberly','fabi'],
 	['adiaz','happyhour'],
+
 	['dlizana','golf1'],
 	['crosas','pizza'],
 	['jtrombert','elvalordelapolitica'],
 	['mastaburuaga','masta'],
+
+	['cgonzalez','Carogonz76'],
 ]
 
 auth = dash_auth.BasicAuth(app,credentials)

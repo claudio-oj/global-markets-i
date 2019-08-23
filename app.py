@@ -14,10 +14,11 @@ import dash_auth
 app = dash.Dash(__name__)
 
 credentials = [
-    ['admin','108801'],
-	['cortiz','108801'],
 	['ddiaz','davidivad'],
 	['fvizcaino','3981'],
+	['rtroncoso','fara'],
+	['gcabrera','boga'],
+	['cortiz','108801'],
 	['jara','binaryanalytics'], # jara euroamarica
 
     ['gjara', 'chile2019'], #gte tradition

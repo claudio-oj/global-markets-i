@@ -14,26 +14,29 @@ import dash_auth
 app = dash.Dash(__name__)
 
 credentials = [
-    ['admin','108'],
+    ['admin','108801'],
+	['cortiz','108801'],
+	['ddiaz','davidivad'],
 	['fvizcaino','3981'],
-	['test2','test2'],
-	['jara','binaryanalytics'],
+	['jara','binaryanalytics'], # jara euroamarica
 
-    ['gjara', 'chile2019'],
-	['fferrada', 'ptosfernando2020'],
-	['jzamora', 'basispapurri2029'],
-	['mandrades','xt.e498B'],
+    ['gjara', 'chile2019'], #gte tradition
+	['mandrades','xt.e498B'], # gte TI tradition
+	['fferrada', 'ptosfernando2020'], # broker tradition
+	# ['jzamora', 'basispapurri2029'], # broker tradition
 
-	['cgomez','binary'],
-	['fberly','fabi'],
-	['adiaz','happyhour'],
 
-	['dlizana','golf1'],
-	['crosas','pizza'],
-	['jtrombert','elvalordelapolitica'],
-	['mastaburuaga','masta'],
+	# ['cgomez','binary'], # Christian Gomez
+	# ['fberly','fabi'], #contacto CO en Santander
+	# ['adiaz','happyhour'], #contacto CO en Santander
 
-	['cgonzalez','Carogonz76'],
+	# ['dlizana','golf1'], # diego lizana, hsbc
+	# ['crosas','pizza'], # cristobal rosas, hsbc
+	# ['jtrombert','elvalordelapolitica'], # jorge trombert, hsbc
+
+	# ['mastaburuaga','masta'], # manuel astaburuaga, credicorp
+
+	# ['cgonzalez','Carogonz76'], # carolina gonzalez, GFI
 ]
 
 auth = dash_auth.BasicAuth(app,credentials)
